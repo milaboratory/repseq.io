@@ -58,7 +58,7 @@ public class LociLibraryIOTest {
         writer.writeMetaInfo("G", "B");
         writer.writeCommonSpeciesName(Species.HomoSapiens, "hsa");
         writer.writeSequencePart("A1", 0, new NucleotideSequence("ATTAGACAATTAGACA"), compressed);
-        writer.writeBeginOfLocus(Species.HomoSapiens, Locus.TRB, uuid);
+        writer.writeBeginOfLocus(Species.HomoSapiens, Chain.TRB, uuid);
         writer.writeAllele(GeneType.Joining, "TRBJ2-4*01", true, true, "A1", new int[]{1, 5, 8}, null, null, null);
         writer.writeAllele(GeneType.Joining, "TRBJ2-4*02", false, true, null, null, "TRBJ2-4*01",
                 Mutations.decodeNuc("ST1G").getRAWMutations(), GermlineJCDR3Part);
@@ -72,7 +72,7 @@ public class LociLibraryIOTest {
         assertEquals("B", library.getProperty("G"));
 
         //Testing container
-        LocusContainer container = library.getLocus("hsa", Locus.TRB);
+        LocusContainer container = library.getLocus("hsa", Chain.TRB);
         assertNotNull(container);
         assertEquals("D", container.getProperty("C"));
         assertEquals(uuid, container.getUUID());

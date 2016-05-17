@@ -31,7 +31,7 @@ package io.repseq.reference;
 import java.util.*;
 
 /**
- * Container of information about single locus.
+ * Container of information about single chain.
  */
 public class LocusContainer {
     final Map<String, String> properties = new HashMap<>();
@@ -41,13 +41,13 @@ public class LocusContainer {
     final Map<String, Allele> nameToAllele;
     final List<Gene> allGenes;
     private final UUID uuid;
-    private final SpeciesAndLocus speciesAndLocus;
+    private final SpeciesAndChain speciesAndChain;
     LociLibrary library = null;
 
-    public LocusContainer(UUID uuid, SpeciesAndLocus speciesAndLocus, EnumMap<GeneType, List<Gene>> genes, EnumMap<GeneType, List<Allele>> alleles,
+    public LocusContainer(UUID uuid, SpeciesAndChain speciesAndChain, EnumMap<GeneType, List<Gene>> genes, EnumMap<GeneType, List<Allele>> alleles,
                           Map<String, Gene> nameToGene, Map<String, Allele> nameToAllele, List<Gene> allGenes) {
         this.uuid = uuid;
-        this.speciesAndLocus = speciesAndLocus;
+        this.speciesAndChain = speciesAndChain;
         this.genes = genes;
         this.alleles = alleles;
         this.nameToGene = nameToGene;
@@ -128,15 +128,15 @@ public class LocusContainer {
         return uuid;
     }
 
-    public SpeciesAndLocus getSpeciesAndLocus() {
-        return speciesAndLocus;
+    public SpeciesAndChain getSpeciesAndChain() {
+        return speciesAndChain;
     }
 
-    public Locus getLocus() {
-        return speciesAndLocus.locus;
+    public Chain getLocus() {
+        return speciesAndChain.chain;
     }
 
     public boolean hasDGene() {
-        return speciesAndLocus.locus.hasDGene;
+        return speciesAndChain.chain.hasDGene;
     }
 }

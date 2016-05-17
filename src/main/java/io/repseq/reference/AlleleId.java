@@ -36,15 +36,15 @@ import java.util.UUID;
 public final class AlleleId implements Comparable<AlleleId> {
     static final long serialVersionUID = 1L;
     final UUID containerUUID;
-    final SpeciesAndLocus speciesAndLocus;
+    final SpeciesAndChain speciesAndChain;
     final String name;
 
-    public AlleleId(UUID containerUUID, SpeciesAndLocus speciesAndLocus, String name) {
-        if (containerUUID == null || speciesAndLocus == null || name == null)
+    public AlleleId(UUID containerUUID, SpeciesAndChain speciesAndChain, String name) {
+        if (containerUUID == null || speciesAndChain == null || name == null)
             throw new NullPointerException();
 
         this.containerUUID = containerUUID;
-        this.speciesAndLocus = speciesAndLocus;
+        this.speciesAndChain = speciesAndChain;
         this.name = name;
     }
 
@@ -56,8 +56,8 @@ public final class AlleleId implements Comparable<AlleleId> {
         return containerUUID;
     }
 
-    public SpeciesAndLocus getSpeciesAndLocus() {
-        return speciesAndLocus;
+    public SpeciesAndChain getSpeciesAndChain() {
+        return speciesAndChain;
     }
 
     public String getName() {
@@ -73,7 +73,7 @@ public final class AlleleId implements Comparable<AlleleId> {
 
         if (!containerUUID.equals(alleleId.containerUUID)) return false;
         if (!name.equals(alleleId.name)) return false;
-        if (!speciesAndLocus.equals(alleleId.speciesAndLocus)) return false;
+        if (!speciesAndChain.equals(alleleId.speciesAndChain)) return false;
 
         return true;
     }
@@ -81,7 +81,7 @@ public final class AlleleId implements Comparable<AlleleId> {
     @Override
     public int hashCode() {
         int result = containerUUID.hashCode();
-        result = 31 * result + speciesAndLocus.hashCode();
+        result = 31 * result + speciesAndChain.hashCode();
         result = 31 * result + name.hashCode();
         return result;
     }
@@ -95,6 +95,6 @@ public final class AlleleId implements Comparable<AlleleId> {
             return r;
         if ((r = name.compareTo(o.name)) != 0)
             return r;
-        return speciesAndLocus.compareTo(o.speciesAndLocus);
+        return speciesAndChain.compareTo(o.speciesAndChain);
     }
 }

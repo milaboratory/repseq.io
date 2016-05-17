@@ -28,9 +28,6 @@
  */
 package io.repseq.reference;
 
-import io.repseq.reference.GeneGroup;
-import io.repseq.reference.GeneType;
-import io.repseq.reference.Locus;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,9 +35,9 @@ public class GeneGroupTest {
     @Test
     public void test1() throws Exception {
         for (GeneType type : GeneType.values())
-            for (Locus locus : Locus.values())
-                Assert.assertTrue((!locus.hasDSegment() && type == GeneType.Diversity)
-                        || GeneGroup.get(locus, type) != null);
+            for (Chain chain : Chain.values())
+                Assert.assertTrue((!chain.hasDSegment() && type == GeneType.Diversity)
+                        || GeneGroup.get(chain, type) != null);
     }
 
     @Test

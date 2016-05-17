@@ -46,10 +46,10 @@ public abstract class Allele
     protected Allele(Gene gene, String name, boolean isFunctional) {
         this.gene = gene;
         this.locusContainer = gene.locusContainer;
-        this.taxonId = locusContainer.getSpeciesAndLocus().taxonId;
+        this.taxonId = locusContainer.getSpeciesAndChain().taxonId;
         this.name = name;
         this.isFunctional = isFunctional;
-        this.alleleId = new AlleleId(getLocusContainer().getUUID(), getLocusContainer().getSpeciesAndLocus(), name);
+        this.alleleId = new AlleleId(getLocusContainer().getUUID(), getLocusContainer().getSpeciesAndChain(), name);
     }
 
     public final boolean isComplete() {
@@ -84,8 +84,8 @@ public abstract class Allele
         return getGeneGroup().getType();
     }
 
-    public final Locus getLocus() {
-        return getGeneGroup().getLocus();
+    public final Chain getLocus() {
+        return getGeneGroup().getChain();
     }
 
     public final boolean isFunctional() {

@@ -37,41 +37,41 @@ package io.repseq.reference;
  */
 public enum GeneGroup implements java.io.Serializable {
     //TRA
-    TRAC("TRAC", GeneType.Constant, Locus.TRA), TRAJ("TRAJ", GeneType.Joining, Locus.TRA),
-    TRAV("TRAV", GeneType.Variable, Locus.TRA),
+    TRAC("TRAC", GeneType.Constant, Chain.TRA), TRAJ("TRAJ", GeneType.Joining, Chain.TRA),
+    TRAV("TRAV", GeneType.Variable, Chain.TRA),
 
     //TRB
-    TRBC("TRBC", GeneType.Constant, Locus.TRB), TRBD("TRBD", GeneType.Diversity, Locus.TRB),
-    TRBJ("TRBJ", GeneType.Joining, Locus.TRB), TRBV("TRBV", GeneType.Variable, Locus.TRB),
+    TRBC("TRBC", GeneType.Constant, Chain.TRB), TRBD("TRBD", GeneType.Diversity, Chain.TRB),
+    TRBJ("TRBJ", GeneType.Joining, Chain.TRB), TRBV("TRBV", GeneType.Variable, Chain.TRB),
 
     //TRG
-    TRGC("TRGC", GeneType.Constant, Locus.TRG), TRGJ("TRGJ", GeneType.Joining, Locus.TRG),
-    TRGV("TRGV", GeneType.Variable, Locus.TRG),
+    TRGC("TRGC", GeneType.Constant, Chain.TRG), TRGJ("TRGJ", GeneType.Joining, Chain.TRG),
+    TRGV("TRGV", GeneType.Variable, Chain.TRG),
 
     //TRD
-    TRDC("TRDC", GeneType.Constant, Locus.TRD), TRDD("TRDD", GeneType.Diversity, Locus.TRD),
-    TRDJ("TRDJ", GeneType.Joining, Locus.TRD), TRDV("TRDV", GeneType.Variable, Locus.TRD),
+    TRDC("TRDC", GeneType.Constant, Chain.TRD), TRDD("TRDD", GeneType.Diversity, Chain.TRD),
+    TRDJ("TRDJ", GeneType.Joining, Chain.TRD), TRDV("TRDV", GeneType.Variable, Chain.TRD),
 
     //IGL
-    IGLC("IGLC", GeneType.Constant, Locus.IGL), IGLJ("IGLJ", GeneType.Joining, Locus.IGL),
-    IGLV("IGLV", GeneType.Variable, Locus.IGL),
+    IGLC("IGLC", GeneType.Constant, Chain.IGL), IGLJ("IGLJ", GeneType.Joining, Chain.IGL),
+    IGLV("IGLV", GeneType.Variable, Chain.IGL),
 
     //IGK
-    IGKC("IGKC", GeneType.Constant, Locus.IGK), IGKJ("IGKJ", GeneType.Joining, Locus.IGK),
-    IGKV("IGKV", GeneType.Variable, Locus.IGK),
+    IGKC("IGKC", GeneType.Constant, Chain.IGK), IGKJ("IGKJ", GeneType.Joining, Chain.IGK),
+    IGKV("IGKV", GeneType.Variable, Chain.IGK),
 
     //IGH
-    IGHC("IGHC", GeneType.Constant, Locus.IGH), IGHD("IGHD", GeneType.Diversity, Locus.IGH),
-    IGHJ("IGHJ", GeneType.Joining, Locus.IGH), IGHV("IGHV", GeneType.Variable, Locus.IGH);
+    IGHC("IGHC", GeneType.Constant, Chain.IGH), IGHD("IGHD", GeneType.Diversity, Chain.IGH),
+    IGHJ("IGHJ", GeneType.Joining, Chain.IGH), IGHV("IGHV", GeneType.Variable, Chain.IGH);
 
     final String id;
     final GeneType type;
-    final Locus locus;
+    final Chain chain;
 
-    private GeneGroup(String id, GeneType type, Locus locus) {
+    private GeneGroup(String id, GeneType type, Chain chain) {
         this.id = id;
         this.type = type;
-        this.locus = locus;
+        this.chain = chain;
     }
 
     public GeneType getType() {
@@ -82,13 +82,13 @@ public enum GeneGroup implements java.io.Serializable {
         return id;
     }
 
-    public Locus getLocus() {
-        return locus;
+    public Chain getChain() {
+        return chain;
     }
 
-    public static GeneGroup get(Locus g, GeneType type) {
+    public static GeneGroup get(Chain g, GeneType type) {
         for (GeneGroup sg : values())
-            if (sg.locus == g && sg.type == type)
+            if (sg.chain == g && sg.type == type)
                 return sg;
         return null;
     }

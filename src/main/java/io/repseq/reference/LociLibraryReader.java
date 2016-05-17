@@ -142,9 +142,9 @@ public class LociLibraryReader {
 
     private void beginLocus() throws IOException {
         String locusId = stream.readUTF();
-        Locus locus = Locus.fromId(locusId);
-        if (locus == null)
-            throw new IOException("Unknown locus: " + locusId);
+        Chain chain = Chain.fromId(locusId);
+        if (chain == null)
+            throw new IOException("Unknown chain: " + locusId);
         int taxonId = stream.readInt();
         long lsb = stream.readLong();
         long msb = stream.readLong();
@@ -158,7 +158,7 @@ public class LociLibraryReader {
         for (GeneType gt : GeneType.values())
             alleles.put(gt, new ArrayList<Allele>());
 
-        container = new LocusContainer(uuid, new SpeciesAndLocus(taxonId, locus), genes, alleles,
+        container = new LocusContainer(uuid, new SpeciesAndChain(taxonId, chain), genes, alleles,
                 Collections.unmodifiableMap(nameToGenes = new HashMap<>()),
                 Collections.unmodifiableMap(nameToAlleles = new HashMap<>()),
                 Collections.unmodifiableList(allGenes = new ArrayList<>()));
@@ -204,7 +204,7 @@ public class LociLibraryReader {
                 throw new IOException("First gene allele is not reference.");
             List<Gene> gs = genes.get(type);
             gs.add(gene =
-                    new Gene(gs.size(), geneName, GeneGroup.get(container.getSpeciesAndLocus().locus, type), container));
+                    new Gene(gs.size(), geneName, GeneGroup.get(container.getSpeciesAndChain().chain, type), container));
             Gene gg = nameToGenes.put(geneName, gene);
             assert gg == null;
             allGenes.add(gene);

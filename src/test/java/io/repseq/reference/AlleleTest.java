@@ -70,7 +70,7 @@ public class AlleleTest {
         Mockito.when(ll.getBase()).thenReturn(base);
         container = Mockito.mock(LocusContainer.class);
         Mockito.when(container.getLibrary()).thenReturn(ll);
-        Mockito.when(container.getSpeciesAndLocus()).thenReturn(new SpeciesAndLocus(1, Locus.TRB));
+        Mockito.when(container.getSpeciesAndChain()).thenReturn(new SpeciesAndChain(1, Chain.TRB));
         Mockito.when(container.getUUID()).thenReturn(UUID.randomUUID());
 
         Gene gene = new Gene(0, "Gene", GeneGroup.TRBV, container);

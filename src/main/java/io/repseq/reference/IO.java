@@ -64,16 +64,16 @@ class IO {
         @Override
         public void write(PrimitivO output, AlleleId object) {
             output.writeObject(object.containerUUID);
-            output.writeObject(object.speciesAndLocus);
+            output.writeObject(object.speciesAndChain);
             output.writeUTF(object.name);
         }
 
         @Override
         public AlleleId read(PrimitivI input) {
             UUID uuid = input.readObject(UUID.class);
-            SpeciesAndLocus speciesAndLocus = input.readObject(SpeciesAndLocus.class);
+            SpeciesAndChain speciesAndChain = input.readObject(SpeciesAndChain.class);
             String name = input.readUTF();
-            return new AlleleId(uuid, speciesAndLocus, name);
+            return new AlleleId(uuid, speciesAndChain, name);
         }
 
         @Override
@@ -87,17 +87,17 @@ class IO {
         }
     }
 
-    public static class SpeciesAndLocusSerializer implements Serializer<SpeciesAndLocus> {
+    public static class SpeciesAndLocusSerializer implements Serializer<SpeciesAndChain> {
         @Override
-        public void write(PrimitivO output, SpeciesAndLocus object) {
+        public void write(PrimitivO output, SpeciesAndChain object) {
             output.writeVarInt(object.taxonId);
-            output.writeObject(object.locus);
+            output.writeObject(object.chain);
         }
 
         @Override
-        public SpeciesAndLocus read(PrimitivI input) {
+        public SpeciesAndChain read(PrimitivI input) {
             int taxonId = input.readVarInt();
-            return new SpeciesAndLocus(taxonId, input.readObject(Locus.class));
+            return new SpeciesAndChain(taxonId, input.readObject(Chain.class));
         }
 
         @Override

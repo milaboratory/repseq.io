@@ -31,14 +31,14 @@ package io.repseq.reference;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 @Serializable(by = IO.SpeciesAndLocusSerializer.class)
-public final class SpeciesAndLocus implements Comparable<SpeciesAndLocus>, java.io.Serializable {
+public final class SpeciesAndChain implements Comparable<SpeciesAndChain>, java.io.Serializable {
     //static final long serialVersionUID = 1L;
     public final int taxonId;
-    public final Locus locus;
+    public final Chain chain;
 
-    public SpeciesAndLocus(int taxonId, Locus locus) {
+    public SpeciesAndChain(int taxonId, Chain chain) {
         this.taxonId = taxonId;
-        this.locus = locus;
+        this.chain = chain;
     }
 
     @Override
@@ -46,9 +46,9 @@ public final class SpeciesAndLocus implements Comparable<SpeciesAndLocus>, java.
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        SpeciesAndLocus that = (SpeciesAndLocus) o;
+        SpeciesAndChain that = (SpeciesAndChain) o;
 
-        if (locus != that.locus) return false;
+        if (chain != that.chain) return false;
 
         return taxonId == that.taxonId;
     }
@@ -56,19 +56,19 @@ public final class SpeciesAndLocus implements Comparable<SpeciesAndLocus>, java.
     @Override
     public int hashCode() {
         int result = taxonId;
-        result = 31 * result + locus.hashCode();
+        result = 31 * result + chain.hashCode();
         return result;
     }
 
     @Override
     public String toString() {
-        return "" + taxonId + ":" + locus;
+        return "" + taxonId + ":" + chain;
     }
 
     @Override
-    public int compareTo(SpeciesAndLocus o) {
+    public int compareTo(SpeciesAndChain o) {
         int r;
-        if ((r = locus.compareTo(o.locus)) != 0)
+        if ((r = chain.compareTo(o.chain)) != 0)
             return r;
         return Integer.compare(taxonId, o.taxonId);
     }

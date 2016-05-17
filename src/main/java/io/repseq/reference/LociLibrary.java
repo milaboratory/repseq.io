@@ -41,28 +41,28 @@ public class LociLibrary implements AlleleResolver {
     final Map<String, String> properties = new HashMap<>();
     final Map<Integer, Map<String, Allele>> alleles = new HashMap<>();
     final Map<Integer, Map<String, Gene>> genes = new HashMap<>();
-    final Map<SpeciesAndLocus, LocusContainer> loci = new HashMap<>();
+    final Map<SpeciesAndChain, LocusContainer> loci = new HashMap<>();
 
     public void registerContainer(LocusContainer container) {
-        if (loci.containsKey(container.getSpeciesAndLocus()))
-            throw new IllegalArgumentException("This species/locus combination already registered. (" + container.getSpeciesAndLocus() + ")");
+        if (loci.containsKey(container.getSpeciesAndChain()))
+            throw new IllegalArgumentException("This species/chain combination already registered. (" + container.getSpeciesAndChain() + ")");
 
-        loci.put(container.getSpeciesAndLocus(), container);
+        loci.put(container.getSpeciesAndChain(), container);
         container.setLibrary(this);
 
-        Map<String, Allele> am = alleles.get(container.getSpeciesAndLocus().taxonId);
+        Map<String, Allele> am = alleles.get(container.getSpeciesAndChain().taxonId);
         if (am == null)
-            alleles.put(container.getSpeciesAndLocus().taxonId, am = new HashMap<>());
+            alleles.put(container.getSpeciesAndChain().taxonId, am = new HashMap<>());
         am.putAll(container.nameToAllele);
         allAlleles.addAll(container.getAllAlleles());
 
-        Map<String, Gene> gm = genes.get(container.getSpeciesAndLocus().taxonId);
+        Map<String, Gene> gm = genes.get(container.getSpeciesAndChain().taxonId);
         if (gm == null)
-            genes.put(container.getSpeciesAndLocus().taxonId, gm = new HashMap<>());
+            genes.put(container.getSpeciesAndChain().taxonId, gm = new HashMap<>());
         gm.putAll(container.nameToGene);
     }
 
-    public Map<SpeciesAndLocus, LocusContainer> getLociMap() {
+    public Map<SpeciesAndChain, LocusContainer> getLociMap() {
         return unmodifiableMap(loci);
     }
 
@@ -70,7 +70,7 @@ public class LociLibrary implements AlleleResolver {
         return unmodifiableCollection(loci.values());
     }
 
-    public LocusContainer getLocus(String species, Locus locus) {
+    public LocusContainer getLocus(String species, Chain chain) {
         Integer taxonId = knownSpecies.get(species);
 
         if (taxonId == null)
@@ -79,25 +79,25 @@ public class LociLibrary implements AlleleResolver {
         if (taxonId == null || taxonId == -1)
             return null;
 
-        return getLocus(taxonId, locus);
+        return getLocus(taxonId, chain);
     }
 
     @Override
     public Allele getAllele(AlleleId id) {
-        final LocusContainer locusContainer = loci.get(id.getSpeciesAndLocus());
+        final LocusContainer locusContainer = loci.get(id.getSpeciesAndChain());
 
         if (locusContainer == null)
-            throw new IllegalArgumentException("No container for " + id.getSpeciesAndLocus());
+            throw new IllegalArgumentException("No container for " + id.getSpeciesAndChain());
 
         return locusContainer.getAllele(id);
     }
 
-    public LocusContainer getLocus(int taxonId, Locus locus) {
-        return loci.get(new SpeciesAndLocus(taxonId, locus));
+    public LocusContainer getLocus(int taxonId, Chain chain) {
+        return loci.get(new SpeciesAndChain(taxonId, chain));
     }
 
-    public LocusContainer getLocus(SpeciesAndLocus speciesAndLocus) {
-        return loci.get(speciesAndLocus);
+    public LocusContainer getLocus(SpeciesAndChain speciesAndChain) {
+        return loci.get(speciesAndChain);
     }
 
     public String getProperty(String name) {

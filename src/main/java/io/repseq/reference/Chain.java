@@ -36,7 +36,7 @@ import java.util.ArrayList;
  * @author Bolotin Dmitriy (bolotin.dmitriy@gmail.com)
  * @author Shugay Mikhail (mikhail.shugay@gmail.com)
  */
-public enum Locus implements java.io.Serializable {
+public enum Chain implements java.io.Serializable {
     TRA("TRA", "alpha", false), TRB("TRB", "beta", true),
     TRG("TRG", "gamma", false), TRD("TRD", "delta", true),
     IGL("IGL", "lambda", false), IGK("IGK", "kappa", false),
@@ -46,7 +46,7 @@ public enum Locus implements java.io.Serializable {
     final boolean ig;
     final boolean hasDGene;
 
-    Locus(String id, String greekLetter, boolean hasDGene) {
+    Chain(String id, String greekLetter, boolean hasDGene) {
         this.id = id;
         this.hasDGene = hasDGene;
         this.greekLetter = greekLetter;
@@ -69,18 +69,18 @@ public enum Locus implements java.io.Serializable {
         return greekLetter;
     }
 
-    public static Locus fromId(String id) {
-        for (Locus g : values())
+    public static Chain fromId(String id) {
+        for (Chain g : values())
             if (id.equalsIgnoreCase(g.id))
                 return g;
         return null;
     }
 
-    public static Locus fromIdSafe(String id) {
-        for (Locus g : values())
+    public static Chain fromIdSafe(String id) {
+        for (Chain g : values())
             if (id.equalsIgnoreCase(g.id))
                 return g;
-        throw new IllegalArgumentException("Unknown locus:" + id);
+        throw new IllegalArgumentException("Unknown chain:" + id);
     }
 
     @Override
@@ -88,23 +88,23 @@ public enum Locus implements java.io.Serializable {
         return id;
     }
 
-    static final Locus[] lT, lIG;
+    static final Chain[] lT, lIG;
 
     static {
-        ArrayList<Locus> ig = new ArrayList<>(), t = new ArrayList<>();
-        for (Locus l : values())
+        ArrayList<Chain> ig = new ArrayList<>(), t = new ArrayList<>();
+        for (Chain l : values())
             if (l.isIg())
                 ig.add(l);
             else t.add(l);
-        lT = t.toArray(new Locus[t.size()]);
-        lIG = ig.toArray(new Locus[t.size()]);
+        lT = t.toArray(new Chain[t.size()]);
+        lIG = ig.toArray(new Chain[t.size()]);
     }
 
-    public static Locus[] getAllTCRLoci() {
+    public static Chain[] getAllTCRLoci() {
         return lT.clone();
     }
 
-    public static Locus[] getAllBCRLoci() {
+    public static Chain[] getAllBCRLoci() {
         return lIG.clone();
     }
 }

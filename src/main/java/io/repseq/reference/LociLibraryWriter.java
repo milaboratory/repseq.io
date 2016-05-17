@@ -107,34 +107,34 @@ public class LociLibraryWriter {
 
 
     /**
-     * Writes header of a set of segments (e.g. segments from one locus).
+     * Writes header of a set of segments (e.g. segments from one chain).
      *
      * @param taxonId NCBI taxon id (see: <a href="http://www.ncbi.nlm.nih.gov/taxonomy">http://www.ncbi.nlm.nih.gov/taxonomy</a>)
-     * @param locus   gene
+     * @param chain   gene
      * @throws java.io.IOException if an I/O error occurs.
      */
-    public void writeBeginOfLocus(int taxonId, Locus locus) throws IOException {
-        writeBeginOfLocus(taxonId, locus, UUID.randomUUID());
+    public void writeBeginOfLocus(int taxonId, Chain chain) throws IOException {
+        writeBeginOfLocus(taxonId, chain, UUID.randomUUID());
     }
 
     /**
-     * Writes header of a set of segments (e.g. segments from one locus).
+     * Writes header of a set of segments (e.g. segments from one chain).
      *
      * @param taxonId NCBI taxon id (see: <a href="http://www.ncbi.nlm.nih.gov/taxonomy">http://www.ncbi.nlm.nih.gov/taxonomy</a>)
-     * @param locus   gene
+     * @param chain   gene
      * @param uuid    uuid
      * @throws java.io.IOException if an I/O error occurs.
      */
-    public void writeBeginOfLocus(int taxonId, Locus locus, UUID uuid) throws IOException {
+    public void writeBeginOfLocus(int taxonId, Chain chain, UUID uuid) throws IOException {
         stream.writeByte(LOCUS_BEGIN_TYPE);
-        stream.writeUTF(locus.getId());
+        stream.writeUTF(chain.getId());
         stream.writeInt(taxonId);
         stream.writeLong(uuid.getLeastSignificantBits());
         stream.writeLong(uuid.getMostSignificantBits());
     }
 
     /**
-     * Writes end of locus.
+     * Writes end of chain.
      *
      * @throws java.io.IOException if an I/O error occurs.
      */
