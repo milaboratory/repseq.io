@@ -36,7 +36,7 @@ public class ReferenceUtil {
     /**
      * For advanced use.
      */
-    public static final int TOTAL_NUMBER_OF_REFERENCE_POINTS = BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS;
+    public static final int TOTAL_NUMBER_OF_REFERENCE_POINTS = BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS;
 
     private static final Map<GeneType, ReferencePoint[]> allBasicPointsByTypes;
 

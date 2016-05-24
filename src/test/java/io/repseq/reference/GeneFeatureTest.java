@@ -29,9 +29,6 @@
 package io.repseq.reference;
 
 import com.milaboratory.util.IntArrayList;
-import io.repseq.reference.BasicReferencePoint;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.ReferencePoint;
 import junit.framework.Assert;
 import org.apache.commons.math3.random.Well44497a;
 import org.junit.Ignore;
@@ -272,7 +269,7 @@ public class GeneFeatureTest {
     @Test
     public void testRandom1() {
         Well44497a rand = new Well44497a();
-        int tn = BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS;
+        int tn = BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS;
         for (int baseBlock = 2; baseBlock < 5; ++baseBlock)
             for (int t = 0; t < 1000; ++t) {
                 int[] all = new int[tn];

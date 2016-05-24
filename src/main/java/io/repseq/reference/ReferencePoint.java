@@ -42,10 +42,7 @@ import com.milaboratory.primitivio.annotations.Serializable;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a {@link BasicReferencePoint} with offset.
@@ -356,6 +353,8 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
 
     private static Map<String, ReferencePoint> pointByName = null;
     private static Map<ReferencePoint, List<String>> nameByPoint = null;
+    private static EnumMap<BasicReferencePoint, ReferencePoint> fromBasicBeginBiased = null;
+    private static EnumMap<BasicReferencePoint, ReferencePoint> fromBasicEndBiased = null;
 
     private static void ensureInitialized() {
         if (pointByName == null) {
@@ -364,6 +363,10 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
                     try {
                         Map<String, ReferencePoint> fbn = new HashMap<>();
                         Map<ReferencePoint, List<String>> nbf = new HashMap<>();
+
+                        EnumMap<BasicReferencePoint, ReferencePoint> fromBasicBB = new EnumMap<>(BasicReferencePoint.class);
+                        EnumMap<BasicReferencePoint, ReferencePoint> fromBasicEB = new EnumMap<>(BasicReferencePoint.class);
+
                         Field[] declaredFields = ReferencePoint.class.getDeclaredFields();
                         for (Field field : declaredFields)
                             if (Modifier.isStatic(field.getModifiers()) &&
@@ -377,15 +380,31 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
                                     nbf.put(value, l);
                                 }
                                 l.add(name);
+
+                                if (!fromBasicBB.containsKey(value.basicPoint) || name.contains("Begin"))
+                                    fromBasicBB.put(value.basicPoint, value);
+                                if (!fromBasicEB.containsKey(value.basicPoint) || name.contains("End"))
+                                    fromBasicEB.put(value.basicPoint, value);
+
                             }
                         pointByName = fbn;
                         nameByPoint = nbf;
+                        fromBasicBeginBiased = fromBasicBB;
+                        fromBasicEndBiased = fromBasicEB;
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
                 }
             }
         }
+    }
+
+    static ReferencePoint fromBasic(BasicReferencePoint basic, boolean begin){
+        ensureInitialized();
+        if(begin)
+            return fromBasicBeginBiased.get(basic);
+        else
+            return fromBasicEndBiased.get(basic);
     }
 
     public static ReferencePoint getPointByName(String pointName) {

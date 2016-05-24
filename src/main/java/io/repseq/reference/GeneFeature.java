@@ -477,7 +477,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         for (int i = 1; i < ranges.length; ++i) {
             cur = ranges[i];
             if (cur.begin.compareTo(prev.end) < 0)
-                throw new IllegalArgumentException("Intersecting ranges.");
+                throw new IllegalArgumentException("Intersecting regions.");
             if (cur.begin.equals(prev.end) && cur.isReversed() == prev.isReversed()) {
                 //merge
                 prev = new ReferenceRange(prev.begin, cur.end);

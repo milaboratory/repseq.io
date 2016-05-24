@@ -28,9 +28,12 @@
  */
 package io.repseq.reference;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.test.TestUtil;
+import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -147,5 +150,27 @@ public class ReferencePointsTest {
         Assert.assertEquals(
                 new ReferencePoints(2, new int[]{0, 5, 11, -1, 11, 35, 47}),
                 points.getRelativeReferencePoints(feature).applyMutations(mutations));
+    }
+
+    @Test
+    public void testSerialization1() throws Exception {
+        ReferencePoints points = new ReferencePoints(0, new int[]{2, 52, 63, 84, 155, 455, 645, 1255, 2142});
+        TestUtil.assertJson(points, true);
+    }
+
+    @Test(expected = JsonProcessingException.class)
+    public void testSerialization2() throws Exception {
+        String str = "[{" +
+                "\"UTR5Begin\":2,\n" +
+                "\"L1Begin\":52,\n" +
+                "\"VIntronBegin\":87,\n" +
+                "\"L2Begin\":84,\n" +
+                "\"FR1Begin\":155,\n" +
+                "\"CDR1Begin\":455,\n" +
+                "\"FR2Begin\":645,\n" +
+                "\"CDR2Begin\":1255,\n" +
+                "\"FR3Begin\":2142\n" +
+                "}]";
+        GlobalObjectMappers.ONE_LINE.readValue(str, ReferencePoints[].class);
     }
 }

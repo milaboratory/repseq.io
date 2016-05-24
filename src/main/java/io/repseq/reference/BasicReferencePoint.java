@@ -130,10 +130,10 @@ enum BasicReferencePoint implements java.io.Serializable {
     }
 
     private final static BasicReferencePoint[] allReferencePoints;
-    public static final int TOTAL_NUMBER_OF_REFERENCE_POINTS = 19;
+    public static final int TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS = 19;
 
     static {
-        allReferencePoints = new BasicReferencePoint[TOTAL_NUMBER_OF_REFERENCE_POINTS];
+        allReferencePoints = new BasicReferencePoint[TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS];
 
         for (BasicReferencePoint rp : values()) {
             if (rp.isAttachedToAlignmentBound())

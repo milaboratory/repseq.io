@@ -129,7 +129,7 @@ public class LociLibraryIOUtils {
             }
         }
 
-        // Collecting ranges to remove
+        // Collecting regions to remove
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file))) {
             Listener listener = new Listener();
             LociLibraryReader reader = new LociLibraryReader(bis, false).setListener(listener);

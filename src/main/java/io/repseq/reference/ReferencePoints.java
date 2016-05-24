@@ -29,22 +29,34 @@
 package io.repseq.reference;
 
 
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.SequencePartitioning;
 
+import java.io.IOException;
 import java.util.Arrays;
+
+import static io.repseq.reference.BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS;
 
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
+@JsonSerialize(using = ReferencePoints.JSerializer.class)
+@JsonDeserialize(using = ReferencePoints.JDeserializer.class)
 public final class ReferencePoints extends SequencePartitioning implements java.io.Serializable {
     final int[] points;
     final boolean reversed;
 
     public ReferencePoints(int[] points) {
-        if (points.length != BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS)
+        if (points.length != TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS)
             throw new IllegalArgumentException("Illegal length of array.");
         Boolean rev = checkReferencePoints(points);
         this.reversed = rev == null ? false : rev;
@@ -53,7 +65,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
 
     public ReferencePoints(int start, int[] points) {
         Boolean rev = checkReferencePoints(points);
-        int[] array = new int[BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS];
+        int[] array = new int[TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS];
         Arrays.fill(array, -1);
         System.arraycopy(points, 0, array, start, points.length);
         this.points = array;
@@ -69,7 +81,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
         return ret;
     }
 
-    private static Boolean checkReferencePoints(int[] points) {
+    static Boolean checkReferencePoints(int[] points) {
         Boolean reversed = null;
 
         int first = -1;
@@ -183,7 +195,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
     @Override
     public int hashCode() {
         int hash = 31;
-        for (int i = 0; i < BasicReferencePoint.TOTAL_NUMBER_OF_REFERENCE_POINTS; ++i)
+        for (int i = 0; i < TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS; ++i)
             hash = getPosition(i) + hash * 17;
         return hash;
     }
@@ -191,5 +203,48 @@ public final class ReferencePoints extends SequencePartitioning implements java.
     @Override
     public String toString() {
         return Arrays.toString(points);
+    }
+
+    public static final class JSerializer extends JsonSerializer<ReferencePoints> {
+        @Override
+        public void serialize(ReferencePoints value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+            jgen.writeStartObject();
+            for (int i = 0; i < TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS; i++) {
+                if (value.points[i] >= 0) {
+                    String point = ReferencePoint.encode(new ReferencePoint(BasicReferencePoint.getByIndex(i)), true);
+                    jgen.writeNumberField(point, value.points[i]);
+                }
+            }
+            jgen.writeEndObject();
+        }
+    }
+
+    public static final class JDeserializer extends JsonDeserializer<ReferencePoints> {
+        @Override
+        public ReferencePoints deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+            ReferencePointsBuilder builder = new ReferencePointsBuilder();
+
+            while (true) {
+                JsonToken jsonToken = jp.nextToken();
+                if (jsonToken == JsonToken.END_OBJECT)
+                    break;
+                else if (jsonToken == JsonToken.FIELD_NAME) {
+                    String anchorPoint = jp.getCurrentName();
+                    ReferencePoint point = ReferencePoint.parse(anchorPoint);
+
+                    if (jp.nextToken() != JsonToken.VALUE_NUMBER_INT)
+                        throw ctxt.wrongTokenException(jp, JsonToken.VALUE_NUMBER_INT, "Position of anchor point expected.");
+
+                    try {
+                        builder.setPosition(point, jp.getIntValue());
+                    } catch (IllegalArgumentException e) {
+                        throw new JsonParseException(jp, "Error while parsing anchor points.", e);
+                    }
+                } else
+                    throw ctxt.wrongTokenException(jp, JsonToken.FIELD_NAME, null);
+            }
+
+            return builder.build();
+        }
     }
 }
