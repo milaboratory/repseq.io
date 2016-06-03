@@ -26,7 +26,7 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package io.repseq.reference;
+package io.repseq.util;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NucleotideSequence;
@@ -41,32 +41,32 @@ import static java.util.Map.Entry;
  * Storage of fragmented sequences.
  */
 public final class SequenceBase {
-    private final Map<String, SequenceContainer> library = new HashMap<>();
+    private final Map<String, SequenceContainer> cache = new HashMap<>();
 
     public void put(String accession, int from, NucleotideSequence sequence) {
-        SequenceContainer container = library.get(accession);
+        SequenceContainer container = cache.get(accession);
         if (container == null)
-            library.put(accession, new SequenceContainer(from, sequence));
+            cache.put(accession, new SequenceContainer(from, sequence));
         else
             container.put(from, sequence);
     }
 
     public NucleotideSequence get(String accession, Range range) {
-        SequenceContainer c = library.get(accession);
+        SequenceContainer c = cache.get(accession);
         if (c == null)
             return null;
         return c.get(range);
     }
 
     public Range getAvailableRange(String accession, Range range) {
-        SequenceContainer c = library.get(accession);
+        SequenceContainer c = cache.get(accession);
         if (c == null)
             return null;
         return c.getAvailableRange(range);
     }
 
     public boolean isEmpty() {
-        return library.isEmpty();
+        return cache.isEmpty();
     }
 
     private static final class SequenceContainer {
@@ -151,7 +151,7 @@ public final class SequenceBase {
                 if (singleRange.contains(range))
                     return singleSequence.getRange(range.move(-singleRange.getLower()));
                 else return null;
-            Entry<Range, NucleotideSequence> entry = map.getEntryThatContains(range);
+            Entry<Range, NucleotideSequence> entry = map.findContaining(range);
             if (entry == null)
                 return null;
             return entry.getValue().getRange(range.move(-entry.getKey().getLower()));
@@ -162,7 +162,7 @@ public final class SequenceBase {
                 if (singleRange.contains(range))
                     return singleRange;
                 else return null;
-            Entry<Range, NucleotideSequence> entry = map.getEntryThatContains(range);
+            Entry<Range, NucleotideSequence> entry = map.findContaining(range);
             if (entry == null)
                 return null;
             return entry.getKey();

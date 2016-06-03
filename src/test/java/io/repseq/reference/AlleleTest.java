@@ -31,6 +31,7 @@ package io.repseq.reference;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import io.repseq.util.SequenceBase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

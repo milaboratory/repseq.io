@@ -26,11 +26,10 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package io.repseq.reference;
+package io.repseq.util;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.reference.SequenceBase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

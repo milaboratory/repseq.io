@@ -28,6 +28,8 @@
  */
 package io.repseq.reference;
 
+import io.repseq.util.SequenceBase;
+
 import java.util.*;
 
 import static java.util.Collections.unmodifiableCollection;
