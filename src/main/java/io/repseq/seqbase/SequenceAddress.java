@@ -16,8 +16,20 @@ public final class SequenceAddress {
      */
     final URI uri;
 
+    public SequenceAddress(String uri) {
+        this(null, URI.create(uri));
+    }
+
+    public SequenceAddress(URI uri) {
+        this(null, uri);
+    }
+
+    public SequenceAddress(Path context, String uri) {
+        this(context, URI.create(uri));
+    }
+
     public SequenceAddress(Path context, URI uri) {
-        this.context = context;
+        this.context = context == null ? null : context.normalize();
         this.uri = uri;
     }
 
@@ -27,6 +39,11 @@ public final class SequenceAddress {
 
     public URI getUri() {
         return uri;
+    }
+
+    @Override
+    public String toString() {
+        return uri.toString() + " (rel. " + context + ")";
     }
 
     @Override

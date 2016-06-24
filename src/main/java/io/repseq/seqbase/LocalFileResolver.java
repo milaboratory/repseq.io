@@ -4,6 +4,7 @@ import com.milaboratory.util.LongProcessReporter;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public final class LocalFileResolver extends AbstractRAFastaResolver implements OptionalSequenceResolver {
     public LocalFileResolver() {
@@ -30,12 +31,15 @@ public final class LocalFileResolver extends AbstractRAFastaResolver implements 
 
     @Override
     protected Path getFASTAFile(SequenceAddress address) {
-        String relativePath = address.getUri().getRawSchemeSpecificPart();
-        return address.getContext().resolve(relativePath).normalize();
+        Path path = Paths.get(address.getUri().getRawSchemeSpecificPart().replaceAll("^//", "")).normalize();
+        if (path.isAbsolute())
+            return path;
+        else
+            return address.getContext().resolve(path).normalize();
     }
 
     @Override
     public boolean canResolve(SequenceAddress address) {
-        return false;
+        return "file".equalsIgnoreCase(address.uri.getScheme());
     }
 }

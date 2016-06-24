@@ -7,34 +7,37 @@ public final class HTTPSequenceResolvers {
     }
 
     /**
-     * gi:568815591
+     * gi://568815591
      */
     public static class NucCoreGIResolver extends HTTPSequenceResolver {
         public NucCoreGIResolver(HTTPResolversContext context) {
             super(context);
         }
 
+        private String extractId(URI address) {
+            return address.getAuthority();
+        }
+
         @Override
         protected String resolveCacheFileName(URI address) {
-            String id = address.getRawSchemeSpecificPart();
-            return "gi_" + id;
+            return "gi_" + extractId(address);
         }
 
         @Override
         protected URI resolveHTTPAddress(URI address) {
-            String id = address.getRawSchemeSpecificPart();
             return URI.create("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" +
-                    id + "&rettype=fasta&retmode=text");
+                    extractId(address) +
+                    "&rettype=fasta&retmode=text");
         }
 
         @Override
         protected String resolveRecordId(URI address) {
-            return address.getRawSchemeSpecificPart();
+            return extractId(address);
         }
 
         @Override
         public boolean canResolve(SequenceAddress address) {
-            return "gi".equals(address.uri.getScheme());
+            return "gi".equalsIgnoreCase(address.uri.getScheme()) && address.uri.getAuthority() != null;
         }
     }
 }
