@@ -1,4 +1,4 @@
-package io.repseq.dto;
+package io.repseq.core;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -12,9 +12,16 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.SequenceBuilder;
+import com.milaboratory.core.sequence.provider.CachedSequenceProvider;
+import com.milaboratory.core.sequence.provider.SequenceProvider;
+import com.milaboratory.core.sequence.provider.SequenceProviderUtils;
+import io.repseq.seqbase.SequenceAddress;
+import io.repseq.seqbase.SequenceResolver;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 /**
@@ -29,14 +36,9 @@ import java.util.Arrays;
  * (1) cutting of specified regions with subsequent concatenation;
  * (2) application of mutations.
  */
-@JsonSerialize(using = BaseSequenceData.Serializer.class)
-@JsonDeserialize(using = BaseSequenceData.Deserializer.class)
-public class BaseSequenceData {
-    ///**
-    // * Context (e.g. path of file this object was deserialized from) of this base sequence to resolve relative paths of
-    // * fasta files
-    // */
-    //final Path context;
+@JsonSerialize(using = BaseSequence.Serializer.class)
+@JsonDeserialize(using = BaseSequence.Deserializer.class)
+public class BaseSequence {
     /**
      * URI of original sequence (e.g. gi://195360724 , file://some_fasta.fa#recordId etc...)
      */
@@ -51,14 +53,43 @@ public class BaseSequenceData {
      */
     final Mutations<NucleotideSequence> mutations;
 
-    public BaseSequenceData(URI origin, Range[] regions, Mutations<NucleotideSequence> mutations) {
+    public BaseSequence(URI origin, Range[] regions, Mutations<NucleotideSequence> mutations) {
         if (regions != null && regions.length == 0)
             regions = null;
         if (mutations != null && mutations.isEmpty())
             mutations = null;
+        if (mutations != null && regions == null)
+            throw new IllegalArgumentException("Only relative mutations are supported, please specify " +
+                    "regions/region for this sequence.");
         this.origin = origin;
         this.regions = regions;
         this.mutations = mutations;
+    }
+
+    /**
+     * Returns SequenceProvider to access underlying sequence
+     *
+     * @param context  resolution context
+     * @param resolver sequence resolver
+     * @return SequenceProvider to access underlying sequence
+     */
+    public SequenceProvider<NucleotideSequence> resolve(Path context, SequenceResolver resolver) {
+        CachedSequenceProvider<NucleotideSequence> originalProvider = resolver.resolve(new SequenceAddress(context, origin));
+        if (isPureOriginalSequence()) {
+            return originalProvider;
+        } else {
+            // TODO implement more lazy algorithm
+            int length = 0;
+            for (Range region : regions)
+                length += region.length();
+            SequenceBuilder<NucleotideSequence> builder = NucleotideSequence.ALPHABET.createBuilder()
+                    .ensureCapacity(length);
+            for (Range region : regions)
+                builder.append(originalProvider.getRegion(region));
+            NucleotideSequence seq = builder.createAndDestroy();
+            seq = mutations == null ? seq : mutations.mutate(seq);
+            return SequenceProviderUtils.fromSequence(seq);
+        }
     }
 
     /**
@@ -73,9 +104,9 @@ public class BaseSequenceData {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BaseSequenceData)) return false;
+        if (!(o instanceof BaseSequence)) return false;
 
-        BaseSequenceData that = (BaseSequenceData) o;
+        BaseSequence that = (BaseSequence) o;
 
         if (!origin.equals(that.origin)) return false;
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
@@ -92,9 +123,9 @@ public class BaseSequenceData {
         return result;
     }
 
-    public static final class Serializer extends JsonSerializer<BaseSequenceData> {
+    public static final class Serializer extends JsonSerializer<BaseSequence> {
         @Override
-        public void serialize(BaseSequenceData value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
+        public void serialize(BaseSequence value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
             if (value.isPureOriginalSequence())
                 gen.writeObject(value.origin);
             else {
@@ -115,9 +146,9 @@ public class BaseSequenceData {
     private static final TypeReference<Mutations<NucleotideSequence>> numMutationsRef = new TypeReference<Mutations<NucleotideSequence>>() {};
     private static final JavaType numMutationsType = TypeFactory.defaultInstance().constructParametricType(Mutations.class, NucleotideSequence.class);
 
-    public static final class Deserializer extends JsonDeserializer<BaseSequenceData> {
+    public static final class Deserializer extends JsonDeserializer<BaseSequence> {
         @Override
-        public BaseSequenceData deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        public BaseSequence deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
             if (p.getCurrentToken() == JsonToken.START_OBJECT) {
                 URI origin = null;
                 Range[] regions = null;
@@ -144,13 +175,13 @@ public class BaseSequenceData {
                             mutations = p.readValueAs(numMutationsRef);
                             break;
                         default:
-                            throw ctxt.reportInstantiationException(BaseSequenceData.class, "Unknown field: " + fieldName);
+                            throw ctxt.reportInstantiationException(BaseSequence.class, "Unknown field: " + fieldName);
                     }
                 }
-                return new BaseSequenceData(origin, regions, mutations);
+                return new BaseSequence(origin, regions, mutations);
             } else {
                 URI origin = p.readValueAs(URI.class);
-                return new BaseSequenceData(origin, null, null);
+                return new BaseSequence(origin, null, null);
             }
         }
     }

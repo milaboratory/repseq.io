@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.repseq.core.BaseSequence;
 import io.repseq.reference.ReferencePoint;
 
 import java.util.Map;
@@ -16,7 +17,7 @@ import java.util.Set;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class VDJCGeneData {
-    final BaseSequenceData baseSequence;
+    final BaseSequence baseSequence;
     final String name;
     final boolean isFunctional;
     final Set<String> chains;
@@ -25,7 +26,7 @@ public class VDJCGeneData {
     final Map<ReferencePoint, Long> anchorPoints;
 
     @JsonCreator
-    public VDJCGeneData(@JsonProperty("baseSequence") BaseSequenceData baseSequence,
+    public VDJCGeneData(@JsonProperty("baseSequence") BaseSequence baseSequence,
                         @JsonProperty("name") String name,
                         @JsonProperty("isFunctional") boolean isFunctional,
                         @JsonProperty("chains") Set<String> chains,
@@ -35,6 +36,26 @@ public class VDJCGeneData {
         this.isFunctional = isFunctional;
         this.chains = chains;
         this.anchorPoints = anchorPoints;
+    }
+
+    public BaseSequence getBaseSequence() {
+        return baseSequence;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isFunctional() {
+        return isFunctional;
+    }
+
+    public Set<String> getChains() {
+        return chains;
+    }
+
+    public Map<ReferencePoint, Long> getAnchorPoints() {
+        return anchorPoints;
     }
 
     @Override

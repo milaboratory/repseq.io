@@ -1,4 +1,4 @@
-package io.repseq.dto;
+package io.repseq.core;
 
 import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.Mutations;
@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import java.net.URI;
 
-public class BaseSequenceDataTest {
+public class BaseSequenceTest {
     @Test
     public void test1() throws Exception {
         //SequenceResolvers.initDefaultResolver(TempFileManager.getTempDir().toPath());
@@ -27,23 +27,23 @@ public class BaseSequenceDataTest {
 
         boolean sout = true;
 
-        BaseSequenceData seq = new BaseSequenceData(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), null, null);
+        BaseSequence seq = new BaseSequence(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), null, null);
         TestUtil.assertJson(seq, sout);
 
-        seq = new BaseSequenceData(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), new Range[]{}, null);
+        seq = new BaseSequence(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), new Range[]{}, null);
         TestUtil.assertJson(seq, sout);
 
-        seq = new BaseSequenceData(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), new Range[]{new Range(10, 30)}, null);
+        seq = new BaseSequence(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), new Range[]{new Range(10, 30)}, null);
         TestUtil.assertJson(seq, sout);
 
-        seq = new BaseSequenceData(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), new Range[]{new Range(10, 20), new Range(20, 30)}, null);
+        seq = new BaseSequence(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), new Range[]{new Range(10, 20), new Range(20, 30)}, null);
         TestUtil.assertJson(seq, sout);
 
-        seq = new BaseSequenceData(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), new Range[]{new Range(10, 20), new Range(20, 30)},
+        seq = new BaseSequence(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), new Range[]{new Range(10, 20), new Range(20, 30)},
                 Mutations.decode("", NucleotideSequence.ALPHABET));
         TestUtil.assertJson(seq, sout);
 
-        seq = new BaseSequenceData(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), new Range[]{new Range(10, 20), new Range(20, 30)},
+        seq = new BaseSequence(URI.create("file://some_fasta.fasta#24.6jsd21.Tut"), new Range[]{new Range(10, 20), new Range(20, 30)},
                 Mutations.decode("DC2SG5T", NucleotideSequence.ALPHABET));
         TestUtil.assertJson(seq, sout);
     }
