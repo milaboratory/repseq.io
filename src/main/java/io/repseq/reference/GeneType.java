@@ -28,12 +28,25 @@
  */
 package io.repseq.reference;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import java.io.IOException;
+
 /**
  * Group type of a segment.
  *
  * @author Bolotin Dmitriy (bolotin.dmitriy@gmail.com)
  * @author Shugay Mikhail (mikhail.shugay@gmail.com)
  */
+@JsonSerialize(using = GeneType.Serializer.class)
+@JsonDeserialize(using = GeneType.Deserializer.class)
 public enum GeneType implements java.io.Serializable {
     Variable((byte) 0, 'V', +1, 11),
     Diversity((byte) 2, 'D', 0, 2),
@@ -116,5 +129,22 @@ public enum GeneType implements java.io.Serializable {
 
     static {
         NUMBER_OF_TYPES = values().length;
+    }
+
+    public static final class Deserializer extends JsonDeserializer<GeneType> {
+        @Override
+        public GeneType deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+            String val = jp.getValueAsString();
+            if (val.length() == 1)
+                return GeneType.fromChar(val.charAt(0));
+            return GeneType.valueOf(val);
+        }
+    }
+
+    public static final class Serializer extends JsonSerializer<GeneType> {
+        @Override
+        public void serialize(GeneType value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+            jgen.writeString("" + value.letter);
+        }
     }
 }

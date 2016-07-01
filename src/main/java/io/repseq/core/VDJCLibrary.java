@@ -22,6 +22,10 @@ public class VDJCLibrary {
      */
     private final VDJCLibraryData libraryData;
     /**
+     * Library name
+     */
+    private final String name;
+    /**
      * Each library stores the link to it's parent registry
      */
     private final VDJCLibraryRegistry registry;
@@ -34,8 +38,9 @@ public class VDJCLibrary {
      */
     private final Map<String, VDJCGene> genes = new HashMap<>();
 
-    public VDJCLibrary(VDJCLibraryData libraryData, VDJCLibraryRegistry registry, Path context) {
+    public VDJCLibrary(VDJCLibraryData libraryData, String name, VDJCLibraryRegistry registry, Path context) {
         this.libraryData = libraryData;
+        this.name = name;
         this.registry = registry;
         this.context = context;
     }
@@ -67,8 +72,17 @@ public class VDJCLibrary {
      *
      * @return collection of all genes in this library
      */
-    public Collection<VDJCGene> getGenes(){
+    public Collection<VDJCGene> getGenes() {
         return genes.values();
+    }
+
+    /**
+     * Returns identifier of this library
+     *
+     * @return identifier of this library
+     */
+    public SpeciesAndLibraryName getSpeciesAndLibraryName() {
+        return new SpeciesAndLibraryName(libraryData.getTaxonId(), name);
     }
 
     /**

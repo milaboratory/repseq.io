@@ -4,6 +4,7 @@ import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.provider.SequenceProvider;
 import io.repseq.dto.VDJCGeneData;
+import io.repseq.reference.GeneType;
 import io.repseq.reference.ReferencePoints;
 
 import java.util.Set;
@@ -48,6 +49,15 @@ public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
     }
 
     /**
+     * Returns gene type
+     *
+     * @return gene type
+     */
+    public GeneType getGeneType() {
+        return data.getGeneType();
+    }
+
+    /**
      * Returns true if this gene marked as functional
      *
      * @return true if this gene marked as functional
@@ -65,7 +75,7 @@ public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
     public Set<String> getChains() {
         return data.getChains();
     }
-    
+
     @Override
     protected NucleotideSequence getSequence(Range range) {
         return sequenceProvider.getRegion(range);

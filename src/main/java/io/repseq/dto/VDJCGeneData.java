@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.repseq.core.BaseSequence;
+import io.repseq.reference.GeneType;
 import io.repseq.reference.ReferencePoint;
 
 import java.util.Map;
@@ -19,6 +20,7 @@ import java.util.Set;
 public class VDJCGeneData {
     final BaseSequence baseSequence;
     final String name;
+    final GeneType geneType;
     final boolean isFunctional;
     final Set<String> chains;
     @JsonDeserialize(keyUsing = ReferencePoint.JsonKeyDeserializer.class)
@@ -28,11 +30,13 @@ public class VDJCGeneData {
     @JsonCreator
     public VDJCGeneData(@JsonProperty("baseSequence") BaseSequence baseSequence,
                         @JsonProperty("name") String name,
+                        @JsonProperty("geneType") GeneType geneType,
                         @JsonProperty("isFunctional") boolean isFunctional,
                         @JsonProperty("chains") Set<String> chains,
                         @JsonProperty("anchorPoints") Map<ReferencePoint, Long> anchorPoints) {
         this.baseSequence = baseSequence;
         this.name = name;
+        this.geneType = geneType;
         this.isFunctional = isFunctional;
         this.chains = chains;
         this.anchorPoints = anchorPoints;
@@ -44,6 +48,10 @@ public class VDJCGeneData {
 
     public String getName() {
         return name;
+    }
+
+    public GeneType getGeneType() {
+        return geneType;
     }
 
     public boolean isFunctional() {
