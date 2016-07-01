@@ -31,10 +31,7 @@ package io.repseq.reference;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.primitivio.annotations.Serializable;
@@ -399,9 +396,9 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
         }
     }
 
-    static ReferencePoint fromBasic(BasicReferencePoint basic, boolean begin){
+    static ReferencePoint fromBasic(BasicReferencePoint basic, boolean begin) {
         ensureInitialized();
-        if(begin)
+        if (begin)
             return fromBasicBeginBiased.get(basic);
         else
             return fromBasicEndBiased.get(basic);
@@ -470,6 +467,20 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
         @Override
         public ReferencePoint deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
             return ReferencePoint.parse(jp.readValueAs(String.class));
+        }
+    }
+
+    public static final class JsonKeyDeserializer extends KeyDeserializer {
+        @Override
+        public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+            return ReferencePoint.parse(key);
+        }
+    }
+
+    public static final class JsonKeySerializer extends JsonSerializer<ReferencePoint> {
+        @Override
+        public void serialize(ReferencePoint value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+            jgen.writeFieldName(ReferencePoint.encode(value, true));
         }
     }
 }
