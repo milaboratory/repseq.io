@@ -67,8 +67,6 @@ public abstract class AbstractRAFastaResolver implements SequenceResolver {
     protected abstract Path getFASTAFile(SequenceAddress uri);
 
     public synchronized RandomAccessFastaReader<NucleotideSequence> resolveReader(SequenceAddress address) {
-        URI uri = address.getUri();
-
         for (int retry = 0; retry < 2; ++retry) {
             // Getting reader key
             String readerKey = resolveReaderId(address);

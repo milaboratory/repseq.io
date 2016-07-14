@@ -43,12 +43,22 @@ public final class SpeciesAndLibraryName {
         return speciesName != null;
     }
 
+    /**
+     * String species name
+     *
+     * @return string species name
+     */
     public String getSpeciesName() {
         if (!bySpeciesName())
             throw new IllegalArgumentException("No species name specified");
         return speciesName;
     }
 
+    /**
+     * Taxon id
+     *
+     * @return taxon id
+     */
     public long getTaxonId() {
         if (bySpeciesName())
             throw new IllegalArgumentException("No taxon id specified");

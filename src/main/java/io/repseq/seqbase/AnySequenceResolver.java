@@ -3,10 +3,10 @@ package io.repseq.seqbase;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.provider.CachedSequenceProvider;
 
-import java.util.TreeMap;
+import java.util.HashMap;
 
 public final class AnySequenceResolver implements OptionalSequenceResolver {
-    final TreeMap<SequenceAddress, CachedSequenceProvider<NucleotideSequence>> providers = new TreeMap<>();
+    final HashMap<SequenceAddress, CachedSequenceProvider<NucleotideSequence>> providers = new HashMap<>();
 
     @Override
     public boolean canResolve(SequenceAddress address) {

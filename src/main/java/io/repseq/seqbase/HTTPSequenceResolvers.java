@@ -9,8 +9,8 @@ public final class HTTPSequenceResolvers {
     /**
      * gi://568815591
      */
-    public static class NucCoreGIResolver extends HTTPSequenceResolver {
-        public NucCoreGIResolver(HTTPResolversContext context) {
+    public static class NucCoreResolver extends HTTPFastaSequenceResolver {
+        public NucCoreResolver(HTTPResolversContext context) {
             super(context);
         }
 
@@ -20,7 +20,7 @@ public final class HTTPSequenceResolvers {
 
         @Override
         protected String resolveCacheFileName(URI address) {
-            return "gi_" + extractId(address);
+            return "nuccore_" + extractId(address);
         }
 
         @Override
@@ -37,7 +37,7 @@ public final class HTTPSequenceResolvers {
 
         @Override
         public boolean canResolve(SequenceAddress address) {
-            return "gi".equalsIgnoreCase(address.uri.getScheme()) && address.uri.getAuthority() != null;
+            return "nuccore".equalsIgnoreCase(address.uri.getScheme()) && address.uri.getAuthority() != null;
         }
     }
 }

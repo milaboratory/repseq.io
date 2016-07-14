@@ -9,6 +9,9 @@ import io.repseq.reference.ReferencePoints;
 
 import java.util.Set;
 
+/**
+ * This class represents the same entity as Allele class in previous abstraction version.
+ */
 public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
     /**
      * Any gene stores a reference to it's parent library

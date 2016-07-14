@@ -9,29 +9,67 @@ import io.repseq.seqbase.SequenceResolver;
 import io.repseq.seqbase.SequenceResolvers;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Registry of VDJCLibraries. Central storage for VDJCLibraries objects. VDJCLibraries can be created only using
+ * VDJCLibraryRegistry.
+ */
 public final class VDJCLibraryRegistry {
     /**
-     * If null - default sequence resolver is used
+     * If this field is null -> default sequence resolver is used
      */
     final SequenceResolver sequenceResolver;
-    final List<Path> searchPath = new ArrayList<>();
+    /**
+     * Resolvers to search for VDJCLibrary with particular name
+     */
+    final List<LibraryResolver> libraryResolvers = new ArrayList<>();
+    /**
+     * Collected from all loaded VDJCLibrary
+     */
     final Map<String, Long> speciesNames = new HashMap<>();
+    /**
+     * Loaded libraries
+     */
     final Map<SpeciesAndLibraryName, VDJCLibrary> libraries = new HashMap<>();
 
+    /**
+     * Creates new VDJCLibraryRegistry with default sequence resolver
+     */
+    public VDJCLibraryRegistry() {
+        this(null);
+    }
+
+    /**
+     * Creates new VDJCLibraryRegistry with specific sequence resolver.
+     *
+     * @param sequenceResolver sequece resolver or null to use default resolver
+     */
     public VDJCLibraryRegistry(SequenceResolver sequenceResolver) {
         this.sequenceResolver = sequenceResolver;
     }
 
+    /**
+     * Return sequence resolver used by this registry
+     *
+     * @return sequence resolver used by this registry
+     */
     public SequenceResolver getSequenceResolver() {
         return sequenceResolver == null ? SequenceResolvers.getDefault() : sequenceResolver;
     }
 
+    /**
+     * Resolves species name to taxon id
+     *
+     * @param name species name
+     * @return taxon id
+     * @throws IllegalArgumentException if can't resolve
+     */
     public long resolveSpecies(String name) {
         Long taxonId = speciesNames.get(name);
         if (taxonId == null)
@@ -39,23 +77,115 @@ public final class VDJCLibraryRegistry {
         return taxonId;
     }
 
+    /**
+     * Resolve species name to taxon id
+     *
+     * @param sal species and library name
+     * @return species (taxon-id) and library name
+     */
     public SpeciesAndLibraryName resolveSpecies(SpeciesAndLibraryName sal) {
-        return sal.bySpeciesName() ? new SpeciesAndLibraryName(resolveSpecies(sal.getSpeciesName()),
-                sal.getLibraryName()) :
+        return sal.bySpeciesName() ?
+                new SpeciesAndLibraryName(resolveSpecies(sal.getSpeciesName()),
+                        sal.getLibraryName()) :
                 sal;
     }
 
-    public VDJCLibrary registerLibrary(Path context, String name, VDJCLibraryData data) {
+    /**
+     * Register library resolver to be used for automatic load of libraries by name and species
+     *
+     * @param resolver resolver to add
+     */
+    public void addLibraryResolver(LibraryResolver resolver) {
+        libraryResolvers.add(resolver);
+    }
+
+    /**
+     * Adds path resolver to search for libraries with {libraryName}.json file names in specified folder.
+     *
+     * @param searchPath path to search for {libraryName}.json files
+     */
+    public void addSearchPath(Path searchPath) {
+        addLibraryResolver(new FolderLibraryResolver(searchPath.toAbsolutePath()));
+    }
+
+    /**
+     * Returns library with specified name and specified species.
+     *
+     * If not opened yet, library will be loaded using library providers added to this registry.
+     *
+     * @param speciesAndLibrary identifier of the library
+     * @return library
+     * @throws RuntimeException if no library found
+     */
+    public synchronized VDJCLibrary getLibrary(SpeciesAndLibraryName speciesAndLibrary) {
+        // Resolve species name to taxon id if needed
+        speciesAndLibrary = resolveSpecies(speciesAndLibrary);
+
+        // Search for already loaded libraries
+        VDJCLibrary vdjcLibrary = libraries.get(speciesAndLibrary);
+
+        // If found return it
+        if (vdjcLibrary != null)
+            return vdjcLibrary;
+
+        // Try load library using provided resolvers
+        for (LibraryResolver resolver : libraryResolvers) {
+            String libraryName = speciesAndLibrary.getLibraryName();
+
+            // Try resolve
+            VDJCLibraryData[] resolved = resolver.resolve(libraryName);
+
+            // If not resolved proceed to next resolver
+            if (resolved == null)
+                continue;
+
+            // Registering loaded library entries
+            for (VDJCLibraryData vdjcLibraryData : resolved) {
+                SpeciesAndLibraryName sal = new SpeciesAndLibraryName(vdjcLibraryData.getTaxonId(), libraryName);
+
+                // Check whether library is already loaded manually or using higher priority resolver
+                // (or using previous resolution call with the same library name)
+                if (libraries.containsKey(sal)) // If so - ignore it
+                    continue;
+
+                // Registering library
+                registerLibrary(resolver.getContext(libraryName), libraryName, vdjcLibraryData);
+            }
+
+            // Check whether required library was loaded
+            vdjcLibrary = libraries.get(speciesAndLibrary);
+
+            // If found return it
+            if (vdjcLibrary != null)
+                return vdjcLibrary;
+
+            // If not - continue
+        }
+
+        // If library was not found nor loaded throw exception
+        throw new RuntimeException("Can't find library for following species and library name: " + speciesAndLibrary);
+    }
+
+    /**
+     * Creates and registers single library from VDJCLibraryData
+     *
+     * @param context context to use for resolution of sequences
+     * @param name    library name
+     * @param data    library data
+     * @return created library
+     */
+    public synchronized VDJCLibrary registerLibrary(Path context, String name, VDJCLibraryData data) {
+        // Creating library object
+        VDJCLibrary library = new VDJCLibrary(data, name, this, context);
+
+        // Check if such library is already registered
+        if (libraries.containsKey(library.getSpeciesAndLibraryName()))
+            throw new RuntimeException("Duplicate library: " + library.getSpeciesAndLibraryName());
+
         // Loading known sequence fragments from VDJCLibraryData to current SequenceResolver
         SequenceResolver resolver = getSequenceResolver();
         for (KnownSequenceFragmentData fragment : data.getSequenceFragments())
             resolver.resolve(new SequenceAddress(context, fragment.getUri())).setRegion(fragment.getRange(), fragment.getSequence());
-
-        // Creating library object
-        VDJCLibrary library = new VDJCLibrary(data, name, this, context);
-
-        if (libraries.containsKey(library.getSpeciesAndLibraryName()))
-            throw new RuntimeException("Duplicate library: " + library.getSpeciesAndLibraryName());
 
         // Adding genes
         for (VDJCGeneData gene : data.getGenes())
@@ -73,6 +203,11 @@ public final class VDJCLibraryRegistry {
         return library;
     }
 
+    /**
+     * Register libraries from specific path
+     *
+     * @param file libraries json file
+     */
     public void registerLibraries(Path file) {
         file = file.toAbsolutePath();
         String name = file.getFileName().toString();
@@ -86,6 +221,70 @@ public final class VDJCLibraryRegistry {
                 registerLibrary(file.getParent(), name, library);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Default registry
+     */
+    private volatile VDJCLibraryRegistry defaultRegistry = new VDJCLibraryRegistry();
+
+    /**
+     * Resets default VDJLibrary registry and sets specific sequence resolver
+     */
+    public void resetDefaultRegistry(SequenceResolver resolver) {
+        defaultRegistry = new VDJCLibraryRegistry(resolver);
+    }
+
+    /**
+     * Returns default VDJCLibraryRegistry.
+     *
+     * @return default VDJCLibraryRegistry
+     */
+    public VDJCLibraryRegistry getDefault() {
+        return defaultRegistry;
+    }
+
+    /**
+     * Tries to resolve library name to array of VDJCLibraryData[] objects
+     *
+     * E.g. searches existence of file with {libraryName}.json name in specific folder.
+     */
+    public interface LibraryResolver {
+        VDJCLibraryData[] resolve(String libraryName);
+
+        Path getContext(String libraryName);
+    }
+
+    /**
+     * Load library data from {libraryName}.json files in specified folder.
+     */
+    public static final class FolderLibraryResolver implements LibraryResolver {
+        final Path path;
+
+        public FolderLibraryResolver(Path path) {
+            this.path = path;
+        }
+
+        @Override
+        public Path getContext(String libraryName) {
+            return path;
+        }
+
+        @Override
+        public VDJCLibraryData[] resolve(String libraryName) {
+            try {
+                Path filePath = path.resolve(libraryName + ".json");
+                if (!Files.exists(filePath))
+                    return null;
+
+                // Getting libraries from file
+                VDJCLibraryData[] libraries = GlobalObjectMappers.ONE_LINE.readValue(filePath.toFile(), VDJCLibraryData[].class);
+
+                return libraries;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

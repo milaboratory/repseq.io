@@ -14,7 +14,7 @@ import java.util.Map;
  * Class represent a single library of V, D, J, C genes from a single species. This class may represent a full set of
  * genes in organism e.g. TRA,B,G,D/IGH,L,K or just a set of segments for a single immune receptor chain.
  *
- * VDJCLibrary can be obtained using {@link VDJCLibraryRegistry}.
+ * VDJCLibrary can be loaded using {@link VDJCLibraryRegistry}.
  */
 public class VDJCLibrary {
     /**

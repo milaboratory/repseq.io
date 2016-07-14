@@ -16,7 +16,7 @@ public class SequenceResolverTest {
         SequenceResolvers.initDefaultResolver(TempFileManager.getTempDir().toPath());
         SequenceResolver defaultResolver = SequenceResolvers.getDefault();
 
-        NucleotideSequence seq = defaultResolver.resolve(new SequenceAddress("gi://195360724"))
+        NucleotideSequence seq = defaultResolver.resolve(new SequenceAddress("nuccore://EU877942.1"))
                 .getRegion(new Range(10, 30));
         Assert.assertEquals(new NucleotideSequence("gcgagagcaagcactatggc"), seq);
 

@@ -17,9 +17,9 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public abstract class HTTPSequenceResolver extends AbstractRAFastaResolver
+public abstract class HTTPFastaSequenceResolver extends AbstractRAFastaResolver
         implements OptionalSequenceResolver {
-    private static final Logger log = LoggerFactory.getLogger(HTTPSequenceResolver.class);
+    private static final Logger log = LoggerFactory.getLogger(HTTPFastaSequenceResolver.class);
     public static final int CHUNK_SIZE = 32768;
     /**
      * Local reporter
@@ -30,17 +30,17 @@ public abstract class HTTPSequenceResolver extends AbstractRAFastaResolver
      */
     final HTTPResolversContext context;
 
-    protected HTTPSequenceResolver(HTTPResolversContext context) {
+    public HTTPFastaSequenceResolver(HTTPResolversContext context) {
         super(true);
-        this.reporter = context.getReporter(this.getClass());
         this.context = context;
+        this.reporter = context.getReporter(this.getClass());
     }
 
     public Path getCacheDir() {
         return context.getCacheDir();
     }
 
-    private void ensureCacheDirExist() {
+    protected void ensureCacheDirExist() {
         try {
             Files.createDirectories(getCacheDir());
         } catch (IOException e) {
@@ -68,13 +68,13 @@ public abstract class HTTPSequenceResolver extends AbstractRAFastaResolver
     }
 
     @Override
-    protected String resolveReaderId(SequenceAddress address) {
-        return resolveCacheFileName(address.getUri());
+    protected LongProcessReporter getReporter() {
+        return reporter;
     }
 
     @Override
-    protected LongProcessReporter getReporter() {
-        return reporter;
+    protected String resolveReaderId(SequenceAddress address) {
+        return resolveCacheFileName(address.getUri());
     }
 
     @Override

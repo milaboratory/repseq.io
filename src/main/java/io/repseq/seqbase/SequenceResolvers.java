@@ -24,7 +24,7 @@ public class SequenceResolvers {
     public static void initDefaultResolver(HTTPResolversContext context) {
         defaultResolver = new MultiSequenceResolver(
                 new LocalFileResolver(),
-                new HTTPSequenceResolvers.NucCoreGIResolver(context),
+                new HTTPSequenceResolvers.NucCoreResolver(context),
                 new AnySequenceResolver());
     }
 

@@ -32,13 +32,34 @@ import com.milaboratory.core.Range;
 import io.repseq.reference.GeneFeature;
 import io.repseq.reference.ReferencePoint;
 
+/**
+ * Object stores information about sequence partitioning (positions of specific anchor points)
+ */
 public abstract class SequencePartitioning {
+    /**
+     * Return position of specific anchor point
+     *
+     * @param referencePoint anchor point
+     * @return position of anchor point
+     */
     public abstract int getPosition(ReferencePoint referencePoint);
 
+    /**
+     * Checks if position of anchor point can be obtained using this partitioning
+     *
+     * @param referencePoint anchor point
+     * @return true if position of anchor point can be obtained using this partitioning
+     */
     public boolean isAvailable(ReferencePoint referencePoint) {
         return getPosition(referencePoint) >= 0;
     }
 
+    /**
+     * Checks if position of gene feature can be obtained using this partitioning
+     *
+     * @param feature gene feature
+     * @return true if position of gene feature can be obtained using this partitioning
+     */
     public boolean isAvailable(GeneFeature feature) {
         for (GeneFeature.ReferenceRange region : feature)
             if (!isAvailable(region))
@@ -46,6 +67,12 @@ public abstract class SequencePartitioning {
         return true;
     }
 
+    /**
+     * Return sequence range for non-composite gene features
+     *
+     * @param feature gene feature
+     * @return range
+     */
     public Range getRange(GeneFeature feature) {
         if (feature.isComposite())
             throw new IllegalArgumentException();
