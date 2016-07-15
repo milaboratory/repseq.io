@@ -11,10 +11,8 @@ import io.repseq.seqbase.SequenceResolvers;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * Registry of VDJCLibraries. Central storage for VDJCLibraries objects. VDJCLibraries can be created only using
@@ -61,6 +59,15 @@ public final class VDJCLibraryRegistry {
      */
     public SequenceResolver getSequenceResolver() {
         return sequenceResolver == null ? SequenceResolvers.getDefault() : sequenceResolver;
+    }
+
+    /**
+     * Returns collection of libraries that are currently loaded by this registry.
+     *
+     * @return collection of libraries that are currently loaded by this registry
+     */
+    public Collection<VDJCLibrary> getLoadedLibraries() {
+        return libraries.values();
     }
 
     /**
@@ -204,7 +211,16 @@ public final class VDJCLibraryRegistry {
     }
 
     /**
-     * Register libraries from specific path
+     * Register libraries from specific file
+     *
+     * @param file libraries json file
+     */
+    public void registerLibraries(String file) {
+        registerLibraries(Paths.get(file));
+    }
+
+    /**
+     * Register libraries from specific file
      *
      * @param file libraries json file
      */
@@ -227,12 +243,12 @@ public final class VDJCLibraryRegistry {
     /**
      * Default registry
      */
-    private volatile VDJCLibraryRegistry defaultRegistry = new VDJCLibraryRegistry();
+    private static volatile VDJCLibraryRegistry defaultRegistry = new VDJCLibraryRegistry();
 
     /**
      * Resets default VDJLibrary registry and sets specific sequence resolver
      */
-    public void resetDefaultRegistry(SequenceResolver resolver) {
+    public static void resetDefaultRegistry(SequenceResolver resolver) {
         defaultRegistry = new VDJCLibraryRegistry(resolver);
     }
 
@@ -241,7 +257,7 @@ public final class VDJCLibraryRegistry {
      *
      * @return default VDJCLibraryRegistry
      */
-    public VDJCLibraryRegistry getDefault() {
+    public static VDJCLibraryRegistry getDefault() {
         return defaultRegistry;
     }
 

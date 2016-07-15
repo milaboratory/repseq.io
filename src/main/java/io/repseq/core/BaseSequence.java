@@ -53,6 +53,31 @@ public class BaseSequence {
      */
     final Mutations<NucleotideSequence> mutations;
 
+    /**
+     * Creates non-mutated base sequence from original url. (Pure Original sequence)
+     *
+     * @param origin url of original sequence
+     */
+    public BaseSequence(String origin) {
+        this(URI.create(origin));
+    }
+
+    /**
+     * Creates non-mutated base sequence from original url. (Pure Original sequence)
+     *
+     * @param origin url of original sequence
+     */
+    public BaseSequence(URI origin) {
+        this(origin, null, null);
+    }
+
+    /**
+     * Creates BaseSequence object
+     *
+     * @param origin    original sequence URL
+     * @param regions   subregions of sequence (mutations applied to this subregions)
+     * @param mutations mutations relative to extracted subregions
+     */
     public BaseSequence(URI origin, Range[] regions, Mutations<NucleotideSequence> mutations) {
         if (regions != null && regions.length == 0)
             regions = null;

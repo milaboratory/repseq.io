@@ -77,12 +77,39 @@ public class VDJCLibrary {
     }
 
     /**
+     * Get gene by name
+     *
+     * @return gene
+     */
+    public VDJCGene get(String geneName) {
+        return genes.get(geneName);
+    }
+
+    /**
      * Returns identifier of this library
      *
      * @return identifier of this library
      */
     public SpeciesAndLibraryName getSpeciesAndLibraryName() {
         return new SpeciesAndLibraryName(libraryData.getTaxonId(), name);
+    }
+
+    /**
+     * Return species (taxon id)
+     *
+     * @return species (taxon id)
+     */
+    public long getTaxonId() {
+        return libraryData.getTaxonId();
+    }
+
+    /**
+     * Library name
+     *
+     * @return library name
+     */
+    public String getName() {
+        return name;
     }
 
     /**

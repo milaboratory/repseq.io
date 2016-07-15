@@ -11,13 +11,14 @@ import io.repseq.reference.ReferencePoint;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 
 /**
  * DTO for VDJC Gene
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public class VDJCGeneData {
+public class VDJCGeneData implements Comparable<VDJCGeneData> {
     final BaseSequence baseSequence;
     final String name;
     final GeneType geneType;
@@ -25,7 +26,7 @@ public class VDJCGeneData {
     final Set<String> chains;
     @JsonDeserialize(keyUsing = ReferencePoint.JsonKeyDeserializer.class)
     @JsonSerialize(keyUsing = ReferencePoint.JsonKeySerializer.class)
-    final Map<ReferencePoint, Long> anchorPoints;
+    final SortedMap<ReferencePoint, Long> anchorPoints;
 
     @JsonCreator
     public VDJCGeneData(@JsonProperty("baseSequence") BaseSequence baseSequence,
@@ -33,7 +34,7 @@ public class VDJCGeneData {
                         @JsonProperty("geneType") GeneType geneType,
                         @JsonProperty("isFunctional") boolean isFunctional,
                         @JsonProperty("chains") Set<String> chains,
-                        @JsonProperty("anchorPoints") Map<ReferencePoint, Long> anchorPoints) {
+                        @JsonProperty("anchorPoints") SortedMap<ReferencePoint, Long> anchorPoints) {
         this.baseSequence = baseSequence;
         this.name = name;
         this.geneType = geneType;
@@ -64,6 +65,30 @@ public class VDJCGeneData {
 
     public Map<ReferencePoint, Long> getAnchorPoints() {
         return anchorPoints;
+    }
+
+    /**
+     * Used for sorting
+     */
+    private String lowestChain() {
+        String chain = null;
+        for (String c : chains)
+            if (chain == null || chain.compareTo(c) > 0)
+                chain = c;
+        return chain;
+    }
+
+    @Override
+    public int compareTo(VDJCGeneData o) {
+        int c;
+
+        if ((c = lowestChain().compareTo(o.lowestChain())) != 0)
+            return c;
+
+        if ((c = geneType.compareTo(o.geneType)) != 0)
+            return c;
+
+        return VDJCDataUtils.smartCompare(this.getName(), o.getName());
     }
 
     @Override

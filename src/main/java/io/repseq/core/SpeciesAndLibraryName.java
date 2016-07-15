@@ -92,10 +92,9 @@ public final class SpeciesAndLibraryName {
 
     @Override
     public String toString() {
-        return "SpeciesAndLibraryName{" +
-                "speciesName='" + speciesName + '\'' +
-                ", taxonId=" + taxonId +
-                ", libraryName='" + libraryName + '\'' +
-                '}';
+        if (bySpeciesName())
+            return libraryName + ":" + speciesName;
+        else
+            return libraryName + ":" + taxonId;
     }
 }

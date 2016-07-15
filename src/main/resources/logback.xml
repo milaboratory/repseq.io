@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="stderr" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} %-5level - %msg%n</pattern>
         </encoder>
@@ -9,6 +10,6 @@
     <logger name="io.repseq" level="trace"/>
 
     <root level="debug">
-        <appender-ref ref="stdout"/>
+        <appender-ref ref="stderr"/>
     </root>
 </configuration>

@@ -17,8 +17,8 @@ public class SequenceResolverTest {
         SequenceResolver defaultResolver = SequenceResolvers.getDefault();
 
         NucleotideSequence seq = defaultResolver.resolve(new SequenceAddress("nuccore://EU877942.1"))
-                .getRegion(new Range(10, 30));
-        Assert.assertEquals(new NucleotideSequence("gcgagagcaagcactatggc"), seq);
+                .getRegion(new Range(10, 30).inverse());
+        Assert.assertEquals(new NucleotideSequence("gcgagagcaagcactatggc").getReverseComplement(), seq);
 
         Path rootPath = new File(SingleFastqReaderTest.class.getClassLoader().getResource("sequences/some_fasta.fasta")
                 .toURI()).toPath().toAbsolutePath().normalize().getParent();

@@ -31,40 +31,41 @@ package io.repseq.reference;
 
 enum BasicReferencePoint implements java.io.Serializable {
     // Points in V
-    V5UTRBegin(0, GeneType.Variable, 0),
-    V5UTRBeginTrimmed(-1, GeneType.Variable, 1, "V5UTREnd"),
-    V5UTREndL1Begin(1, GeneType.Variable, 2),
-    L1EndVIntronBegin(2, GeneType.Variable, 3),
-    VIntronEndL2Begin(3, GeneType.Variable, 4),
-    L2EndFR1Begin(4, GeneType.Variable, 5),
-    FR1EndCDR1Begin(5, GeneType.Variable, 6),
-    CDR1EndFR2Begin(6, GeneType.Variable, 7),
-    FR2EndCDR2Begin(7, GeneType.Variable, 8),
-    CDR2EndFR3Begin(8, GeneType.Variable, 9),
-    FR3EndCDR3Begin(9, GeneType.Variable, 10),
-    VEndTrimmed(-2, GeneType.Variable, 11, "CDR3Begin(-3)"),
-    VEnd(10, GeneType.Variable, 12),
+    V5UTRBegin(0, GeneType.Variable, 0, false, false, false),
+    V5UTRBeginTrimmed(-1, GeneType.Variable, 1, false, false, false, "V5UTREnd"),
+    V5UTREndL1Begin(1, GeneType.Variable, 2, false, true, true),
+    L1EndVIntronBegin(2, GeneType.Variable, 3, true, false, false),
+    VIntronEndL2Begin(3, GeneType.Variable, 4, false, true, false),
+    L2EndFR1Begin(4, GeneType.Variable, 5, true, true, true),
+    FR1EndCDR1Begin(5, GeneType.Variable, 6, true, true, true),
+    CDR1EndFR2Begin(6, GeneType.Variable, 7, true, true, true),
+    FR2EndCDR2Begin(7, GeneType.Variable, 8, true, true, true),
+    CDR2EndFR3Begin(8, GeneType.Variable, 9, true, true, true),
+    FR3EndCDR3Begin(9, GeneType.Variable, 10, true, true, true),
+    VEndTrimmed(-2, GeneType.Variable, 11, true, true, false, "CDR3Begin(-3)"),
+    VEnd(10, GeneType.Variable, 12, true, true, false),
 
     // Points in D
-    DBegin(11, GeneType.Diversity, 13),
-    DBeginTrimmed(-1, GeneType.Diversity, 14, null),
-    DEndTrimmed(-2, GeneType.Diversity, 15, null),
-    DEnd(12, GeneType.Diversity, 16),
+    DBegin(11, GeneType.Diversity, 13, true, true, false),
+    DBeginTrimmed(-1, GeneType.Diversity, 14, true, true, false, null),
+    DEndTrimmed(-2, GeneType.Diversity, 15, true, true, false, null),
+    DEnd(12, GeneType.Diversity, 16, true, true, false),
 
     // Points in J
-    JBegin(13, GeneType.Joining, 17),
-    JBeginTrimmed(-1, GeneType.Joining, 18, "CDR3End(+3)"),
-    CDR3EndFR4Begin(14, GeneType.Joining, 19),
-    FR4End(15, GeneType.Joining, 20),
+    JBegin(13, GeneType.Joining, 17, true, true, false),
+    JBeginTrimmed(-1, GeneType.Joining, 18, true, true, false, "CDR3End(+3)"),
+    CDR3EndFR4Begin(14, GeneType.Joining, 19, true, true, true),
+    FR4End(15, GeneType.Joining, 20, true, true, false),
 
     // Points in C
-    CBegin(16, GeneType.Constant, 21),
-    CExon1End(17, GeneType.Constant, 22),
-    CEnd(18, GeneType.Constant, 23);
+    CBegin(16, GeneType.Constant, 21, true, true, false),
+    CExon1End(17, GeneType.Constant, 22, true, true, false),
+    CEnd(18, GeneType.Constant, 23, true, true, false);
 
     final int orderingIndex;
     final int index;
     final GeneType geneType;
+    final boolean codingSequenceOnTheLeft, codingSequenceOnTheRight, isTripletBoundary;
     BasicReferencePoint trimmedVersion;
 
     /* Only for trimmed (attached to alignment boundary) points */
@@ -76,14 +77,20 @@ enum BasicReferencePoint implements java.io.Serializable {
     volatile ReferencePoint activationPoint;
 
 
-    BasicReferencePoint(int index, GeneType geneType, int orderingIndex) {
-        this(index, geneType, orderingIndex, null);
+    BasicReferencePoint(int index, GeneType geneType, int orderingIndex, boolean codingSequenceOnTheLeft,
+                        boolean codingSequenceOnTheRight, boolean isTripletBoundary) {
+        this(index, geneType, orderingIndex, codingSequenceOnTheLeft, codingSequenceOnTheRight, isTripletBoundary,
+                null);
     }
 
-    BasicReferencePoint(int index, GeneType geneType, int orderingIndex, String activationPoint) {
+    BasicReferencePoint(int index, GeneType geneType, int orderingIndex, boolean codingSequenceOnTheLeft,
+                        boolean codingSequenceOnTheRight, boolean isTripletBoundary, String activationPoint) {
         this.activationPointString = activationPoint;
         this.index = index;
         this.geneType = geneType;
+        this.codingSequenceOnTheLeft = codingSequenceOnTheLeft;
+        this.codingSequenceOnTheRight = codingSequenceOnTheRight;
+        this.isTripletBoundary = isTripletBoundary;
         this.orderingIndex = orderingIndex;
     }
 

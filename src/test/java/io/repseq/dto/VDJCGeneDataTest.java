@@ -13,8 +13,9 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class VDJCGeneDataTest {
     @Test
@@ -23,7 +24,7 @@ public class VDJCGeneDataTest {
         HashSet<String> chains = new HashSet<>();
         chains.add("TRA");
         chains.add("TRB");
-        HashMap<ReferencePoint, Long> referencePoints = new HashMap<>();
+        SortedMap<ReferencePoint, Long> referencePoints = new TreeMap<>();
         referencePoints.put(ReferencePoint.V5UTREnd, 123L);
         referencePoints.put(ReferencePoint.CDR3Begin, 189L);
         VDJCGeneData gene = new VDJCGeneData(seq, "TRBV12-3*01", GeneType.Variable, true, chains, referencePoints);
