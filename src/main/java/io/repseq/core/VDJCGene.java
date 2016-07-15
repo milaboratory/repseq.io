@@ -84,8 +84,13 @@ public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
         return sequenceProvider.getRegion(range);
     }
 
+    /**
+     * Returns reference point object for this gene
+     *
+     * @return reference point object for this gene
+     */
     @Override
-    protected SequencePartitioning getPartitioning() {
+    public ReferencePoints getPartitioning() {
         return referencePoints;
     }
 }

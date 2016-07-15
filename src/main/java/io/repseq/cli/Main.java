@@ -17,6 +17,7 @@ public class Main {
                 new ListAction(),
                 new FilterAction(),
                 new FastaAction(),
+                new DebugAction(),
                 new FormatAction(),
                 new StatAction());
 

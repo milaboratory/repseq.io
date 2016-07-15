@@ -487,10 +487,13 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     public static synchronized ReferencePoint getFrameReference(GeneFeature feature) {
         ReferencePoint rp = frameReferenceCache.get(feature);
         if (rp == null) {
+            OUTER:
             for (ReferenceRange region : feature.regions)
                 for (ReferencePoint intermediatePoint : region.getIntermediatePoints())
-                    if (intermediatePoint.isTripletBoundary())
+                    if (intermediatePoint.isTripletBoundary()) {
                         frameReferenceCache.put(feature, rp = intermediatePoint);
+                        break OUTER;
+                    }
             if (rp == null)
                 // Caching null result
                 frameReferenceCache.put(feature, rp = NULL_FRAME);
@@ -552,7 +555,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
         public List<ReferencePoint> getIntermediatePoints() {
             List<ReferencePoint> rps = new ArrayList<>();
-            for (int i = begin.basicPoint.index; i < end.basicPoint.index; i++) {
+            for (int i = begin.basicPoint.index; i <= end.basicPoint.index; i++) {
                 ReferencePoint rp = new ReferencePoint(BasicReferencePoint.getByIndex(i));
                 if (rp.compareTo(begin) < 0)
                     continue;

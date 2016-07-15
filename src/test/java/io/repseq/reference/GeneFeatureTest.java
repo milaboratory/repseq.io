@@ -265,9 +265,10 @@ public class GeneFeatureTest {
 
     @Test
     public void testFrameAnchor() throws Exception {
-        Assert.assertEquals(CDR1Begin, GeneFeature.getFrameReference(CDR1));
-        Assert.assertEquals(CDR2Begin, GeneFeature.getFrameReference(CDR2));
-        Assert.assertEquals(CDR3End, GeneFeature.getFrameReference(JRegion));
+        //Assert.assertEquals(CDR1Begin, GeneFeature.getFrameReference(CDR1));
+        //Assert.assertEquals(CDR2Begin, GeneFeature.getFrameReference(CDR2));
+        //Assert.assertEquals(CDR3End, GeneFeature.getFrameReference(JRegion));
+        Assert.assertEquals(L1Begin, GeneFeature.getFrameReference(VTranscriptWithout5UTR));
     }
 
     @Test
