@@ -467,6 +467,37 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return false;
     }
 
+    /**
+     * Special value
+     */
+    private static final ReferencePoint NULL_FRAME = new ReferencePoint(BasicReferencePoint.V5UTRBegin);
+    /**
+     * Cache for getFrameReference method
+     */
+    private static final Map<GeneFeature, ReferencePoint> frameReferenceCache = new HashMap<>();
+
+    /**
+     * Returns reference point that is triplet boundary (so defines reading frame) inside provided gene feature or
+     * returns null.
+     *
+     * @param feature gene feature
+     * @return reference point that is triplet boundary (so defines reading frame) inside provided gene feature or
+     * null
+     */
+    public static synchronized ReferencePoint getFrameReference(GeneFeature feature) {
+        ReferencePoint rp = frameReferenceCache.get(feature);
+        if (rp == null) {
+            for (ReferenceRange region : feature.regions)
+                for (ReferencePoint intermediatePoint : region.getIntermediatePoints())
+                    if (intermediatePoint.isTripletBoundary())
+                        frameReferenceCache.put(feature, rp = intermediatePoint);
+            if (rp == null)
+                // Caching null result
+                frameReferenceCache.put(feature, rp = NULL_FRAME);
+        }
+        return rp == NULL_FRAME ? null : rp;
+    }
+
     private static ReferenceRange[] merge(final ReferenceRange[] ranges) {
         if (ranges.length == 1)
             return ranges;
@@ -517,6 +548,19 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         ReferenceRange(ReferencePoint begin, ReferencePoint end) {
             this.begin = begin;
             this.end = end;
+        }
+
+        public List<ReferencePoint> getIntermediatePoints() {
+            List<ReferencePoint> rps = new ArrayList<>();
+            for (int i = begin.basicPoint.index; i < end.basicPoint.index; i++) {
+                ReferencePoint rp = new ReferencePoint(BasicReferencePoint.getByIndex(i));
+                if (rp.compareTo(begin) < 0)
+                    continue;
+                if (rp.compareTo(end) > 0)
+                    continue;
+                rps.add(rp);
+            }
+            return rps;
         }
 
         public boolean isReversed() {

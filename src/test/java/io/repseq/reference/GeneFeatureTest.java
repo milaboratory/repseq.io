@@ -29,7 +29,7 @@
 package io.repseq.reference;
 
 import com.milaboratory.util.IntArrayList;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.apache.commons.math3.random.Well44497a;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,9 +39,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 import static io.repseq.reference.GeneFeature.*;
-import static io.repseq.reference.ReferencePoint.DBegin;
-import static io.repseq.reference.ReferencePoint.DEnd;
-import static io.repseq.reference.ReferencePoint.VEnd;
+import static io.repseq.reference.ReferencePoint.*;
 import static org.junit.Assert.*;
 
 /**
@@ -141,12 +139,11 @@ public class GeneFeatureTest {
         assertEquals(f2, new GeneFeature(f1, -4, -2));
     }
 
-
     @Test
     public void testReversed() throws Exception {
-        GeneFeature gf = parse("{FR1Begin:VEnd}+{VEnd:VEnd(-20)}");
+        GeneFeature gf = GeneFeature.parse("{FR1Begin:VEnd}+{VEnd:VEnd(-20)}");
         assertEquals(2, gf.size());
-        gf = parse("{FR1Begin:VEnd}").append(parse("{VEnd:VEnd(-20)}"));
+        gf = GeneFeature.parse("{FR1Begin:VEnd}").append(GeneFeature.parse("{VEnd:VEnd(-20)}"));
         assertEquals(2, gf.size());
         gf = GeneFeature.VGeneWithP;
         assertEquals(2, gf.size());
@@ -267,6 +264,13 @@ public class GeneFeatureTest {
     }
 
     @Test
+    public void testFrameAnchor() throws Exception {
+        Assert.assertEquals(CDR1Begin, GeneFeature.getFrameReference(CDR1));
+        Assert.assertEquals(CDR2Begin, GeneFeature.getFrameReference(CDR2));
+        Assert.assertEquals(CDR3End, GeneFeature.getFrameReference(JRegion));
+    }
+
+    @Test
     public void testRandom1() {
         Well44497a rand = new Well44497a();
         int tn = BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS;
@@ -301,7 +305,7 @@ public class GeneFeatureTest {
 
     @Test
     public void testStatic() throws Exception {
-        assertEquals(JRegion, parse("JRegion"));
+        assertEquals(JRegion, GeneFeature.parse("JRegion"));
     }
 
     static final GeneFeature create(int... indexes) {
@@ -397,11 +401,11 @@ public class GeneFeatureTest {
     public void testEncode1() throws Exception {
         Collection<GeneFeature> features = GeneFeature.getFeaturesByName().values();
         for (GeneFeature feature : features)
-            assertEquals(feature, parse(encode(feature)));
+            assertEquals(feature, GeneFeature.parse(GeneFeature.encode(feature)));
     }
 
     private static void assertEncode(String str) {
-        Assert.assertEquals(str.replace(" ", ""), encode(parse(str)).replace(" ", ""));
+        Assert.assertEquals(str.replace(" ", ""), GeneFeature.encode(GeneFeature.parse(str)).replace(" ", ""));
     }
 
     @Ignore

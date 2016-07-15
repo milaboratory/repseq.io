@@ -102,6 +102,18 @@ enum BasicReferencePoint implements java.io.Serializable {
         return index < 0;
     }
 
+    public boolean isCodingSequenceOnTheLeft() {
+        return codingSequenceOnTheLeft;
+    }
+
+    public boolean isCodingSequenceOnTheRight() {
+        return codingSequenceOnTheRight;
+    }
+
+    public boolean isTripletBoundary() {
+        return isTripletBoundary;
+    }
+
     /**
      * Returns true if this point is nor attached to any alignments bound.
      *

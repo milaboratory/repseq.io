@@ -313,6 +313,18 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
         return basicPoint.isPure() && offset == 0;
     }
 
+    public boolean isCodingSequenceOnTheLeft() {
+        return basicPoint.isCodingSequenceOnTheLeft();
+    }
+
+    public boolean isCodingSequenceOnTheRight() {
+        return basicPoint.isCodingSequenceOnTheRight();
+    }
+
+    public boolean isTripletBoundary() {
+        return basicPoint.isTripletBoundary() && offset % 3 == 0;
+    }
+
     @Override
     public int compareTo(ReferencePoint o) {
         int c = basicPoint.compareTo(o.basicPoint);
