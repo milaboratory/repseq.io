@@ -25,7 +25,7 @@ public class Main {
             @Override
             public void run() {
                 VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
-                VersionInfo mitools = VersionInfo.getVersionInfoForArtifact("repseq.io");
+                VersionInfo mitools = VersionInfo.getVersionInfoForArtifact("repseqio");
 
                 StringBuilder builder = new StringBuilder();
 
