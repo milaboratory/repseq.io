@@ -93,6 +93,7 @@ public class ExportMI {
         GlobalObjectMappers.PRETTY.writeValue(new File(output + "mi.json"), libs);
     }
 
+    @Ignore
     @Test
     public void test1() throws Exception {
         Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
