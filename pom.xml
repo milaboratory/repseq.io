@@ -32,10 +32,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.milaboratory</groupId>
-    <artifactId>repseq.io</artifactId>
+    <artifactId>repseqio</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>RepSeq.IO</name>
+    <name>RepSeqIO</name>
 
     <parent>
         <groupId>org.sonatype.oss</groupId>
