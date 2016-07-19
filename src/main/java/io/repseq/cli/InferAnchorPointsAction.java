@@ -7,6 +7,7 @@ import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Alignment;
+import com.milaboratory.core.alignment.AlignmentHelper;
 import com.milaboratory.core.alignment.BLASTMatrix;
 import com.milaboratory.core.alignment.batch.AlignmentHit;
 import com.milaboratory.core.alignment.batch.AlignmentResult;
@@ -122,7 +123,9 @@ public class InferAnchorPointsAction implements Action {
                 NucleotideSequence nSeq = targetGene.getFeature(geneFeature);
 
                 if (nSeq == null) {
-                    System.out.println("Failed to extract " + geneFeature);
+                    System.out.println("Failed to extract " + GeneFeature.encode(geneFeature));
+                    System.out.println("================");
+                    System.out.println();
                     continue;
                 }
 
@@ -153,7 +156,9 @@ public class InferAnchorPointsAction implements Action {
 
                 System.out.println("Aligned with " + bestReferenceGene.getName() + " from " +
                         libraryNameToAddress.get(bestReferenceGene.getParentLibrary().getName()) + " ; Score = " + bestAlignment.getScore());
-                System.out.println(bestAlignment.getAlignmentHelper());
+                AlignmentHelper alignmentHelper = bestAlignment.getAlignmentHelper();
+                for (AlignmentHelper h : alignmentHelper.split(150))
+                    System.out.println(h + "\n");
 
                 ReferencePoints targetPartitioning = targetGene.getPartitioning();
                 ReferencePoints referencePartitioning = bestReferenceGene.getPartitioning();
