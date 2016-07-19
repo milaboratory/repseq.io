@@ -86,6 +86,7 @@ public class DebugAction implements Action {
                 GeneFeature.L1,
                 GeneFeature.VIntron,
                 GeneFeature.L2,
+                GeneFeature.L,
                 GeneFeature.FR1,
                 GeneFeature.CDR1,
                 GeneFeature.FR2,

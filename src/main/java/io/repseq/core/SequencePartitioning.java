@@ -212,4 +212,32 @@ public abstract class SequencePartitioning {
         }
         return -1;
     }
+
+    /**
+     * Returns absolute position in reference sequence for the specified local position in specified {@code feature}
+     * or -1 if this position can't be projected.
+     *
+     * @param feature           gene feature
+     * @param positionInFeature local position in gene feature
+     * @return absolute position in reference sequence for the specified local position in specified {@code feature}
+     * or -1 if this position can't be projected
+     */
+    public int getAbsolutePosition(GeneFeature feature, int positionInFeature) {
+        if (positionInFeature < 0)
+            return -1;
+
+        Range[] ranges = getRanges(feature);
+        if (ranges == null)
+            return -1;
+
+        for (int i = 0; i < ranges.length; i++) {
+            Range range = ranges[i];
+            if (positionInFeature > range.length()) {
+                positionInFeature -= range.length();
+                continue;
+            }
+            return range.convertBoundaryToAbsolutePosition(positionInFeature);
+        }
+        return -1;
+    }
 }

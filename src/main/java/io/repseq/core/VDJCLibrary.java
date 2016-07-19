@@ -50,6 +50,15 @@ public class VDJCLibrary {
     }
 
     /**
+     * Returns serializable library data
+     *
+     * @return serializable library data
+     */
+    public VDJCLibraryData getData() {
+        return libraryData;
+    }
+
+    /**
      * Returns parent registry
      *
      * @return parent registry

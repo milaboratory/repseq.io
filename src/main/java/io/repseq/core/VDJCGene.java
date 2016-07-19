@@ -43,6 +43,24 @@ public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
     }
 
     /**
+     * Returns serializable gene data
+     *
+     * @return serializable gene data
+     */
+    public VDJCGeneData getData() {
+        return data;
+    }
+
+    /**
+     * Returns parent VDJCLibrary
+     *
+     * @return parent VDJCLibrary
+     */
+    public VDJCLibrary getParentLibrary() {
+        return parentLibrary;
+    }
+
+    /**
      * Returns gene name (e.g. TRBV12-2*01)
      *
      * @return gene name (e.g. TRBV12-2*01)

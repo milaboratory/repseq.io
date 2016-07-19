@@ -17,6 +17,7 @@ public class Main {
                 new ListAction(),
                 new FilterAction(),
                 new FastaAction(),
+                new InferAnchorPointsAction(),
                 new DebugAction(),
                 new FormatAction(),
                 new StatAction());

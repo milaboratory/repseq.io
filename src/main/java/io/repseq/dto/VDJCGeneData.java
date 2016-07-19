@@ -9,9 +9,7 @@ import io.repseq.core.BaseSequence;
 import io.repseq.reference.GeneType;
 import io.repseq.reference.ReferencePoint;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
+import java.util.*;
 
 /**
  * DTO for VDJC Gene
@@ -65,6 +63,11 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
 
     public Map<ReferencePoint, Long> getAnchorPoints() {
         return anchorPoints;
+    }
+
+    public VDJCGeneData clone() {
+        return new VDJCGeneData(baseSequence, name, geneType, isFunctional,
+                new HashSet<>(chains), new TreeMap<>(anchorPoints));
     }
 
     /**

@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Registry of VDJCLibraries. Central storage for VDJCLibraries objects. VDJCLibraries can be created only using
@@ -68,6 +69,36 @@ public final class VDJCLibraryRegistry {
      */
     public Collection<VDJCLibrary> getLoadedLibraries() {
         return libraries.values();
+    }
+
+    /**
+     * Returns list of libraries that are currently loaded by this registry and has specified name.
+     *
+     * @return list of libraries that are currently loaded by this registry and has specified name
+     */
+    public List<VDJCLibrary> getLoadedLibrariesByName(String libraryName) {
+        ArrayList<VDJCLibrary> libs = new ArrayList<>();
+
+        for (Map.Entry<SpeciesAndLibraryName, VDJCLibrary> entry : libraries.entrySet())
+            if (entry.getKey().getLibraryName().equals(libraryName))
+                libs.add(entry.getValue());
+
+        return libs;
+    }
+
+    /**
+     * Returns list of libraries that are currently loaded by this registry and has specified name pattern.
+     *
+     * @return list of libraries that are currently loaded by this registry and has specified name pattern
+     */
+    public List<VDJCLibrary> getLoadedLibrariesByNamePattern(Pattern libraryNamePattern) {
+        ArrayList<VDJCLibrary> libs = new ArrayList<>();
+
+        for (Map.Entry<SpeciesAndLibraryName, VDJCLibrary> entry : libraries.entrySet())
+            if (libraryNamePattern.matcher(entry.getKey().getLibraryName()).matches())
+                libs.add(entry.getValue());
+
+        return libs;
     }
 
     /**
@@ -220,14 +251,34 @@ public final class VDJCLibraryRegistry {
     }
 
     /**
+     * Register libraries from specific file with specified name
+     *
+     * @param file libraries json file
+     * @param name library name
+     */
+    public void registerLibraries(String file, String name) {
+        registerLibraries(Paths.get(file), name);
+    }
+
+    /**
      * Register libraries from specific file
      *
      * @param file libraries json file
      */
     public void registerLibraries(Path file) {
-        file = file.toAbsolutePath();
         String name = file.getFileName().toString();
         name = name.toLowerCase().replaceAll("(?i).json$", "");
+        registerLibraries(file, name);
+    }
+
+    /**
+     * Register libraries from specific file with specified name
+     *
+     * @param file libraries json file
+     * @param name library name
+     */
+    public void registerLibraries(Path file, String name) {
+        file = file.toAbsolutePath();
         try {
             // Getting libraries from file
             VDJCLibraryData[] libraries = GlobalObjectMappers.ONE_LINE.readValue(file.toFile(), VDJCLibraryData[].class);
