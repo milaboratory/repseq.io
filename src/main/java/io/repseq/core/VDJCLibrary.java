@@ -2,8 +2,6 @@ package io.repseq.core;
 
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
-import io.repseq.reference.ReferencePoint;
-import io.repseq.reference.ReferencePointsBuilder;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -47,6 +45,15 @@ public class VDJCLibrary {
 
     private void put(VDJCGene gene) {
         genes.put(gene.getName(), gene);
+    }
+
+    /**
+     * Return checksum for this library.
+     *
+     * @return checksum for this library
+     */
+    public String getChecksum() {
+        return "00";
     }
 
     /**
@@ -99,8 +106,8 @@ public class VDJCLibrary {
      *
      * @return identifier of this library
      */
-    public SpeciesAndLibraryName getSpeciesAndLibraryName() {
-        return new SpeciesAndLibraryName(libraryData.getTaxonId(), name);
+    public VDJCLibraryId getLibraryId() {
+        return new VDJCLibraryId(name, libraryData.getTaxonId(), getChecksum());
     }
 
     /**

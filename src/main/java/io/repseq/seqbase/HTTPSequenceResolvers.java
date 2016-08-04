@@ -7,7 +7,7 @@ public final class HTTPSequenceResolvers {
     }
 
     /**
-     * gi://568815591
+     * nuccore://568815591
      */
     public static class NucCoreResolver extends HTTPFastaSequenceResolver {
         public NucCoreResolver(HTTPResolversContext context) {

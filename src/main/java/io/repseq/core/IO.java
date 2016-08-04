@@ -26,102 +26,25 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package io.repseq.reference;
+package io.repseq.core;
 
 import com.milaboratory.primitivio.PrimitivI;
 import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
 
-import java.util.UUID;
-
-/**
- * Created by dbolotin on 17/07/14.
- */
 class IO {
-    public static class AlleleSerializer implements Serializer<Allele> {
-        @Override
-        public void write(PrimitivO output, Allele object) {
-            throw new RuntimeException("Serializer only for knownReference serialization.");
-        }
-
-        @Override
-        public Allele read(PrimitivI input) {
-            throw new RuntimeException("Serializer only for knownReference serialization.");
-        }
-
-        @Override
-        public boolean isReference() {
-            return true;
-        }
-
-        @Override
-        public boolean handlesReference() {
-            return false;
-        }
-    }
-
-    public static class AlleleIdSerializer implements Serializer<AlleleId> {
-        @Override
-        public void write(PrimitivO output, AlleleId object) {
-            output.writeObject(object.containerUUID);
-            output.writeObject(object.speciesAndChain);
-            output.writeUTF(object.name);
-        }
-
-        @Override
-        public AlleleId read(PrimitivI input) {
-            UUID uuid = input.readObject(UUID.class);
-            SpeciesAndChain speciesAndChain = input.readObject(SpeciesAndChain.class);
-            String name = input.readUTF();
-            return new AlleleId(uuid, speciesAndChain, name);
-        }
-
-        @Override
-        public boolean isReference() {
-            return false;
-        }
-
-        @Override
-        public boolean handlesReference() {
-            return false;
-        }
-    }
-
-    public static class SpeciesAndLocusSerializer implements Serializer<SpeciesAndChain> {
-        @Override
-        public void write(PrimitivO output, SpeciesAndChain object) {
-            output.writeVarInt(object.taxonId);
-            output.writeObject(object.chain);
-        }
-
-        @Override
-        public SpeciesAndChain read(PrimitivI input) {
-            int taxonId = input.readVarInt();
-            return new SpeciesAndChain(taxonId, input.readObject(Chain.class));
-        }
-
-        @Override
-        public boolean isReference() {
-            return false;
-        }
-
-        @Override
-        public boolean handlesReference() {
-            return false;
-        }
-    }
-
     public static class ReferencePointSerializer implements Serializer<ReferencePoint> {
         @Override
         public void write(PrimitivO output, ReferencePoint object) {
-            output.writeObject(object.basicPoint);
+            output.writeUTF(object.basicPoint.name());
             output.writeInt(object.offset);
         }
 
         @Override
         public ReferencePoint read(PrimitivI input) {
-            BasicReferencePoint brf = input.readObject(BasicReferencePoint.class);
-            return new ReferencePoint(brf, input.readInt());
+            String referencePointName = input.readUTF();
+            return new ReferencePoint(BasicReferencePoint.valueOf(referencePointName),
+                    input.readInt());
         }
 
         @Override
@@ -163,14 +86,14 @@ class IO {
         @Override
         public void write(PrimitivO output, GeneFeature object) {
             output.writeObject(object.regions);
-            // Saving this gene feature for the all subsequent serialization
+            // Saving this gene feature for the all subsequent serializations
             output.putKnownReference(object);
         }
 
         @Override
         public GeneFeature read(PrimitivI input) {
             GeneFeature object = new GeneFeature(input.readObject(GeneFeature.ReferenceRange[].class), true);
-            // Saving this gene feature for the all subsequent deserialization
+            // Saving this gene feature for the all subsequent deserializations
             input.putKnownReference(object);
             return object;
         }

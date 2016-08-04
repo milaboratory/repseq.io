@@ -26,33 +26,30 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package io.repseq.reference;
+package io.repseq.core;
 
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.LociLibraryIOUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
+import com.milaboratory.primitivio.PrimitivI;
+import com.milaboratory.primitivio.PrimitivO;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 
-/**
- * Created by dbolotin on 27/11/15.
- */
-public class LociLibraryIOUtilsTest {
+public class IOTest {
     @Test
     public void test1() throws Exception {
-        testGF(GeneFeature.VDJTranscript);
-        testGF(GeneFeature.CDR3);
-        testGF(GeneFeature.GermlineVCDR3Part);
-    }
-
-    public void testGF(GeneFeature gf) throws IOException {
+        GeneFeature[] gfs = {GeneFeature.VDJTranscriptWithout5UTR, GeneFeature.CDR1, GeneFeature.CDR3};
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        LociLibraryIOUtils.writeReferenceGeneFeature(bos, gf);
+        PrimitivO po = new PrimitivO(bos);
+        int cc = 10;
+        for (int i = 0; i < cc; ++i) {
+            po.writeObject(gfs);
+        }
+        System.out.println(bos.size());
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-        GeneFeature deser = LociLibraryIOUtils.readReferenceGeneFeature(bis);
-        Assert.assertEquals(gf, deser);
+        PrimitivI pi = new PrimitivI(bis);
+        for (int i = 0; i < cc; ++i)
+            Assert.assertArrayEquals(gfs, pi.readObject(GeneFeature[].class));
     }
 }

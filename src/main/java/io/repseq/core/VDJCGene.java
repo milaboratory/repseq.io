@@ -4,10 +4,6 @@ import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.provider.SequenceProvider;
 import io.repseq.dto.VDJCGeneData;
-import io.repseq.reference.GeneType;
-import io.repseq.reference.ReferencePoints;
-
-import java.util.Set;
 
 /**
  * This class represents the same entity as Allele class in previous abstraction version.
@@ -61,12 +57,39 @@ public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
     }
 
     /**
+     * Returns global gene identifier including library id
+     *
+     * @return global gene identifier including library id
+     */
+    public VDJCGeneId getId() {
+        return new VDJCGeneId(parentLibrary.getLibraryId(), getName());
+    }
+
+    /**
      * Returns gene name (e.g. TRBV12-2*01)
      *
      * @return gene name (e.g. TRBV12-2*01)
      */
     public String getName() {
         return data.getName();
+    }
+
+    /**
+     * Name without allele index (e.g. TRBV12-3 for TRBV12-3*01).
+     *
+     * @return without allele index (e.g. TRBV12-3 for TRBV12-3*01)
+     */
+    public String getGeneName() {
+        return data.getGeneName();
+    }
+
+    /**
+     * Gene family name (e.g. TRBV12 for TRBV12-3*01).
+     *
+     * @return gene family name (e.g. TRBV12 for TRBV12-3*01)
+     */
+    public String getFamilyName() {
+        return data.getFamilyName();
     }
 
     /**
@@ -93,7 +116,7 @@ public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
      *
      * @return set of chains (e.g. TRA, TRD) in which this gene can be used.
      */
-    public Set<String> getChains() {
+    public Chains getChains() {
         return data.getChains();
     }
 

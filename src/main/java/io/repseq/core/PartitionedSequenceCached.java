@@ -29,7 +29,6 @@
 package io.repseq.core;
 
 import com.milaboratory.core.sequence.Seq;
-import io.repseq.reference.GeneFeature;
 
 import java.util.concurrent.ConcurrentHashMap;
 

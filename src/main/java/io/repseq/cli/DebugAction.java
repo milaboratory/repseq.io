@@ -10,10 +10,10 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryRegistry;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.GeneType;
-import io.repseq.reference.ReferencePoint;
-import io.repseq.reference.ReferencePoints;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.ReferencePoints;
 
 import java.util.HashMap;
 import java.util.List;

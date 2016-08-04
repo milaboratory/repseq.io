@@ -22,9 +22,9 @@ import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.ReferencePoint;
-import io.repseq.reference.ReferencePoints;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.ReferencePoints;
 
 import java.io.File;
 import java.util.ArrayList;

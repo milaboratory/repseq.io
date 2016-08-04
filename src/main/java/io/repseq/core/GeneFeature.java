@@ -26,7 +26,7 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package io.repseq.reference;
+package io.repseq.core;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -823,16 +823,6 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         @Override
         public GeneFeature deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
             return parse(jp.readValueAs(String.class));
-        }
-
-        @Override
-        public GeneFeature getEmptyValue() {
-            return null;
-        }
-
-        @Override
-        public GeneFeature getNullValue() {
-            return null;
         }
     }
 

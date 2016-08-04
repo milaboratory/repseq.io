@@ -26,7 +26,7 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package io.repseq.reference;
+package io.repseq.core;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -48,10 +48,10 @@ import java.io.IOException;
 @JsonSerialize(using = GeneType.Serializer.class)
 @JsonDeserialize(using = GeneType.Deserializer.class)
 public enum GeneType implements java.io.Serializable {
-    Variable((byte) 0, 'V', +1, 11),
-    Diversity((byte) 2, 'D', 0, 2),
-    Joining((byte) 1, 'J', -1, 3),
-    Constant((byte) 3, 'C', -2, 3);
+    Variable((byte) 0, 'V', +1, 0, 11),
+    Diversity((byte) 2, 'D', 0, 11, 2),
+    Joining((byte) 1, 'J', -1, 13, 3),
+    Constant((byte) 3, 'C', -2, 16, 3);
     public static final GeneType[] VJC_REFERENCE = {Variable, Joining, Constant};
     public static final GeneType[] VDJC_REFERENCE = {Variable, Diversity, Joining, Constant};
 
@@ -59,12 +59,18 @@ public enum GeneType implements java.io.Serializable {
     private final char letter;
     private final int cdr3Side;
     private final int completeNumberOfReferencePoints;
+    private final int indexOfFirstReferencePoint;
 
-    GeneType(byte id, char letter, int cdr3Side, int completeNumberOfReferencePoints) {
+    GeneType(byte id, char letter, int cdr3Side, int indexOfFirstReferencePoint, int completeNumberOfReferencePoints) {
         this.id = id;
         this.letter = letter;
         this.cdr3Side = cdr3Side;
+        this.indexOfFirstReferencePoint = indexOfFirstReferencePoint;
         this.completeNumberOfReferencePoints = completeNumberOfReferencePoints;
+    }
+
+    public int getIndexOfFirstReferencePoint() {
+        return indexOfFirstReferencePoint;
     }
 
     public static GeneType fromChar(char letter) {

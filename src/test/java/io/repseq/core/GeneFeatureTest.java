@@ -26,7 +26,7 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package io.repseq.reference;
+package io.repseq.core;
 
 import com.milaboratory.util.IntArrayList;
 import org.junit.Assert;
@@ -38,8 +38,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
-import static io.repseq.reference.GeneFeature.*;
-import static io.repseq.reference.ReferencePoint.*;
 import static org.junit.Assert.*;
 
 /**
@@ -154,11 +152,11 @@ public class GeneFeatureTest {
         GeneFeature f1, f2;
         f1 = create(1, 5, 7, 9);
         f2 = create(8, 9);
-        assertEquals(create(8, 9), intersection(f1, f2));
+        Assert.assertEquals(create(8, 9), GeneFeature.intersection(f1, f2));
 
         f1 = create(1, 5, 7, 10);
         f2 = create(8, 9);
-        assertEquals(create(8, 9), intersection(f1, f2));
+        Assert.assertEquals(create(8, 9), GeneFeature.intersection(f1, f2));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -166,7 +164,7 @@ public class GeneFeatureTest {
         GeneFeature f1, f2;
         f1 = create(1, 5, 7, 9);
         f2 = create(6, 9);
-        intersection(f1, f2);
+        GeneFeature.intersection(f1, f2);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -174,7 +172,7 @@ public class GeneFeatureTest {
         GeneFeature f1, f2;
         f1 = create(1, 5, 7, 9);
         f2 = create(2, 5, 6, 9);
-        intersection(f1, f2);
+        GeneFeature.intersection(f1, f2);
     }
 
     @Test
@@ -182,18 +180,18 @@ public class GeneFeatureTest {
         GeneFeature f1, f2;
         f1 = create(1, 5, 7, 9, 10, 12);
         f2 = create(2, 5, 7, 9, 10, 11);
-        assertEquals(create(2, 5, 7, 9, 10, 11), intersection(f1, f2));
-        assertEquals(create(2, 5, 7, 9, 10, 11), intersection(f2, f1));
+        Assert.assertEquals(create(2, 5, 7, 9, 10, 11), GeneFeature.intersection(f1, f2));
+        Assert.assertEquals(create(2, 5, 7, 9, 10, 11), GeneFeature.intersection(f2, f1));
 
         f1 = create(2, 5, 7, 9, 10, 12);
         f2 = create(1, 5, 7, 9, 10, 11);
-        assertEquals(create(2, 5, 7, 9, 10, 11), intersection(f1, f2));
-        assertEquals(create(2, 5, 7, 9, 10, 11), intersection(f2, f1));
+        Assert.assertEquals(create(2, 5, 7, 9, 10, 11), GeneFeature.intersection(f1, f2));
+        Assert.assertEquals(create(2, 5, 7, 9, 10, 11), GeneFeature.intersection(f2, f1));
 
         f1 = create(8, 9, 10, 11);
         f2 = create(1, 5, 7, 9, 10, 12);
-        assertEquals(create(8, 9, 10, 11), intersection(f1, f2));
-        assertEquals(create(8, 9, 10, 11), intersection(f2, f1));
+        Assert.assertEquals(create(8, 9, 10, 11), GeneFeature.intersection(f1, f2));
+        Assert.assertEquals(create(8, 9, 10, 11), GeneFeature.intersection(f2, f1));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -201,7 +199,7 @@ public class GeneFeatureTest {
         GeneFeature f1, f2;
         f1 = create(6, 9, 10, 11);
         f2 = create(1, 5, 7, 9, 10, 12);
-        intersection(f1, f2);
+        GeneFeature.intersection(f1, f2);
     }
 
     @Test
@@ -209,8 +207,8 @@ public class GeneFeatureTest {
         GeneFeature f1, f2;
         f1 = create(new int[]{1, 5, 7, 9, 10, 12}, new int[]{-2, 0, 1, -3, -2, 5});
         f2 = create(new int[]{1, 5, 7, 9, 10, 12}, new int[]{-3, 0, 1, -3, -2, 4});
-        assertEquals(create(new int[]{1, 5, 7, 9, 10, 12}, new int[]{-2, 0, 1, -3, -2, 4}),
-                intersection(f2, f1));
+        Assert.assertEquals(create(new int[]{1, 5, 7, 9, 10, 12}, new int[]{-2, 0, 1, -3, -2, 4}),
+                GeneFeature.intersection(f2, f1));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -218,7 +216,7 @@ public class GeneFeatureTest {
         GeneFeature f1, f2;
         f1 = create(new int[]{1, 5, 7, 9, 10, 12}, new int[]{-2, 0, 1, -3, -2, 5});
         f2 = create(new int[]{1, 5, 7, 9, 10, 12}, new int[]{-3, 0, 2, -3, -2, 4});
-        intersection(f2, f1);
+        GeneFeature.intersection(f2, f1);
     }
 
     @Test
@@ -226,8 +224,8 @@ public class GeneFeatureTest {
         GeneFeature f1, f2;
         f1 = create(new int[]{7, 9}, new int[]{2, -4});
         f2 = create(new int[]{1, 5, 7, 9, 10, 12}, new int[]{-3, 0, 1, -4, -2, 4});
-        assertEquals(create(new int[]{7, 9}, new int[]{2, -4}),
-                intersection(f2, f1));
+        Assert.assertEquals(create(new int[]{7, 9}, new int[]{2, -4}),
+                GeneFeature.intersection(f2, f1));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -235,7 +233,7 @@ public class GeneFeatureTest {
         GeneFeature f1, f2;
         f1 = create(new int[]{7, 9}, new int[]{0, -3});
         f2 = create(new int[]{1, 5, 7, 9, 10, 12}, new int[]{-3, 0, 1, -3, -2, 4});
-        intersection(f2, f1);
+        GeneFeature.intersection(f2, f1);
     }
 
     @Test
@@ -243,14 +241,14 @@ public class GeneFeatureTest {
         GeneFeature f1, f2;
         f1 = create(7, 9);
         f2 = create(1, 5, 7, 9, 10, 12);
-        assertEquals(create(7, 9),
-                intersection(f2, f1));
+        Assert.assertEquals(create(7, 9),
+                GeneFeature.intersection(f2, f1));
     }
 
     @Test
     public void testIntersection12() throws Exception {
-        assertNull(intersection(CDR3, CExon1));
-        assertNull(intersection(CExon1, CDR3));
+        assertNull(GeneFeature.intersection(GeneFeature.CDR3, GeneFeature.CExon1));
+        assertNull(GeneFeature.intersection(GeneFeature.CExon1, GeneFeature.CDR3));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -268,7 +266,7 @@ public class GeneFeatureTest {
         //Assert.assertEquals(CDR1Begin, GeneFeature.getFrameReference(CDR1));
         //Assert.assertEquals(CDR2Begin, GeneFeature.getFrameReference(CDR2));
         //Assert.assertEquals(CDR3End, GeneFeature.getFrameReference(JRegion));
-        Assert.assertEquals(L1Begin, GeneFeature.getFrameReference(VTranscriptWithout5UTR));
+        Assert.assertEquals(ReferencePoint.L1Begin, GeneFeature.getFrameReference(GeneFeature.VTranscriptWithout5UTR));
     }
 
     @Test
@@ -306,7 +304,7 @@ public class GeneFeatureTest {
 
     @Test
     public void testStatic() throws Exception {
-        assertEquals(JRegion, GeneFeature.parse("JRegion"));
+        Assert.assertEquals(GeneFeature.JRegion, GeneFeature.parse("JRegion"));
     }
 
     static final GeneFeature create(int... indexes) {
@@ -367,35 +365,35 @@ public class GeneFeatureTest {
 
     @Test
     public void testContains1() throws Exception {
-        assertTrue(CDR3.contains(VJJunction));
-        assertTrue(CDR3.contains(VDJunction));
-        assertTrue(CDR3.contains(DJJunction));
-        assertTrue(CDR3.contains(CDR3));
-        assertFalse(CDR3.contains(FR2));
-        assertFalse(CDR3.contains(CDR1));
-        assertFalse(CDR3.contains(V5UTRGermline));
+        assertTrue(GeneFeature.CDR3.contains(GeneFeature.VJJunction));
+        assertTrue(GeneFeature.CDR3.contains(GeneFeature.VDJunction));
+        assertTrue(GeneFeature.CDR3.contains(GeneFeature.DJJunction));
+        assertTrue(GeneFeature.CDR3.contains(GeneFeature.CDR3));
+        assertFalse(GeneFeature.CDR3.contains(GeneFeature.FR2));
+        assertFalse(GeneFeature.CDR3.contains(GeneFeature.CDR1));
+        assertFalse(GeneFeature.CDR3.contains(GeneFeature.V5UTRGermline));
     }
 
     @Test
     public void testReverse1() throws Exception {
-        assertEquals(new GeneFeature(ReferencePoint.DEnd, ReferencePoint.DBegin), DRegion.reverse());
+        Assert.assertEquals(new GeneFeature(ReferencePoint.DEnd, ReferencePoint.DBegin), GeneFeature.DRegion.reverse());
     }
 
     @Test
     public void testIntersection13() throws Exception {
-        assertEquals(VRegionWithP, intersection(VRegionWithP, VRegionWithP));
-        assertEquals(DRegionWithP, intersection(DRegionWithP, DRegionWithP));
+        Assert.assertEquals(GeneFeature.VRegionWithP, GeneFeature.intersection(GeneFeature.VRegionWithP, GeneFeature.VRegionWithP));
+        Assert.assertEquals(GeneFeature.DRegionWithP, GeneFeature.intersection(GeneFeature.DRegionWithP, GeneFeature.DRegionWithP));
     }
 
     @Test
     public void testIntersection14() throws Exception {
-        GeneFeature aa1 = VRegion.append(new GeneFeature(VEnd, VEnd.move(-20)));
-        GeneFeature aa2 = VRegion.append(new GeneFeature(VEnd, VEnd.move(-15)));
-        assertEquals(aa2, intersection(aa1, aa2));
-        GeneFeature dd1 = new GeneFeature(DEnd.move(-3), DBegin).append(DRegion).append(GermlineDPSegment);
-        GeneFeature dd2 = GermlineDPSegment.append(DRegion).append(new GeneFeature(DEnd, DBegin.move(3)));
-        GeneFeature dd3 = new GeneFeature(DEnd.move(-3), DBegin).append(DRegion).append(new GeneFeature(DEnd, DBegin.move(3)));
-        assertEquals(dd3, intersection(dd1, dd2));
+        GeneFeature aa1 = GeneFeature.VRegion.append(new GeneFeature(ReferencePoint.VEnd, ReferencePoint.VEnd.move(-20)));
+        GeneFeature aa2 = GeneFeature.VRegion.append(new GeneFeature(ReferencePoint.VEnd, ReferencePoint.VEnd.move(-15)));
+        Assert.assertEquals(aa2, GeneFeature.intersection(aa1, aa2));
+        GeneFeature dd1 = new GeneFeature(ReferencePoint.DEnd.move(-3), ReferencePoint.DBegin).append(GeneFeature.DRegion).append(GeneFeature.GermlineDPSegment);
+        GeneFeature dd2 = GeneFeature.GermlineDPSegment.append(GeneFeature.DRegion).append(new GeneFeature(ReferencePoint.DEnd, ReferencePoint.DBegin.move(3)));
+        GeneFeature dd3 = new GeneFeature(ReferencePoint.DEnd.move(-3), ReferencePoint.DBegin).append(GeneFeature.DRegion).append(new GeneFeature(ReferencePoint.DEnd, ReferencePoint.DBegin.move(3)));
+        Assert.assertEquals(dd3, GeneFeature.intersection(dd1, dd2));
     }
 
     @Test
@@ -412,7 +410,7 @@ public class GeneFeatureTest {
     @Ignore
     @Test
     public void testListForDocumentation() throws Exception {
-        getFeatureByName("sd");
+        GeneFeature.getFeatureByName("sd");
         List<GFT> gfts = new ArrayList<>();
         Field[] declaredFields = GeneFeature.class.getDeclaredFields();
         for (Field field : declaredFields)
@@ -420,7 +418,7 @@ public class GeneFeatureTest {
                     field.getType() == GeneFeature.class) {
                 GeneFeature value = (GeneFeature) field.get(null);
                 String name = field.getName();
-                gfts.add(new GFT(value, name, field.getAnnotation(Doc.class).value()));
+                gfts.add(new GFT(value, name, field.getAnnotation(GeneFeature.Doc.class).value()));
             }
 
         Collections.sort(gfts);
@@ -466,7 +464,7 @@ public class GeneFeatureTest {
         public GFT(GeneFeature feature, String name, String doc) {
             this.feature = feature;
             this.name = "``" + name + "``";
-            this.value = "``" + encode(feature, false).replace("+", "`` + ``") + "``";
+            this.value = "``" + GeneFeature.encode(feature, false).replace("+", "`` + ``") + "``";
             this.doc = doc;
         }
 

@@ -29,8 +29,6 @@
 package io.repseq.core;
 
 import com.milaboratory.core.Range;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.ReferencePoint;
 
 /**
  * Object stores information about sequence partitioning (positions of specific anchor points)

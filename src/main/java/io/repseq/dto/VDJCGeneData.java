@@ -6,8 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.repseq.core.BaseSequence;
-import io.repseq.reference.GeneType;
-import io.repseq.reference.ReferencePoint;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
 
 import java.util.*;
 
@@ -21,7 +22,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
     final String name;
     final GeneType geneType;
     final boolean isFunctional;
-    final Set<String> chains;
+    final Chains chains;
     @JsonDeserialize(keyUsing = ReferencePoint.JsonKeyDeserializer.class)
     @JsonSerialize(keyUsing = ReferencePoint.JsonKeySerializer.class)
     final SortedMap<ReferencePoint, Long> anchorPoints;
@@ -31,7 +32,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
                         @JsonProperty("name") String name,
                         @JsonProperty("geneType") GeneType geneType,
                         @JsonProperty("isFunctional") boolean isFunctional,
-                        @JsonProperty("chains") Set<String> chains,
+                        @JsonProperty("chains") Chains chains,
                         @JsonProperty("anchorPoints") SortedMap<ReferencePoint, Long> anchorPoints) {
         this.baseSequence = baseSequence;
         this.name = name;
@@ -49,6 +50,30 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
         return name;
     }
 
+    /**
+     * Name without allele index (e.g. TRBV12-3 for TRBV12-3*01).
+     *
+     * @return without allele index (e.g. TRBV12-3 for TRBV12-3*01)
+     */
+    public String getGeneName() {
+        int i = name.lastIndexOf('*');
+        if (i < 0)
+            return name;
+        return name.substring(0, i);
+    }
+
+    /**
+     * Gene family name (e.g. TRBV12 for TRBV12-3*01).
+     *
+     * @return gene family name (e.g. TRBV12 for TRBV12-3*01)
+     */
+    public String getFamilyName() {
+        int i = name.indexOf('-');
+        if (i < 0)
+            return name;
+        return name.substring(0, i);
+    }
+
     public GeneType getGeneType() {
         return geneType;
     }
@@ -57,7 +82,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
         return isFunctional;
     }
 
-    public Set<String> getChains() {
+    public Chains getChains() {
         return chains;
     }
 
@@ -67,7 +92,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
 
     public VDJCGeneData clone() {
         return new VDJCGeneData(baseSequence, name, geneType, isFunctional,
-                new HashSet<>(chains), new TreeMap<>(anchorPoints));
+                chains, new TreeMap<>(anchorPoints));
     }
 
     /**

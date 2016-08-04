@@ -10,7 +10,7 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryRegistry;
-import io.repseq.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
 
 import java.util.List;
 import java.util.regex.Pattern;

@@ -31,7 +31,6 @@ package io.repseq.core;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.Seq;
 import com.milaboratory.core.sequence.SeqBuilder;
-import io.repseq.reference.GeneFeature;
 
 /**
  * @author Dmitry Bolotin
