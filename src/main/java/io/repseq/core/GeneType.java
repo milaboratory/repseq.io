@@ -48,10 +48,10 @@ import java.io.IOException;
 @JsonSerialize(using = GeneType.Serializer.class)
 @JsonDeserialize(using = GeneType.Deserializer.class)
 public enum GeneType implements java.io.Serializable {
-    Variable((byte) 0, 'V', +1, 0, 11),
-    Diversity((byte) 2, 'D', 0, 11, 2),
-    Joining((byte) 1, 'J', -1, 13, 3),
-    Constant((byte) 3, 'C', -2, 16, 3);
+    Variable((byte) 0, 'V', +1, 0, 11, (byte) 0),
+    Diversity((byte) 2, 'D', 0, 11, 2, (byte) 1),
+    Joining((byte) 1, 'J', -1, 13, 3, (byte) 2),
+    Constant((byte) 3, 'C', -2, 16, 3, (byte) 3);
     public static final GeneType[] VJC_REFERENCE = {Variable, Joining, Constant};
     public static final GeneType[] VDJC_REFERENCE = {Variable, Diversity, Joining, Constant};
 
@@ -60,13 +60,19 @@ public enum GeneType implements java.io.Serializable {
     private final int cdr3Side;
     private final int completeNumberOfReferencePoints;
     private final int indexOfFirstReferencePoint;
+    private final byte order;
 
-    GeneType(byte id, char letter, int cdr3Side, int indexOfFirstReferencePoint, int completeNumberOfReferencePoints) {
+    GeneType(byte id, char letter, int cdr3Side, int indexOfFirstReferencePoint, int completeNumberOfReferencePoints, byte order) {
         this.id = id;
         this.letter = letter;
         this.cdr3Side = cdr3Side;
         this.indexOfFirstReferencePoint = indexOfFirstReferencePoint;
         this.completeNumberOfReferencePoints = completeNumberOfReferencePoints;
+        this.order = order;
+    }
+
+    public byte getOrder() {
+        return order;
     }
 
     public int getIndexOfFirstReferencePoint() {

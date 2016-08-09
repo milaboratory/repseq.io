@@ -1,5 +1,8 @@
 package io.repseq.core;
 
+import com.milaboratory.primitivio.annotations.Serializable;
+
+@Serializable(by = IO.VDJCGeneIdSerializer.class)
 public final class VDJCGeneId implements Comparable<VDJCGeneId> {
     final VDJCLibraryId libraryId;
     final String geneName;

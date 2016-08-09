@@ -109,10 +109,40 @@ public final class VDJCLibraryRegistry {
      * @throws IllegalArgumentException if can't resolve
      */
     public long resolveSpecies(String name) {
+        name = canonicalizeSpeciesName(name);
+        try {
+            return Long.parseLong(name);
+        } catch (NumberFormatException e) {
+        }
         Long taxonId = speciesNames.get(name);
         if (taxonId == null)
             throw new IllegalArgumentException("Can't resolve species name: " + name);
         return taxonId;
+    }
+
+    /**
+     * Try resolves species name to taxon id. Return null if failed
+     *
+     * @param name species name
+     * @return taxon id or null if not found
+     */
+    public Long tryResolveSpecies(String name) {
+        name = canonicalizeSpeciesName(name);
+        try {
+            return Long.parseLong(name);
+        } catch (NumberFormatException e) {
+        }
+        return speciesNames.get(name);
+    }
+
+    /**
+     * Canonicalize a species name to ignore case and some special characters
+     *
+     * @param speciesName non canonicalized species name
+     * @return canonicalized species name
+     */
+    private String canonicalizeSpeciesName(String speciesName) {
+        return speciesName.toLowerCase();
     }
 
     /**
@@ -131,6 +161,15 @@ public final class VDJCLibraryRegistry {
      */
     public void addSearchPath(Path searchPath) {
         addLibraryResolver(new FolderLibraryResolver(searchPath.toAbsolutePath()));
+    }
+
+    /**
+     * Adds path resolver to search for libraries with {libraryName}.json file names in specified folder.
+     *
+     * @param searchPath path to search for {libraryName}.json files
+     */
+    public void addSearchPath(String searchPath) {
+        addSearchPath(Paths.get(searchPath));
     }
 
     /**
@@ -159,7 +198,7 @@ public final class VDJCLibraryRegistry {
      * @throws IllegalArgumentException if species can't be resolved
      */
     public VDJCLibrary getLibrary(String libraryName, String species) {
-        return getLibrary(new VDJCLibraryId(libraryName, resolveSpecies(species)));
+        return getLibrary(libraryName, species, -1, null);
     }
 
     /**
@@ -173,7 +212,7 @@ public final class VDJCLibraryRegistry {
      * @throws RuntimeException if no library found
      */
     public VDJCLibrary getLibrary(String libraryName, long taxonId) {
-        return getLibrary(new VDJCLibraryId(libraryName, taxonId));
+        return getLibrary(libraryName, null, taxonId, null);
     }
 
     /**
@@ -185,17 +224,59 @@ public final class VDJCLibraryRegistry {
      * @return library
      * @throws RuntimeException if no library found or checksum check failed
      */
-    public synchronized VDJCLibrary getLibrary(VDJCLibraryId libraryId) {
-        // Search for already loaded libraries
+    public VDJCLibrary getLibrary(VDJCLibraryId libraryId) {
+        return getLibrary(libraryId.getLibraryName(), null, libraryId.getTaxonId(), libraryId.getChecksum());
+    }
+
+    /**
+     * Used in {@link #getLibrary(String, String, long, String)}
+     */
+    private VDJCLibrary tryResolveLibrary(String libraryName, String species, long taxonId, String checksum) {
+        // Try resolve species if it was provided in string form
+        if (species != null) {
+            Long tId = tryResolveSpecies(species);
+            if (tId == null)
+                return null;
+            taxonId = tId;
+        }
+
+        // Key to search in map
+        VDJCLibraryId libraryId = new VDJCLibraryId(libraryName, taxonId, checksum);
+
+        // Try get from map
         VDJCLibrary vdjcLibrary = libraries.get(libraryId);
 
-        // If found return it
-        if (vdjcLibrary != null)
+        // If not found return null
+        if (vdjcLibrary == null)
+            return null;
+
+        // Check for checksum if it was provided
+        if (checksum != null && !checksum.equals(vdjcLibrary.getChecksum()))
+            throw new RuntimeException("Different checksums.");
+
+        // OK
+        return vdjcLibrary;
+    }
+
+    /**
+     * Root method for library resolution
+     *
+     * @param libraryName library name
+     * @param species     if not null will also try to resolve species; if not null taxonId can be any value
+     * @param taxonId     taxon id, used if species parameter is not provided
+     * @param checksum    if not null will perform checksum check
+     * @return library
+     * @throws RuntimeException if failed to resolve library
+     */
+    private synchronized VDJCLibrary getLibrary(String libraryName, String species, long taxonId, String checksum) {
+        VDJCLibrary vdjcLibrary;
+
+        // Search for already loaded libraries and if found return it
+        if ((vdjcLibrary = tryResolveLibrary(libraryName, species, taxonId, checksum)) != null)
             return vdjcLibrary;
 
         // Try load library using provided resolvers
         for (LibraryResolver resolver : libraryResolvers) {
-            String libraryName = libraryId.getLibraryName();
 
             // Try resolve
             VDJCLibraryData[] resolved = resolver.resolve(libraryName);
@@ -218,20 +299,17 @@ public final class VDJCLibraryRegistry {
             }
 
             // Check whether required library was loaded
-            vdjcLibrary = libraries.get(libraryId);
+            vdjcLibrary = tryResolveLibrary(libraryName, species, taxonId, checksum);
 
             // If found return it
-            if (vdjcLibrary != null) {
-                if (libraryId.requireChecksumCheck() && !vdjcLibrary.getChecksum().equals(libraryId.getChecksum()))
-                    throw new RuntimeException("Different checksums.");
+            if (vdjcLibrary != null)
                 return vdjcLibrary;
-            }
 
             // If not - continue
         }
 
         // If library was not found nor loaded throw exception
-        throw new RuntimeException("Can't find library for following species and library name: " + libraryId);
+        throw new RuntimeException("Can't find library for following library name and species: " + libraryName + " + " + (species != null ? species : taxonId));
     }
 
     /**
@@ -261,9 +339,12 @@ public final class VDJCLibraryRegistry {
 
         // Adding common species names
         Long taxonId = data.getTaxonId();
-        for (String s : data.getSpeciesNames())
-            if (speciesNames.containsKey(s) && !speciesNames.get(s).equals(taxonId))
-                throw new IllegalArgumentException("Mismatch in common species name between several libraries. (Library name = " + name + ").");
+        for (String speciesName : data.getSpeciesNames()) {
+            String cSpeciesName = canonicalizeSpeciesName(speciesName);
+            if (speciesNames.containsKey(cSpeciesName) && !speciesNames.get(cSpeciesName).equals(taxonId))
+                throw new IllegalArgumentException("Mismatch in common species name between several libraries. (Library name = " + name + "; name = " + speciesName + ").");
+            speciesNames.put(cSpeciesName, taxonId);
+        }
 
         // Adding this library to collection
         libraries.put(library.getLibraryId(), library);

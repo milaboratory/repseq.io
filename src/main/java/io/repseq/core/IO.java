@@ -33,6 +33,57 @@ import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
 
 class IO {
+    public static class VDJCGeneSerializer implements Serializer<VDJCGene> {
+        @Override
+        public void write(PrimitivO output, VDJCGene object) {
+            throw new RuntimeException("Serializer only for knownReference serialization.");
+        }
+
+        @Override
+        public VDJCGene read(PrimitivI input) {
+            throw new RuntimeException("Serializer only for knownReference serialization.");
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
+    }
+
+    public static class VDJCGeneIdSerializer implements Serializer<VDJCGeneId> {
+        @Override
+        public void write(PrimitivO output, VDJCGeneId object) {
+            output.writeUTF(object.libraryId.getLibraryName());
+            output.writeVarLong(object.libraryId.getTaxonId());
+            output.writeObject(object.libraryId.getChecksum());
+            output.writeUTF(object.geneName);
+        }
+
+        @Override
+        public VDJCGeneId read(PrimitivI input) {
+            String lName = input.readUTF();
+            long taxonId = input.readVarLong();
+            String chgecksum = input.readObject(String.class);
+            String geneName = input.readUTF();
+            return new VDJCGeneId(new VDJCLibraryId(lName, taxonId, chgecksum), geneName);
+        }
+
+        @Override
+        public boolean isReference() {
+            return true;
+        }
+
+        @Override
+        public boolean handlesReference() {
+            return false;
+        }
+    }
+
     public static class ReferencePointSerializer implements Serializer<ReferencePoint> {
         @Override
         public void write(PrimitivO output, ReferencePoint object) {
@@ -87,14 +138,14 @@ class IO {
         public void write(PrimitivO output, GeneFeature object) {
             output.writeObject(object.regions);
             // Saving this gene feature for the all subsequent serializations
-            output.putKnownReference(object);
+            //output.putKnownReference(object);
         }
 
         @Override
         public GeneFeature read(PrimitivI input) {
             GeneFeature object = new GeneFeature(input.readObject(GeneFeature.ReferenceRange[].class), true);
             // Saving this gene feature for the all subsequent deserializations
-            input.putKnownReference(object);
+            //input.putKnownReference(object);
             return object;
         }
 

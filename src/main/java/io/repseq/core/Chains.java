@@ -9,6 +9,13 @@ import java.util.*;
  * Immutable set of strings
  */
 public final class Chains implements Iterable<String> {
+    /**
+     * Special chains object represents all possible alleles.
+     */
+    public static final Chains ALL = new Chains((HashSet<String>) null);
+
+    public static final Chains EMPTY = new Chains();
+
     public static final Chains TRA = new Chains("TRA");
     public static final Chains TRB = new Chains("TRB");
     public static final Chains TRG = new Chains("TRG");
@@ -37,15 +44,21 @@ public final class Chains implements Iterable<String> {
 
     @JsonValue
     private Set<String> getChains() {
+        if(chains == null)
+            throw new RuntimeException("Serialization of ALL chains is not implemented.");
         return chains;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Iterator<String> iterator() {
-        return Collections.unmodifiableCollection(chains).iterator();
+        return chains == null ? Collections.EMPTY_LIST.iterator() : Collections.unmodifiableCollection(chains).iterator();
     }
 
     public Chains merge(Chains other) {
+        if(chains == null || other.chains == null)
+            return ALL;
+
         HashSet<String> s = new HashSet<>();
         s.addAll(this.chains);
         s.addAll(other.chains);
@@ -53,9 +66,19 @@ public final class Chains implements Iterable<String> {
     }
 
     public boolean intersects(Chains other) {
+        if(other.chains == null && this.chains == null)
+            return true;
+
+        if(other.chains == null)
+            return !this.chains.isEmpty();
+
+        if(this.chains == null)
+            return !other.chains.isEmpty();
+
         for (String s2e : other.chains)
             if (chains.contains(s2e))
                 return true;
+
         return false;
     }
 
@@ -64,14 +87,14 @@ public final class Chains implements Iterable<String> {
         if (this == o) return true;
         if (!(o instanceof Chains)) return false;
 
-        Chains chains1 = (Chains) o;
+        Chains strings = (Chains) o;
 
-        return chains.equals(chains1.chains);
+        return chains != null ? chains.equals(strings.chains) : strings.chains == null;
 
     }
 
     @Override
     public int hashCode() {
-        return chains.hashCode();
+        return chains != null ? chains.hashCode() : 0;
     }
 }

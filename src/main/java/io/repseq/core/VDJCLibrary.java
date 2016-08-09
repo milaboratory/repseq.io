@@ -4,9 +4,7 @@ import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
 
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Class represent a single library of V, D, J, C genes from a single species. This class may represent a full set of
@@ -90,6 +88,19 @@ public class VDJCLibrary {
      */
     public Collection<VDJCGene> getGenes() {
         return genes.values();
+    }
+
+    /**
+     * Returns collection of all genes in this library with specific chains
+     *
+     * @return collection of all genes in this library with specific chains
+     */
+    public Collection<VDJCGene> getGenes(Chains chains) {
+        List<VDJCGene> result = new ArrayList<>();
+        for (VDJCGene gene : genes.values())
+            if (gene.getChains().intersects(chains))
+                result.add(gene);
+        return result;
     }
 
     /**

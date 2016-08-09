@@ -3,11 +3,13 @@ package io.repseq.core;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.provider.SequenceProvider;
+import com.milaboratory.primitivio.annotations.Serializable;
 import io.repseq.dto.VDJCGeneData;
 
 /**
  * This class represents the same entity as Allele class in previous abstraction version.
  */
+@Serializable(by = IO.VDJCGeneSerializer.class)
 public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
     /**
      * Any gene stores a reference to it's parent library
