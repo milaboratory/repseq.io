@@ -13,10 +13,10 @@ import java.net.URI;
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class KnownSequenceFragmentData {
-    final URI uri;
-    final Range range;
-    final NucleotideSequence sequence;
+public final class KnownSequenceFragmentData implements Comparable<KnownSequenceFragmentData> {
+    private final URI uri;
+    private final Range range;
+    private final NucleotideSequence sequence;
 
     @JsonCreator
     public KnownSequenceFragmentData(@JsonProperty("uri") URI uri,
@@ -37,6 +37,19 @@ public final class KnownSequenceFragmentData {
 
     public NucleotideSequence getSequence() {
         return sequence;
+    }
+
+    @Override
+    public int compareTo(KnownSequenceFragmentData o) {
+        int cmp;
+
+        if ((cmp = getUri().compareTo(o.getUri())) != 0)
+            return cmp;
+
+        if ((cmp = getRange().compareTo(o.getRange())) != 0)
+            return cmp;
+
+        return 0;
     }
 
     @Override

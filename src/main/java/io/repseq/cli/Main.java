@@ -16,6 +16,8 @@ public class Main {
         JCommanderBasedMain main = new JCommanderBasedMain("repseqio",
                 new ListAction(),
                 new FilterAction(),
+                new MergeAction(),
+                new CompileAction(),
                 new FastaAction(),
                 new InferAnchorPointsAction(),
                 new DebugAction(),

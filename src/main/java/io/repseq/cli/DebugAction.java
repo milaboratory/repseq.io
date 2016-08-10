@@ -123,7 +123,6 @@ public class DebugAction implements Action {
         return params;
     }
 
-    //TODO force option to overwrite output file
     @Parameters(commandDescription = "Outputs extensive information on genes in the library.")
     public static final class Params extends ActionParameters {
         @Parameter(description = "input_library.json")
@@ -132,14 +131,6 @@ public class DebugAction implements Action {
         @Parameter(description = "Gene name pattern, regexp string, all genes with matching gene name will be exported.",
                 names = {"-n", "--name"})
         public String name;
-
-        //@Parameter(description = "Gene feature to export (e.g. VRegion, JRegion, VTranscript, etc...)",
-        //        names = {"-g", "--gene-feature"}, required = true)
-        //public String feature;
-
-        //public GeneFeature getGeneFeature() {
-        //    return GeneFeature.parse(feature);
-        //}
 
         public String getInput() {
             return parameters.get(0);

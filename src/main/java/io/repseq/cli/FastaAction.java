@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
+import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.core.io.sequence.fasta.FastaWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.VDJCGene;
@@ -12,6 +13,7 @@ import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.core.GeneFeature;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -72,9 +74,8 @@ public class FastaAction implements Action {
         return params;
     }
 
-    //TODO force option to overwrite output file
     @Parameters(commandDescription = "Export sequences of genes to fasta file.")
-    public static final class Params extends ActionParameters {
+    public static final class Params extends ActionParametersWithOutput {
         @Parameter(description = "input_library.json [output.fasta]")
         public List<String> parameters;
 
@@ -108,6 +109,11 @@ public class FastaAction implements Action {
 
         public String getOutput() {
             return parameters.size() == 1 ? "." : parameters.get(1);
+        }
+
+        @Override
+        protected List<String> getOutputFiles() {
+            return Collections.singletonList(getOutput());
         }
     }
 }

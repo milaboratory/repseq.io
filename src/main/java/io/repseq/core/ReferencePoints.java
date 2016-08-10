@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
 
@@ -136,6 +137,12 @@ public final class ReferencePoints extends SequencePartitioning implements java.
             if (points[i] >= 0)
                 return points[i];
         throw new IllegalStateException();
+    }
+
+    public Range getContainigRegion() {
+        return reversed ?
+                new Range(getLastAvailablePosition(), getFirstAvailablePosition()) :
+                new Range(getFirstAvailablePosition(), getLastAvailablePosition());
     }
 
     public int getLengthBetweenBoundaryPoints() {

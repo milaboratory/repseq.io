@@ -41,6 +41,15 @@ public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
     }
 
     /**
+     * Returns sequence provider associated with this gene
+     *
+     * @return sequence provider associated with this gene
+     */
+    public SequenceProvider<NucleotideSequence> getSequenceProvider() {
+        return sequenceProvider;
+    }
+
+    /**
      * Returns serializable gene data
      *
      * @return serializable gene data

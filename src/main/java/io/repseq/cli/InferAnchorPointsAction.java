@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
+import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.core.alignment.AffineGapAlignmentScoring;
 import com.milaboratory.core.alignment.Alignment;
 import com.milaboratory.core.alignment.AlignmentHelper;
@@ -27,10 +28,7 @@ import io.repseq.core.ReferencePoint;
 import io.repseq.core.ReferencePoints;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.milaboratory.core.sequence.TranslationParameters.withIncompleteCodon;
@@ -253,9 +251,8 @@ public class InferAnchorPointsAction implements Action {
         }
     }
 
-    //TODO force option to overwrite output file
     @Parameters(commandDescription = "Try to infer anchor point positions from gene sequences of other libraries.")
-    public static final class Params extends ActionParameters {
+    public static final class Params extends ActionParametersWithOutput {
         @Parameter(description = "input_library.json reference_library1.json reference_library2.json .... output.json")
         public List<String> parameters;
 
@@ -303,6 +300,11 @@ public class InferAnchorPointsAction implements Action {
 
         public String getOutput() {
             return parameters.get(parameters.size() - 1);
+        }
+
+        @Override
+        protected List<String> getOutputFiles() {
+            return Collections.singletonList(getOutput());
         }
     }
 }

@@ -2,6 +2,7 @@ package io.repseq.dto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
@@ -11,10 +12,11 @@ import java.util.List;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
-    final long taxonId;
-    final List<String> speciesNames;
-    final List<VDJCGeneData> genes;
-    final List<KnownSequenceFragmentData> sequenceFragments;
+    private final long taxonId;
+    private final List<String> speciesNames;
+    private final List<VDJCGeneData> genes;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private final List<KnownSequenceFragmentData> sequenceFragments;
 
     /**
      * Creates VDJCLibraryData object from other VDJCLibraryData given new sed of genes
