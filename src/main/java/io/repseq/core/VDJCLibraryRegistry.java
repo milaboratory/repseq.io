@@ -9,6 +9,7 @@ import io.repseq.seqbase.SequenceResolver;
 import io.repseq.seqbase.SequenceResolvers;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,6 +37,10 @@ public final class VDJCLibraryRegistry {
      * Loaded libraries
      */
     final Map<VDJCLibraryId, VDJCLibrary> libraries = new HashMap<>();
+    /**
+     * Store successfully loaded libraries
+     */
+    final HashSet<LibraryLoadRequest> loadedLibraries = new HashSet<>();
 
     /**
      * Creates new VDJCLibraryRegistry with default sequence resolver
@@ -159,7 +164,7 @@ public final class VDJCLibraryRegistry {
      *
      * @param searchPath path to search for {libraryName}.json files
      */
-    public void addSearchPath(Path searchPath) {
+    public void addPathResolver(Path searchPath) {
         addLibraryResolver(new FolderLibraryResolver(searchPath.toAbsolutePath()));
     }
 
@@ -168,8 +173,21 @@ public final class VDJCLibraryRegistry {
      *
      * @param searchPath path to search for {libraryName}.json files
      */
-    public void addSearchPath(String searchPath) {
-        addSearchPath(Paths.get(searchPath));
+    public void addPathResolver(String searchPath) {
+        addPathResolver(Paths.get(searchPath));
+    }
+
+    /**
+     * Adds classpath resolver to search for libraries with {libraryName}.json names in the specified folder
+     *
+     * @param searchPath root address to search for {libraryName}.json files inn classpath
+     */
+    public void addClasspathResolver(String searchPath) {
+        if (!searchPath.endsWith("/"))
+            searchPath = searchPath + "/";
+        if (searchPath.startsWith("/"))
+            searchPath = searchPath.substring(1);
+        addLibraryResolver(new ClasspathLibraryResolver(searchPath));
     }
 
     /**
@@ -231,7 +249,7 @@ public final class VDJCLibraryRegistry {
     /**
      * Used in {@link #getLibrary(String, String, long, String)}
      */
-    private VDJCLibrary tryResolveLibrary(String libraryName, String species, long taxonId, String checksum) {
+    private VDJCLibrary tryGetLibrary(String libraryName, String species, long taxonId, String checksum) {
         // Try resolve species if it was provided in string form
         if (species != null) {
             Long tId = tryResolveSpecies(species);
@@ -272,34 +290,16 @@ public final class VDJCLibraryRegistry {
         VDJCLibrary vdjcLibrary;
 
         // Search for already loaded libraries and if found return it
-        if ((vdjcLibrary = tryResolveLibrary(libraryName, species, taxonId, checksum)) != null)
+        if ((vdjcLibrary = tryGetLibrary(libraryName, species, taxonId, checksum)) != null)
             return vdjcLibrary;
 
         // Try load library using provided resolvers
         for (LibraryResolver resolver : libraryResolvers) {
-
-            // Try resolve
-            VDJCLibraryData[] resolved = resolver.resolve(libraryName);
-
-            // If not resolved proceed to next resolver
-            if (resolved == null)
-                continue;
-
-            // Registering loaded library entries
-            for (VDJCLibraryData vdjcLibraryData : resolved) {
-                VDJCLibraryId sal = new VDJCLibraryId(libraryName, vdjcLibraryData.getTaxonId());
-
-                // Check whether library is already loaded manually or using higher priority resolver
-                // (or using previous resolution call with the same library name)
-                if (libraries.containsKey(sal)) // If so - ignore it
-                    continue;
-
-                // Registering library
-                registerLibrary(resolver.getContext(libraryName), libraryName, vdjcLibraryData);
-            }
+            // Try resolve library using this resolver
+            tryResolve(resolver, libraryName);
 
             // Check whether required library was loaded
-            vdjcLibrary = tryResolveLibrary(libraryName, species, taxonId, checksum);
+            vdjcLibrary = tryGetLibrary(libraryName, species, taxonId, checksum);
 
             // If found return it
             if (vdjcLibrary != null)
@@ -310,6 +310,46 @@ public final class VDJCLibraryRegistry {
 
         // If library was not found nor loaded throw exception
         throw new RuntimeException("Can't find library for following library name and species: " + libraryName + " + " + (species != null ? species : taxonId));
+    }
+
+    /**
+     * Try resolve library using all available resolvers, and register all resolved libraries
+     *
+     * @param name library name
+     */
+    public void loadAllLibraries(String name) {
+        for (LibraryResolver resolver : libraryResolvers)
+            tryResolve(resolver, name);
+    }
+
+    private void tryResolve(LibraryResolver resolver, String libraryName) {
+        // Check if this combination of resolver and libraryName was already being processed
+        LibraryLoadRequest request = new LibraryLoadRequest(resolver, libraryName);
+        if (loadedLibraries.contains(request))
+            return;
+
+        // Try resolve
+        VDJCLibraryData[] resolved = resolver.resolve(libraryName);
+
+        // If not resolved proceed to next resolver
+        if (resolved == null)
+            return;
+
+        // Marking this request as already processed
+        loadedLibraries.add(request);
+
+        // Registering loaded library entries
+        for (VDJCLibraryData vdjcLibraryData : resolved) {
+            VDJCLibraryId sal = new VDJCLibraryId(libraryName, vdjcLibraryData.getTaxonId());
+
+            // Check whether library is already loaded manually or using higher priority resolver
+            // (or using previous resolution call with the same library name)
+            if (libraries.containsKey(sal)) // If so - ignore it
+                continue;
+
+            // Registering library
+            registerLibrary(resolver.getContext(libraryName), libraryName, vdjcLibraryData);
+        }
     }
 
     /**
@@ -405,7 +445,11 @@ public final class VDJCLibraryRegistry {
     /**
      * Default registry
      */
-    private static volatile VDJCLibraryRegistry defaultRegistry = new VDJCLibraryRegistry();
+    private static volatile VDJCLibraryRegistry defaultRegistry;
+
+    static {
+        resetDefaultRegistry();
+    }
 
     /**
      * Resets default VDJLibrary registry
@@ -419,6 +463,7 @@ public final class VDJCLibraryRegistry {
      */
     public static void resetDefaultRegistry(SequenceResolver resolver) {
         defaultRegistry = new VDJCLibraryRegistry(resolver);
+        defaultRegistry.addClasspathResolver("libraries/");
     }
 
     /**
@@ -464,12 +509,69 @@ public final class VDJCLibraryRegistry {
                     return null;
 
                 // Getting libraries from file
-                VDJCLibraryData[] libraries = GlobalObjectMappers.ONE_LINE.readValue(filePath.toFile(), VDJCLibraryData[].class);
-
-                return libraries;
+                return GlobalObjectMappers.ONE_LINE.readValue(filePath.toFile(), VDJCLibraryData[].class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    /**
+     * Load library data from {libraryName}.json files in specified folder.
+     */
+    public static final class ClasspathLibraryResolver implements LibraryResolver {
+        final String path;
+
+        public ClasspathLibraryResolver(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public Path getContext(String libraryName) {
+            return null;
+        }
+
+        @Override
+        public VDJCLibraryData[] resolve(String libraryName) {
+            try (InputStream stream = ClassLoader.getSystemClassLoader().getResourceAsStream(path + libraryName + ".json")) {
+                if (stream == null)
+                    return null;
+
+                // Getting libraries from file
+                return GlobalObjectMappers.ONE_LINE.readValue(stream, VDJCLibraryData[].class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private static final class LibraryLoadRequest {
+        // TODO weak reference ?
+        final LibraryResolver resolver;
+        final String libraryName;
+
+        public LibraryLoadRequest(LibraryResolver resolver, String libraryName) {
+            this.resolver = resolver;
+            this.libraryName = libraryName;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof LibraryLoadRequest)) return false;
+
+            LibraryLoadRequest that = (LibraryLoadRequest) o;
+
+            if (resolver != null ? resolver == that.resolver : that.resolver != null) return false;
+            return libraryName != null ? libraryName.equals(that.libraryName) : that.libraryName == null;
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = resolver != null ? System.identityHashCode(resolver) : 0;
+            result = 31 * result + (libraryName != null ? libraryName.hashCode() : 0);
+            return result;
         }
     }
 }

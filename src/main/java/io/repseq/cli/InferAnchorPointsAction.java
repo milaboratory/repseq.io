@@ -56,7 +56,12 @@ public class InferAnchorPointsAction implements Action {
         int i = 0;
         for (String refAddress : params.getReference()) {
             String name = REFERENCE_LIBRARY_PREFIX + (i++);
-            reg.registerLibraries(refAddress, name);
+
+            if (!"default".equals(refAddress))
+                reg.registerLibraries(refAddress, name);
+            else
+                reg.loadAllLibraries("default");
+
             libraryNameToAddress.put(name, refAddress);
         }
 
@@ -253,7 +258,7 @@ public class InferAnchorPointsAction implements Action {
 
     @Parameters(commandDescription = "Try to infer anchor point positions from gene sequences of other libraries.")
     public static final class Params extends ActionParametersWithOutput {
-        @Parameter(description = "input_library.json reference_library1.json reference_library2.json .... output.json")
+        @Parameter(description = "input_library.json|default reference_library1.json reference_library2.json .... output.json")
         public List<String> parameters;
 
         @Parameter(description = "Gene name pattern, regexp string, all genes with matching gene name will be exported.",

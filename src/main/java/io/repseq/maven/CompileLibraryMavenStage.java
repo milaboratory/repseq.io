@@ -47,7 +47,7 @@ public class CompileLibraryMavenStage {
 
         VDJCLibraryData[] mergeResult = VDJCDataUtils.merge(libs);
 
-        Path resultPath = root.resolve("target").resolve("classes").resolve("library");
+        Path resultPath = root.resolve("target").resolve("classes").resolve("libraries");
         Files.createDirectories(resultPath);
         resultPath = resultPath.resolve("default.json");
 

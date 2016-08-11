@@ -25,7 +25,11 @@ public class FastaAction implements Action {
         GeneFeature geneFeature = params.getGeneFeature();
 
         VDJCLibraryRegistry reg = VDJCLibraryRegistry.getDefault();
-        reg.registerLibraries(params.getInput());
+
+        if (!"default".equals(params.getInput()))
+            reg.registerLibraries(params.getInput());
+        else
+            reg.loadAllLibraries("default");
 
         Pattern chainPattern = params.chain == null ? null : Pattern.compile(params.chain);
         Pattern namePattern = params.name == null ? null : Pattern.compile(params.name);
@@ -58,7 +62,7 @@ public class FastaAction implements Action {
                     if (featureSequence == null)
                         continue;
 
-                    writer.write(gene.getName() + "|" + (gene.isFunctional() ? "F" : "P"), featureSequence);
+                    writer.write(gene.getName() + "|" + (gene.isFunctional() ? "F" : "P") + "|taxonId=" + gene.getParentLibrary().getTaxonId(), featureSequence);
                 }
             }
         }
@@ -76,7 +80,7 @@ public class FastaAction implements Action {
 
     @Parameters(commandDescription = "Export sequences of genes to fasta file.")
     public static final class Params extends ActionParametersWithOutput {
-        @Parameter(description = "input_library.json [output.fasta]")
+        @Parameter(description = "input_library.json|default [output.fasta]")
         public List<String> parameters;
 
         @Parameter(description = "Taxon id (filter multi-library file to leave single library for specified taxon id)",
