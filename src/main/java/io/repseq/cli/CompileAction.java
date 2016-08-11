@@ -19,8 +19,10 @@ import io.repseq.dto.VDJCLibraryData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,8 +33,24 @@ public class CompileAction implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
+        compile(Paths.get(params.getInput()), Paths.get(params.getOutput()), params.surroundings);
+    }
+
+    @Override
+    public String command() {
+        return "compile";
+    }
+
+    @Override
+    public ActionParameters params() {
+        return params;
+    }
+
+    public static void compile(Path source, Path destination, int surroundings) throws IOException {
+        VDJCLibraryRegistry.resetDefaultRegistry();
+
         VDJCLibraryRegistry reg = VDJCLibraryRegistry.getDefault();
-        reg.registerLibraries(params.getInput(), "lib");
+        reg.registerLibraries(source, "lib");
 
         List<VDJCLibraryData> result = new ArrayList<>();
 
@@ -47,7 +65,7 @@ public class CompileAction implements Action {
                     throw new IllegalArgumentException("Don't support mutated sequences yet.");
                 URI uri = gene.getData().getBaseSequence().getOrigin();
                 Range region = gene.getPartitioning().getContainigRegion();
-                region = region.expand(params.surroundings);
+                region = region.expand(surroundings);
                 NucleotideSequence seq;
                 try {
                     seq = gene.getSequenceProvider().getRegion(region);
@@ -65,19 +83,9 @@ public class CompileAction implements Action {
 
         VDJCDataUtils.sort(result);
 
-        GlobalObjectMappers.ONE_LINE.writeValue(new File(params.getOutput()), result);
+        GlobalObjectMappers.ONE_LINE.writeValue(destination.toFile(), result);
 
-        log.info("{} compiled successfully.", params.getInput());
-    }
-
-    @Override
-    public String command() {
-        return "compile";
-    }
-
-    @Override
-    public ActionParameters params() {
-        return params;
+        log.info("{} compiled successfully.", source);
     }
 
     @Parameters(commandDescription = "Compile a library into self-contained compiled library file, by embedding " +

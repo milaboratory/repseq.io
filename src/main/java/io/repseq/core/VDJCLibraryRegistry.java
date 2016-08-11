@@ -408,6 +408,13 @@ public final class VDJCLibraryRegistry {
     private static volatile VDJCLibraryRegistry defaultRegistry = new VDJCLibraryRegistry();
 
     /**
+     * Resets default VDJLibrary registry
+     */
+    public static void resetDefaultRegistry() {
+        resetDefaultRegistry(null);
+    }
+
+    /**
      * Resets default VDJLibrary registry and sets specific sequence resolver
      */
     public static void resetDefaultRegistry(SequenceResolver resolver) {
