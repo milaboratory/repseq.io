@@ -74,7 +74,7 @@ public class InferAnchorPointsAction implements Action {
         // Parsing gene feature
         GeneFeature geneFeature = params.getGeneFeature();
 
-        SimpleBatchAlignerParameters<AminoAcidSequence> aParams = new SimpleBatchAlignerParameters<>(1, 0.9f,
+        SimpleBatchAlignerParameters<AminoAcidSequence> aParams = new SimpleBatchAlignerParameters<>(5, 0.4f,
                 params.getAbsoluteMinScore(), true,
                 AffineGapAlignmentScoring.getAminoAcidBLASTScoring(BLASTMatrix.BLOSUM62, -10, -1));
         SimpleBatchAligner<AminoAcidSequence, Ref> aligner = new SimpleBatchAligner<>(aParams);
@@ -168,79 +168,99 @@ public class InferAnchorPointsAction implements Action {
                     continue;
                 }
 
-                Alignment<AminoAcidSequence> bestAlignment = bestAResult.getBestHit().getAlignment();
-                Ref bestRef = bestAResult.getBestHit().getRecordPayload();
-                VDJCGene bestReferenceGene = bestRef.gene;
-
-                ps.println("Aligned with " + bestReferenceGene.getName() + " from " +
-                        libraryNameToAddress.get(bestReferenceGene.getParentLibrary().getName()) + " ; Score = " + bestAlignment.getScore());
-                AlignmentHelper alignmentHelper = bestAlignment.getAlignmentHelper();
-                for (AlignmentHelper h : alignmentHelper.split(150))
-                    ps.println(h + "\n");
-
-                ReferencePoints targetPartitioning = targetGene.getPartitioning();
-                ReferencePoints referencePartitioning = bestReferenceGene.getPartitioning();
+                List<AlignmentHit<AminoAcidSequence, Ref>> hits = bestAResult.getHits();
 
                 VDJCGeneData targetGeneData = targetGene.getData().clone();
 
-                for (GeneFeature.ReferenceRange range : geneFeature)
-                    for (ReferencePoint point : range.getIntermediatePoints()) {
-                        ps.print(point + ": ");
+                boolean anyPointChanged = false;
 
-                        if (targetPartitioning.isAvailable(point)) {
-                            ps.println("already set");
-                            continue;
+                for (int ai = 0; ai < hits.size(); ai++) {
+                    // Accumulate output
+                    ByteArrayOutputStream localBos = new ByteArrayOutputStream();
+                    PrintStream localPS = new PrintStream(localBos);
+
+                    Alignment<AminoAcidSequence> bestAlignment = hits.get(ai).getAlignment();
+                    Ref bestRef = hits.get(ai).getRecordPayload();
+                    VDJCGene bestReferenceGene = bestRef.gene;
+
+                    localPS.println("Aligned with " + bestReferenceGene.getName() + " from " +
+                            libraryNameToAddress.get(bestReferenceGene.getParentLibrary().getName()) + " ; Score = " + bestAlignment.getScore());
+                    AlignmentHelper alignmentHelper = bestAlignment.getAlignmentHelper();
+                    for (AlignmentHelper h : alignmentHelper.split(150))
+                        localPS.println(h + "\n");
+
+                    ReferencePoints targetPartitioning = targetGene.getPartitioning();
+                    ReferencePoints referencePartitioning = bestReferenceGene.getPartitioning();
+
+                    for (GeneFeature.ReferenceRange range : geneFeature)
+                        for (ReferencePoint point : range.getIntermediatePoints()) {
+                            localPS.print(point + ": ");
+
+                            if (targetPartitioning.isAvailable(point)) {
+                                localPS.println("already set");
+                                continue;
+                            }
+
+                            if (!referencePartitioning.isAvailable(point)) {
+                                localPS.println("not set in reference gene");
+                                continue;
+                            }
+
+                            int ntPositionInReference = referencePartitioning.getRelativePosition(geneFeature, point);
+
+                            // Projecting position
+
+                            AminoAcidSequence.AminoAcidSequencePosition aaPositionInReferece = AminoAcidSequence
+                                    .convertNtPositionToAA(ntPositionInReference, bestRef.ntSeqLength, bestRef.frame);
+
+                            if (aaPositionInReferece == null) {
+                                localPS.println("failed to convert to aa position in ref");
+                                continue;
+                            }
+
+                            int aaPositionInTarget = Alignment.aabs(bestAlignment.convertPosition(aaPositionInReferece.aminoAcidPosition));
+
+                            if (aaPositionInTarget == -1) {
+                                localPS.println("failed to project using alignment");
+                                continue;
+                            }
+
+                            int ntPositionInTarget = AminoAcidSequence.convertAAPositionToNt(aaPositionInTarget, nSeq.size(), bestFrame);
+
+                            if (ntPositionInTarget == -1) {
+                                localPS.println("failed");
+                                continue;
+                            }
+
+                            ntPositionInTarget += aaPositionInReferece.positionInTriplet;
+
+                            ntPositionInTarget = targetPartitioning.getAbsolutePosition(geneFeature, ntPositionInTarget);
+
+                            if (ntPositionInTarget == -1) {
+                                localPS.println("failed");
+                                continue;
+                            }
+
+                            localPS.println(ntPositionInTarget);
+
+                            targetGeneData.getAnchorPoints().put(point, (long) ntPositionInTarget);
+
+                            anyPointChanged = true;
                         }
 
-                        if (!referencePartitioning.isAvailable(point)) {
-                            ps.println("not set in reference gene");
-                            continue;
-                        }
-
-                        int ntPositionInReference = referencePartitioning.getRelativePosition(geneFeature, point);
-
-                        // Projecting position
-
-                        AminoAcidSequence.AminoAcidSequencePosition aaPositionInReferece = AminoAcidSequence
-                                .convertNtPositionToAA(ntPositionInReference, bestRef.ntSeqLength, bestRef.frame);
-
-                        if (aaPositionInReferece == null) {
-                            ps.println("failed to convert to aa position in ref");
-                            continue;
-                        }
-
-                        int aaPositionInTarget = Alignment.aabs(bestAlignment.convertPosition(aaPositionInReferece.aminoAcidPosition));
-
-                        if (aaPositionInTarget == -1) {
-                            ps.println("failed to project using alignment");
-                            continue;
-                        }
-
-                        int ntPositionInTarget = AminoAcidSequence.convertAAPositionToNt(aaPositionInTarget, nSeq.size(), bestFrame);
-
-                        if (ntPositionInTarget == -1) {
-                            ps.println("failed");
-                            continue;
-                        }
-
-                        ntPositionInTarget += aaPositionInReferece.positionInTriplet;
-
-                        ntPositionInTarget = targetPartitioning.getAbsolutePosition(geneFeature, ntPositionInTarget);
-
-                        if (ntPositionInTarget == -1) {
-                            ps.println("failed");
-                            continue;
-                        }
-
-                        ps.println(ntPositionInTarget);
-
-                        targetGeneData.getAnchorPoints().put(point, (long) ntPositionInTarget);
+                    if (!anyPointChanged) {
+                        if (!params.outputOnlyModified() && ai == 0)
+                            ps.write(localBos.toByteArray());
+                    } else {
+                        ps.write(localBos.toByteArray());
+                        break;
                     }
+                }
 
                 ps.println("================");
                 ps.println();
 
-                if (params.outputOnlyModified())
+                if (anyPointChanged && params.outputOnlyModified())
                     System.out.write(bos.toByteArray());
 
                 genes.add(targetGeneData);
