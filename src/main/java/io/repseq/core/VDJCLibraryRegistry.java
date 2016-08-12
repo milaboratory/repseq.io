@@ -183,11 +183,21 @@ public final class VDJCLibraryRegistry {
      * @param searchPath root address to search for {libraryName}.json files inn classpath
      */
     public void addClasspathResolver(String searchPath) {
+        addClasspathResolver(searchPath, VDJCLibraryRegistry.class.getClassLoader());
+    }
+
+    /**
+     * Adds classpath resolver to search for libraries with {libraryName}.json names in the specified folder
+     *
+     * @param searchPath  root address to search for {libraryName}.json files inn classpath
+     * @param classLoader class loader
+     */
+    public void addClasspathResolver(String searchPath, ClassLoader classLoader) {
         if (!searchPath.endsWith("/"))
             searchPath = searchPath + "/";
         if (searchPath.startsWith("/"))
             searchPath = searchPath.substring(1);
-        addLibraryResolver(new ClasspathLibraryResolver(searchPath));
+        addLibraryResolver(new ClasspathLibraryResolver(searchPath, classLoader));
     }
 
     /**
@@ -521,9 +531,11 @@ public final class VDJCLibraryRegistry {
      */
     public static final class ClasspathLibraryResolver implements LibraryResolver {
         final String path;
+        final ClassLoader classLoader;
 
-        public ClasspathLibraryResolver(String path) {
+        public ClasspathLibraryResolver(String path, ClassLoader classLoader) {
             this.path = path;
+            this.classLoader = classLoader;
         }
 
         @Override
@@ -533,9 +545,11 @@ public final class VDJCLibraryRegistry {
 
         @Override
         public VDJCLibraryData[] resolve(String libraryName) {
-            try (InputStream stream = ClassLoader.getSystemClassLoader().getResourceAsStream(path + libraryName + ".json")) {
-                if (stream == null)
+            try (InputStream stream = classLoader.getResourceAsStream(path + libraryName + ".json")) {
+                if (stream == null) {
+                    System.out.println(classLoader.toString());
                     return null;
+                }
 
                 // Getting libraries from file
                 return GlobalObjectMappers.ONE_LINE.readValue(stream, VDJCLibraryData[].class);

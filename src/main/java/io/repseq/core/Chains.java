@@ -44,7 +44,7 @@ public final class Chains implements Iterable<String> {
 
     @JsonValue
     private Set<String> getChains() {
-        if(chains == null)
+        if (chains == null)
             throw new RuntimeException("Serialization of ALL chains is not implemented.");
         return chains;
     }
@@ -56,7 +56,7 @@ public final class Chains implements Iterable<String> {
     }
 
     public Chains merge(Chains other) {
-        if(chains == null || other.chains == null)
+        if (chains == null || other.chains == null)
             return ALL;
 
         HashSet<String> s = new HashSet<>();
@@ -66,13 +66,13 @@ public final class Chains implements Iterable<String> {
     }
 
     public boolean intersects(Chains other) {
-        if(other.chains == null && this.chains == null)
+        if (other.chains == null && this.chains == null)
             return true;
 
-        if(other.chains == null)
+        if (other.chains == null)
             return !this.chains.isEmpty();
 
-        if(this.chains == null)
+        if (this.chains == null)
             return !other.chains.isEmpty();
 
         for (String s2e : other.chains)
@@ -96,5 +96,10 @@ public final class Chains implements Iterable<String> {
     @Override
     public int hashCode() {
         return chains != null ? chains.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return chains.toString();
     }
 }
