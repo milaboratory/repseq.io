@@ -10,7 +10,8 @@ import io.repseq.dto.VDJCGeneData;
  * This class represents the same entity as Allele class in previous abstraction version.
  */
 @Serializable(by = IO.VDJCGeneSerializer.class)
-public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
+public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence>
+        implements Comparable<VDJCGene> {
     /**
      * Any gene stores a reference to it's parent library
      */
@@ -144,5 +145,10 @@ public class VDJCGene extends PartitionedSequenceCached<NucleotideSequence> {
     @Override
     public ReferencePoints getPartitioning() {
         return referencePoints;
+    }
+
+    @Override
+    public int compareTo(VDJCGene o) {
+        return getId().compareTo(o.getId());
     }
 }

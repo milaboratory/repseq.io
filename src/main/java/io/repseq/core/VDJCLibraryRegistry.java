@@ -195,8 +195,6 @@ public final class VDJCLibraryRegistry {
     public void addClasspathResolver(String searchPath, ClassLoader classLoader) {
         if (!searchPath.endsWith("/"))
             searchPath = searchPath + "/";
-        if (searchPath.startsWith("/"))
-            searchPath = searchPath.substring(1);
         addLibraryResolver(new ClasspathLibraryResolver(searchPath, classLoader));
     }
 
@@ -546,10 +544,8 @@ public final class VDJCLibraryRegistry {
         @Override
         public VDJCLibraryData[] resolve(String libraryName) {
             try (InputStream stream = classLoader.getResourceAsStream(path + libraryName + ".json")) {
-                if (stream == null) {
-                    System.out.println(classLoader.toString());
+                if (stream == null)
                     return null;
-                }
 
                 // Getting libraries from file
                 return GlobalObjectMappers.ONE_LINE.readValue(stream, VDJCLibraryData[].class);
