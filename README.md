@@ -10,7 +10,7 @@ Command line helper to manipulate RepSeq.IO formatted V/D/J/C reference data.
 
 #### Using zip
 
-Unpack zip file with latest release version to a folder and add it to your PATH variable of create symlink to `repseqio` script in `/usr/local/bin`, `~/bin` or similar folder.
+Unpack zip file with latest release version to a folder and add it to your `PATH` variable or create symlink to `repseqio` script in `/usr/local/bin`, `~/bin` or similar folder.
 
 # Reference
 
