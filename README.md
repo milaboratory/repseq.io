@@ -2,16 +2,26 @@
 
 Command line helper to manipulate RepSeq.IO formatted V/D/J/C reference data.
 
+# Install
+
+#### Using Homebrew on Mac OS X or Linux (linuxbrew)
+
+    brew install repseqio/all/repseqio
+
+#### Using zip
+
+Unpack zip file with latest release version to a folder and add it to your PATH variable of create symlink to `repseqio` script in `/usr/local/bin`, `~/bin` or similar folder.
+
 # Reference
 
-See this [repository](https://github.com/repseqio/reference) for actual references.
+See this [repository](https://github.com/repseqio/library) for actual references.
 
 # Format
 
 RepSeq.IO formatted reference is a JSON file that contain positions of V/D/J/C genes in some well known sequence (like NG_001332.2) or in file delivered with the reference. Each type of gene has predefined set of Anchor Points (see [here](http://mixcr.readthedocs.io/en/latest/geneFeatures.html)) which are used to encode gene position.
 
 See this file for example of RepSeq.IO formatted VDJCLibrary:
-https://github.com/repseqio/reference/blob/master/human/human_TR.json
+https://github.com/repseqio/library/blob/master/human/TRB.json
 
 Detailed format documentation and JSON Schemas coming soon.
 
