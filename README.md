@@ -6,7 +6,14 @@ Command line helper to manipulate RepSeq.IO formatted V/D/J/C reference data.
 
 #### Using Homebrew on Mac OS X or Linux (linuxbrew)
 
+Install
+
     brew install repseqio/all/repseqio
+
+Upgrade
+
+    brew update
+    brew upgrade repseqio
 
 #### Using zip
 
