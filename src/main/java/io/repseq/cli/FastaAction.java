@@ -5,13 +5,15 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
+import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.core.io.sequence.fasta.FastaWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryRegistry;
-import io.repseq.reference.GeneFeature;
+import io.repseq.core.GeneFeature;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -23,7 +25,11 @@ public class FastaAction implements Action {
         GeneFeature geneFeature = params.getGeneFeature();
 
         VDJCLibraryRegistry reg = VDJCLibraryRegistry.getDefault();
-        reg.registerLibraries(params.getInput());
+
+        if (!"default".equals(params.getInput()))
+            reg.registerLibraries(params.getInput());
+        else
+            reg.loadAllLibraries("default");
 
         Pattern chainPattern = params.chain == null ? null : Pattern.compile(params.chain);
         Pattern namePattern = params.name == null ? null : Pattern.compile(params.name);
@@ -56,7 +62,7 @@ public class FastaAction implements Action {
                     if (featureSequence == null)
                         continue;
 
-                    writer.write(gene.getName() + "|" + (gene.isFunctional() ? "F" : "P"), featureSequence);
+                    writer.write(gene.getName() + "|" + (gene.isFunctional() ? "F" : "P") + "|taxonId=" + gene.getParentLibrary().getTaxonId(), featureSequence);
                 }
             }
         }
@@ -72,10 +78,9 @@ public class FastaAction implements Action {
         return params;
     }
 
-    //TODO force option to overwrite output file
     @Parameters(commandDescription = "Export sequences of genes to fasta file.")
-    public static final class Params extends ActionParameters {
-        @Parameter(description = "input_library.json [output.fasta]")
+    public static final class Params extends ActionParametersWithOutput {
+        @Parameter(description = "input_library.json|default [output.fasta]")
         public List<String> parameters;
 
         @Parameter(description = "Taxon id (filter multi-library file to leave single library for specified taxon id)",
@@ -108,6 +113,11 @@ public class FastaAction implements Action {
 
         public String getOutput() {
             return parameters.size() == 1 ? "." : parameters.get(1);
+        }
+
+        @Override
+        protected List<String> getOutputFiles() {
+            return Collections.singletonList(getOutput());
         }
     }
 }

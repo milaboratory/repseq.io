@@ -126,6 +126,18 @@ public class BaseSequence {
         return regions == null && mutations == null;
     }
 
+    public URI getOrigin() {
+        return origin;
+    }
+
+    public Range[] getRegions() {
+        return regions;
+    }
+
+    public Mutations<NucleotideSequence> getMutations() {
+        return mutations;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

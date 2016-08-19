@@ -2,13 +2,9 @@ package io.repseq.core;
 
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
-import io.repseq.reference.ReferencePoint;
-import io.repseq.reference.ReferencePointsBuilder;
 
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Class represent a single library of V, D, J, C genes from a single species. This class may represent a full set of
@@ -50,6 +46,24 @@ public class VDJCLibrary {
     }
 
     /**
+     * Return checksum for this library.
+     *
+     * @return checksum for this library
+     */
+    public String getChecksum() {
+        return "00";
+    }
+
+    /**
+     * Returns serializable library data
+     *
+     * @return serializable library data
+     */
+    public VDJCLibraryData getData() {
+        return libraryData;
+    }
+
+    /**
      * Returns parent registry
      *
      * @return parent registry
@@ -77,6 +91,19 @@ public class VDJCLibrary {
     }
 
     /**
+     * Returns collection of all genes in this library with specific chains
+     *
+     * @return collection of all genes in this library with specific chains
+     */
+    public Collection<VDJCGene> getGenes(Chains chains) {
+        List<VDJCGene> result = new ArrayList<>();
+        for (VDJCGene gene : genes.values())
+            if (gene.getChains().intersects(chains))
+                result.add(gene);
+        return result;
+    }
+
+    /**
      * Get gene by name
      *
      * @return gene
@@ -90,8 +117,8 @@ public class VDJCLibrary {
      *
      * @return identifier of this library
      */
-    public SpeciesAndLibraryName getSpeciesAndLibraryName() {
-        return new SpeciesAndLibraryName(libraryData.getTaxonId(), name);
+    public VDJCLibraryId getLibraryId() {
+        return new VDJCLibraryId(name, libraryData.getTaxonId(), getChecksum());
     }
 
     /**

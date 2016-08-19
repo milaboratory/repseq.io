@@ -8,11 +8,14 @@ import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.dto.VDJCDataUtils;
 import io.repseq.dto.VDJCLibraryData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
 
 public class FormatAction implements Action {
+    private static final Logger log = LoggerFactory.getLogger(FormatAction.class);
     final Params params = new Params();
 
     @Override
@@ -27,7 +30,7 @@ public class FormatAction implements Action {
         else
             GlobalObjectMappers.PRETTY.writeValue(new File(params.getInput()), libs);
 
-        System.out.println("Formatted successfully.");
+        log.info("Formatted successfully.");
     }
 
     @Override
@@ -40,7 +43,6 @@ public class FormatAction implements Action {
         return params;
     }
 
-    //TODO force option to overwrite output file
     @Parameters(commandDescription = "Format JSON in library; sort libraries in multi-library files, sort genes inside libraries.")
     public static final class Params extends ActionParameters {
         @Parameter(description = "library.json", arity = 1)

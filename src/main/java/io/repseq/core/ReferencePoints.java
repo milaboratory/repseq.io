@@ -26,7 +26,7 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package io.repseq.reference;
+package io.repseq.core;
 
 
 import com.fasterxml.jackson.core.*;
@@ -36,14 +36,12 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.milaboratory.core.Range;
 import com.milaboratory.core.mutations.Mutations;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import io.repseq.core.SequencePartitioning;
 
 import java.io.IOException;
 import java.util.Arrays;
-
-import static io.repseq.reference.BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS;
 
 /**
  * @author Dmitry Bolotin
@@ -56,7 +54,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
     final boolean reversed;
 
     public ReferencePoints(int[] points) {
-        if (points.length != TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS)
+        if (points.length != BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS)
             throw new IllegalArgumentException("Illegal length of array.");
         Boolean rev = checkReferencePoints(points);
         this.reversed = rev == null ? false : rev;
@@ -65,7 +63,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
 
     public ReferencePoints(int start, int[] points) {
         Boolean rev = checkReferencePoints(points);
-        int[] array = new int[TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS];
+        int[] array = new int[BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS];
         Arrays.fill(array, -1);
         System.arraycopy(points, 0, array, start, points.length);
         this.points = array;
@@ -141,6 +139,12 @@ public final class ReferencePoints extends SequencePartitioning implements java.
         throw new IllegalStateException();
     }
 
+    public Range getContainigRegion() {
+        return reversed ?
+                new Range(getLastAvailablePosition(), getFirstAvailablePosition()) :
+                new Range(getFirstAvailablePosition(), getLastAvailablePosition());
+    }
+
     public int getLengthBetweenBoundaryPoints() {
         if (reversed)
             return getFirstAvailablePosition() - getLastAvailablePosition();
@@ -195,7 +199,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
     @Override
     public int hashCode() {
         int hash = 31;
-        for (int i = 0; i < TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS; ++i)
+        for (int i = 0; i < BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS; ++i)
             hash = getPosition(i) + hash * 17;
         return hash;
     }
@@ -207,9 +211,9 @@ public final class ReferencePoints extends SequencePartitioning implements java.
 
     public static final class JSerializer extends JsonSerializer<ReferencePoints> {
         @Override
-        public void serialize(ReferencePoints value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+        public void serialize(ReferencePoints value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
             jgen.writeStartObject();
-            for (int i = 0; i < TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS; i++) {
+            for (int i = 0; i < BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS; i++) {
                 if (value.points[i] >= 0) {
                     String point = ReferencePoint.encode(new ReferencePoint(BasicReferencePoint.getByIndex(i)), true);
                     jgen.writeNumberField(point, value.points[i]);

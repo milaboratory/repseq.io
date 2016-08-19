@@ -26,7 +26,7 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package io.repseq.reference;
+package io.repseq.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.milaboratory.core.Range;
@@ -36,8 +36,6 @@ import com.milaboratory.test.TestUtil;
 import com.milaboratory.util.GlobalObjectMappers;
 import org.junit.Assert;
 import org.junit.Test;
-
-import static io.repseq.reference.GeneFeature.*;
 
 public class ReferencePointsTest {
     @Test
@@ -75,9 +73,9 @@ public class ReferencePointsTest {
     @Test
     public void test4() throws Exception {
         ReferencePoints rp = new ReferencePoints(3, new int[]{1, 2, 4, -1, 5, -1, 7});
-        Assert.assertEquals(new Range(2, 4), rp.getRange(FR1));
-        Assert.assertNull(rp.getRange(CDR1));
-        Assert.assertNull(rp.getRange(FR2));
+        Assert.assertEquals(new Range(2, 4), rp.getRange(GeneFeature.FR1));
+        Assert.assertNull(rp.getRange(GeneFeature.CDR1));
+        Assert.assertNull(rp.getRange(GeneFeature.FR2));
     }
 
     @Test

@@ -5,12 +5,14 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
+import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -80,9 +82,8 @@ public class FilterAction implements Action {
         return params;
     }
 
-    //TODO force option to overwrite output file
     @Parameters(commandDescription = "Filter libraries and library records.")
-    public static final class Params extends ActionParameters {
+    public static final class Params extends ActionParametersWithOutput {
         @Parameter(description = "input_library.json output_library.json", arity = 2)
         public List<String> parameters;
 
@@ -104,6 +105,11 @@ public class FilterAction implements Action {
 
         public String getOutput() {
             return parameters.get(1);
+        }
+
+        @Override
+        protected List<String> getOutputFiles() {
+            return Collections.singletonList(getOutput());
         }
     }
 }

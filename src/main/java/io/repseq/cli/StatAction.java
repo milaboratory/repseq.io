@@ -7,13 +7,9 @@ import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import gnu.trove.iterator.TObjectIntIterator;
 import gnu.trove.map.hash.TObjectIntHashMap;
-import io.repseq.core.VDJCGene;
-import io.repseq.core.VDJCLibrary;
-import io.repseq.core.VDJCLibraryRegistry;
-import io.repseq.reference.GeneType;
+import io.repseq.core.*;
 
 import java.util.List;
-import java.util.Set;
 
 public class StatAction implements Action {
     final Params params = new Params();
@@ -24,7 +20,7 @@ public class StatAction implements Action {
         reg.registerLibraries(params.getInput());
 
         for (VDJCLibrary vdjcLibrary : reg.getLoadedLibraries()) {
-            System.out.println("LibraryID (libraryName:taxonId): " + vdjcLibrary.getSpeciesAndLibraryName());
+            System.out.println("LibraryID (libraryName:taxonId): " + vdjcLibrary.getLibraryId());
             TObjectIntHashMap<GeneType> geneTypeCount = new TObjectIntHashMap<>();
             for (VDJCGene vdjcGene : vdjcLibrary.getGenes())
                 geneTypeCount.adjustOrPutValue(vdjcGene.getGeneType(), 1, 1);
@@ -35,7 +31,7 @@ public class StatAction implements Action {
                 it.advance();
                 System.out.println(it.key() + " (total records " + it.value() + "):");
 
-                TObjectIntHashMap<Set<String>> byChains = new TObjectIntHashMap<>();
+                TObjectIntHashMap<Chains> byChains = new TObjectIntHashMap<>();
 
                 for (VDJCGene vdjcGene : vdjcLibrary.getGenes()) {
                     if (vdjcGene.getGeneType() != it.key())
@@ -44,7 +40,7 @@ public class StatAction implements Action {
                     byChains.adjustOrPutValue(vdjcGene.getChains(), 1, 1);
                 }
 
-                TObjectIntIterator<Set<String>> itByChains = byChains.iterator();
+                TObjectIntIterator<Chains> itByChains = byChains.iterator();
                 while (itByChains.hasNext()) {
                     itByChains.advance();
 

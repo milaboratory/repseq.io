@@ -9,14 +9,19 @@ import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
-        SequenceResolvers.initDefaultResolver(cachePath);
+        if (System.getProperty("localOnly") == null) {
+            Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
+            SequenceResolvers.initDefaultResolver(cachePath);
+        }
 
         // Setting up main helper
         JCommanderBasedMain main = new JCommanderBasedMain("repseqio",
                 new ListAction(),
                 new FilterAction(),
+                new MergeAction(),
+                new CompileAction(),
                 new FastaAction(),
+                new InferAnchorPointsAction(),
                 new DebugAction(),
                 new FormatAction(),
                 new StatAction());

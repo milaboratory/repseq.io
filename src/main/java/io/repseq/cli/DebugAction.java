@@ -10,10 +10,10 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryRegistry;
-import io.repseq.reference.GeneFeature;
-import io.repseq.reference.GeneType;
-import io.repseq.reference.ReferencePoint;
-import io.repseq.reference.ReferencePoints;
+import io.repseq.core.GeneFeature;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
+import io.repseq.core.ReferencePoints;
 
 import java.util.HashMap;
 import java.util.List;
@@ -86,6 +86,7 @@ public class DebugAction implements Action {
                 GeneFeature.L1,
                 GeneFeature.VIntron,
                 GeneFeature.L2,
+                GeneFeature.L,
                 GeneFeature.FR1,
                 GeneFeature.CDR1,
                 GeneFeature.FR2,
@@ -122,7 +123,6 @@ public class DebugAction implements Action {
         return params;
     }
 
-    //TODO force option to overwrite output file
     @Parameters(commandDescription = "Outputs extensive information on genes in the library.")
     public static final class Params extends ActionParameters {
         @Parameter(description = "input_library.json")
@@ -131,14 +131,6 @@ public class DebugAction implements Action {
         @Parameter(description = "Gene name pattern, regexp string, all genes with matching gene name will be exported.",
                 names = {"-n", "--name"})
         public String name;
-
-        //@Parameter(description = "Gene feature to export (e.g. VRegion, JRegion, VTranscript, etc...)",
-        //        names = {"-g", "--gene-feature"}, required = true)
-        //public String feature;
-
-        //public GeneFeature getGeneFeature() {
-        //    return GeneFeature.parse(feature);
-        //}
 
         public String getInput() {
             return parameters.get(0);

@@ -26,24 +26,38 @@
  * PARTICULAR PURPOSE, OR THAT THE USE OF THE SOFTWARE WILL NOT INFRINGE ANY
  * PATENT, TRADEMARK OR OTHER RIGHTS.
  */
-package io.repseq.reference;
+package io.repseq.core;
 
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-public class GeneGroupTest {
-    @Test
-    public void test1() throws Exception {
-        for (GeneType type : GeneType.values())
-            for (Chain chain : Chain.values())
-                Assert.assertTrue((!chain.hasDSegment() && type == GeneType.Diversity)
-                        || GeneGroup.get(chain, type) != null);
+public class ReferenceUtil {
+    /**
+     * For advanced use.
+     */
+    public static final int TOTAL_NUMBER_OF_REFERENCE_POINTS = BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS;
+
+    private static final Map<GeneType, ReferencePoint[]> allBasicPointsByTypes;
+
+    private ReferenceUtil() {
     }
 
-    @Test
-    public void test2() throws Exception {
-        for (GeneGroup gg : GeneGroup.values()) {
-            Assert.assertEquals(gg, GeneGroup.getFromName(gg.name()));
-        }
+    static {
+        allBasicPointsByTypes = new HashMap<>();
+        ArrayList<ReferencePoint> pointsBuffer = new ArrayList<>();
+    }
+
+    /**
+     * Returns underlying reference point id.
+     *
+     * For advanced use.
+     *
+     * @return underlying reference point id
+     */
+    public static int getReferencePointIndex(ReferencePoint referencePoint) {
+        if (!referencePoint.isBasicPoint())
+            throw new IllegalArgumentException("Index is defined only for pure basic reference points.");
+        return referencePoint.getIndex();
     }
 }

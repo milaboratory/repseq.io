@@ -1,4 +1,4 @@
-package io.repseq.reference;
+package io.repseq.core;
 
 import java.util.Arrays;
 
