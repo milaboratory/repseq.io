@@ -14,6 +14,7 @@ import com.milaboratory.core.io.sequence.fasta.FastaWriter;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.*;
+import io.repseq.dto.VDJCDataUtils;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
 import io.repseq.util.StringWithMapping;
@@ -32,7 +33,7 @@ public class FromPaddedFastaAction implements Action {
         Pattern functionalityRegexp = params.getFunctionalityRegexp();
         GeneType geneType = params.getGeneType();
 
-        List<VDJCGeneData> genes = new ArrayList<>();
+        Map<String, VDJCGeneData> genes = new HashMap<>();
 
         int importedGenes = 0;
 
@@ -46,7 +47,6 @@ public class FromPaddedFastaAction implements Action {
                 StringWithMapping swm = StringWithMapping.removeSymbol(record.sequence, params.paddingCharacter);
 
                 NucleotideSequence seq = new NucleotideSequence(swm.getModifiedString());
-                seqWriter.write(record.description, seq);
 
                 String[] fields = record.description.split("\\|");
 
@@ -76,11 +76,22 @@ public class FromPaddedFastaAction implements Action {
                 VDJCGeneData gene = new VDJCGeneData(new BaseSequence("file://" + relativeFastaPath + "#" + geneName),
                         geneName, geneType, functionality, new Chains(params.chain), anchorPoints);
 
-                genes.add(gene);
+                if (genes.containsKey(geneName)) {
+                    if (params.getIgnoreDuplicates())
+                        continue;
+                    else
+                        throw new IllegalArgumentException("Duplicate records for " + geneName);
+                }
+
+                seqWriter.write(record.description, seq);
+
+                genes.put(geneName, gene);
             }
         }
 
-        VDJCLibraryData library = new VDJCLibraryData(params.taxonId, Collections.EMPTY_LIST, genes, Collections.EMPTY_LIST);
+        VDJCLibraryData library = new VDJCLibraryData(params.taxonId, Collections.EMPTY_LIST, new ArrayList<>(genes.values()), Collections.EMPTY_LIST);
+
+        VDJCDataUtils.sort(library);
 
         GlobalObjectMappers.PRETTY.writeValue(new File(params.getOutputJSON()), new VDJCLibraryData[]{library});
     }
@@ -111,6 +122,10 @@ public class FromPaddedFastaAction implements Action {
                 required = true)
         public String geneType;
 
+        @Parameter(description = "Ignore duplicate genes",
+                names = {"-i", "--ignore-duplicates"})
+        public Boolean ignoreDuplicates;
+
         @Parameter(description = "Gene name index (0-based) in FASTA description line (e.g. 1 for IMGT files).",
                 names = {"-n", "--name-index"},
                 required = true)
@@ -134,11 +149,14 @@ public class FromPaddedFastaAction implements Action {
                 required = true)
         public Long taxonId;
 
-
         @DynamicParameter(names = "-P", description = "Positions of anchor points in padded file. To define position " +
                 "relative to еру end of sequence use negative values: -1 = sequence end, -2 = last but one letter. " +
                 "Example: -PFR1Begin=0 -PVEnd=-1")
         public Map<String, String> points = new HashMap<>();
+
+        public boolean getIgnoreDuplicates() {
+            return ignoreDuplicates != null && ignoreDuplicates;
+        }
 
         public String getInput() {
             return parameters.get(0);
