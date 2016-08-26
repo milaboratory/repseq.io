@@ -24,7 +24,8 @@ public class Main {
                 new InferAnchorPointsAction(),
                 new DebugAction(),
                 new FormatAction(),
-                new StatAction());
+                new StatAction(),
+                new FromPaddedFastaAction());
 
         main.setVersionInfoCallback(new Runnable() {
             @Override

@@ -65,6 +65,12 @@ public final class Chains implements Iterable<String> {
         return new Chains(s);
     }
 
+    public boolean contains(String chain){
+        if(this.chains == null)
+            return true;
+        return chains.contains(chain);
+    }
+
     public boolean intersects(Chains other) {
         if (other.chains == null && this.chains == null)
             return true;
