@@ -48,6 +48,9 @@ public class FromPaddedFastaAction implements Action {
 
                 NucleotideSequence seq = new NucleotideSequence(swm.getModifiedString());
 
+                if(seq.containsWildcards())
+                    continue;
+
                 String[] fields = record.description.split("\\|");
 
                 String geneName = fields[params.nameIndex];
