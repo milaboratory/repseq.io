@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameters;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
+import com.milaboratory.core.sequence.AminoAcidAlphabet;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.core.VDJCGene;
@@ -32,10 +33,41 @@ public class DebugAction implements Action {
 
         Pattern namePattern = params.name == null ? null : Pattern.compile(params.name);
 
+        GeneFeature l3VFeature = new GeneFeature(ReferencePoint.CDR3Begin, 0, 3);
+        GeneFeature l3JFeature = new GeneFeature(ReferencePoint.CDR3End, -3, 0);
+
         for (VDJCLibrary lib : reg.getLoadedLibraries()) {
             for (VDJCGene gene : lib.getGenes()) {
                 if (namePattern != null && !namePattern.matcher(gene.getName()).matches())
                     continue;
+
+                if (params.getProblemOnly()) {
+                    if (!gene.isFunctional())
+                        continue;
+
+                    boolean good = true;
+                    if (gene.getGeneType() == GeneType.Variable) {
+                        NucleotideSequence l3 = gene.getFeature(l3VFeature);
+
+                        if (l3 == null)
+                            good = false;
+                        else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.C)
+                            good = false;
+                    }
+
+                    if (gene.getGeneType() == GeneType.Joining) {
+                        NucleotideSequence l3 = gene.getFeature(l3JFeature);
+
+                        if (l3 == null)
+                            good = false;
+                        else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.W &&
+                                AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.F)
+                            good = false;
+                    }
+
+                    if (good)
+                        continue;
+                }
 
                 System.out.println(gene.getName() + " (" + (gene.isFunctional() ? "F" : "P") + ") " + gene.getChains());
 
@@ -128,9 +160,17 @@ public class DebugAction implements Action {
         @Parameter(description = "input_library.json")
         public List<String> parameters;
 
+        @Parameter(description = "Print only functional genes with problems.",
+                names = {"-p", "--problems"})
+        public Boolean problemOnly;
+
         @Parameter(description = "Gene name pattern, regexp string, all genes with matching gene name will be exported.",
                 names = {"-n", "--name"})
         public String name;
+
+        public boolean getProblemOnly() {
+            return problemOnly != null && problemOnly;
+        }
 
         public String getInput() {
             return parameters.get(0);

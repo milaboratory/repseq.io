@@ -11,7 +11,9 @@ import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.io.sequence.fasta.FastaWriter;
+import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.core.sequence.TranslationParameters;
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.*;
 import io.repseq.dto.VDJCDataUtils;
@@ -23,6 +25,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FromPaddedFastaAction implements Action {
@@ -48,7 +51,7 @@ public class FromPaddedFastaAction implements Action {
 
                 NucleotideSequence seq = new NucleotideSequence(swm.getModifiedString());
 
-                if(seq.containsWildcards())
+                if (seq.containsWildcards())
                     continue;
 
                 String[] fields = record.description.split("\\|");
@@ -62,11 +65,46 @@ public class FromPaddedFastaAction implements Action {
 
                 SortedMap<ReferencePoint, Long> anchorPoints = new TreeMap<>();
 
+                for (Map.Entry<String, String> p : params.patterns.entrySet()) {
+                    ReferencePoint anchorPoint = ReferencePoint.getPointByName(p.getKey());
+
+                    if (anchorPoint == null)
+                        throw new IllegalArgumentException("Unknown anchor point: " + p.getKey());
+
+                    Pattern pattern = Pattern.compile(p.getValue());
+
+                    int position = -1;
+
+                    for (boolean stops : new boolean[]{false, true})
+                        for (int f = 0; f < 3; f++) {
+                            if (position != -1)
+                                continue;
+                            TranslationParameters tp = TranslationParameters.withoutIncompleteCodon(f);
+                            AminoAcidSequence aa = AminoAcidSequence.translate(seq, tp);
+                            if (!stops && aa.containStops())
+                                continue;
+                            String str = aa.toString();
+                            Matcher matcher = pattern.matcher(str);
+                            if (matcher.find()) {
+                                int aaPosition = matcher.start(1);
+                                position = AminoAcidSequence.convertAAPositionToNt(aaPosition, seq.size(), tp);
+                            }
+                        }
+
+                    if (position == -1)
+                        continue;
+
+                    anchorPoints.put(anchorPoint, (long) position);
+                }
+
                 for (Map.Entry<String, String> p : params.points.entrySet()) {
                     ReferencePoint anchorPoint = ReferencePoint.getPointByName(p.getKey());
 
                     if (anchorPoint == null)
                         throw new IllegalArgumentException("Unknown anchor point: " + p.getKey());
+
+                    if (anchorPoints.containsKey(anchorPoint))
+                        continue;
 
                     int position = swm.convertPosition(Integer.decode(p.getValue()));
 
@@ -140,7 +178,7 @@ public class FromPaddedFastaAction implements Action {
 
         @Parameter(description = "Functionality regexp.",
                 names = {"--functionality-regexp"})
-        public String functionalityRegexp = ".*[Ff].*";
+        public String functionalityRegexp = "[\\(\\[]?[Ff].?";
 
         @Parameter(description = "Chain.",
                 names = {"-c", "--chain"},
@@ -156,6 +194,10 @@ public class FromPaddedFastaAction implements Action {
                 "relative to еру end of sequence use negative values: -1 = sequence end, -2 = last but one letter. " +
                 "Example: -PFR1Begin=0 -PVEnd=-1")
         public Map<String, String> points = new HashMap<>();
+
+        @DynamicParameter(names = "-L", description = "Amino-acid pattern of anchor point. Have higher priority than " +
+                "-P for the same anchor point.")
+        public Map<String, String> patterns = new HashMap<>();
 
         public boolean getIgnoreDuplicates() {
             return ignoreDuplicates != null && ignoreDuplicates;
