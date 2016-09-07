@@ -51,8 +51,10 @@ public class FromPaddedFastaAction implements Action {
 
                 NucleotideSequence seq = new NucleotideSequence(swm.getModifiedString());
 
-                if (seq.containsWildcards())
+                if (seq.containsWildcards()) {
+                    System.out.println("Sequence dropped because contain wildcards: " + record.description);
                     continue;
+                }
 
                 String[] fields = record.description.split("\\|");
 
@@ -118,9 +120,10 @@ public class FromPaddedFastaAction implements Action {
                         geneName, geneType, functionality, new Chains(params.chain), anchorPoints);
 
                 if (genes.containsKey(geneName)) {
-                    if (params.getIgnoreDuplicates())
+                    if (params.getIgnoreDuplicates()) {
+                        System.out.println("Ignored: Duplicate records for " + geneName);
                         continue;
-                    else
+                    } else
                         throw new IllegalArgumentException("Duplicate records for " + geneName);
                 }
 
