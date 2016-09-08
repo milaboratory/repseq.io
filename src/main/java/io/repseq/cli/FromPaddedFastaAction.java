@@ -14,14 +14,15 @@ import com.milaboratory.core.io.sequence.fasta.FastaWriter;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
-import com.milaboratory.util.GlobalObjectMappers;
-import io.repseq.core.*;
+import io.repseq.core.BaseSequence;
+import io.repseq.core.Chains;
+import io.repseq.core.GeneType;
+import io.repseq.core.ReferencePoint;
 import io.repseq.dto.VDJCDataUtils;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
 import io.repseq.util.StringWithMapping;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -135,9 +136,7 @@ public class FromPaddedFastaAction implements Action {
 
         VDJCLibraryData library = new VDJCLibraryData(params.taxonId, Collections.EMPTY_LIST, new ArrayList<>(genes.values()), Collections.EMPTY_LIST);
 
-        VDJCDataUtils.sort(library);
-
-        GlobalObjectMappers.PRETTY.writeValue(new File(params.getOutputJSON()), new VDJCLibraryData[]{library});
+        VDJCDataUtils.writeToFile(new VDJCLibraryData[]{library}, params.getOutputJSON(), false);
     }
 
     @Override
@@ -154,7 +153,7 @@ public class FromPaddedFastaAction implements Action {
             "json library files. Json library contain links to non-padded fasta file, so to use library one need both " +
             "output file, or library can be compiled using 'repseqio compile'.")
     public static final class Params extends ActionParametersWithOutput {
-        @Parameter(description = "input_padded.fasta output.fasta output.json", arity = 2)
+        @Parameter(description = "input_padded.fasta output.fasta output.json[.gz]", arity = 2)
         public List<String> parameters;
 
         @Parameter(description = "Padding character",

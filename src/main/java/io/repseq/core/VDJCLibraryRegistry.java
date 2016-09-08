@@ -2,19 +2,20 @@ package io.repseq.core;
 
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.dto.KnownSequenceFragmentData;
+import io.repseq.dto.VDJCDataUtils;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
 import io.repseq.seqbase.SequenceAddress;
 import io.repseq.seqbase.SequenceResolver;
 import io.repseq.seqbase.SequenceResolvers;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Registry of VDJCLibraries. Central storage for VDJCLibraries objects. VDJCLibraries can be created only using
@@ -426,7 +427,7 @@ public final class VDJCLibraryRegistry {
      */
     public void registerLibraries(Path file) {
         String name = file.getFileName().toString();
-        name = name.toLowerCase().replaceAll("(?i).json$", "");
+        name = name.toLowerCase().replaceAll("(?i).json(?:\\.gz)$", "");
         registerLibraries(file, name);
     }
 
@@ -439,11 +440,8 @@ public final class VDJCLibraryRegistry {
     public void registerLibraries(Path file, String name) {
         file = file.toAbsolutePath();
         try {
-            // Getting libraries from file
-            VDJCLibraryData[] libraries = GlobalObjectMappers.ONE_LINE.readValue(file.toFile(), VDJCLibraryData[].class);
-
             // Registering libraries
-            for (VDJCLibraryData library : libraries)
+            for (VDJCLibraryData library : VDJCDataUtils.readArrayFromFile(file))
                 registerLibrary(file.getParent(), name, library);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -498,10 +496,14 @@ public final class VDJCLibraryRegistry {
      * Load library data from {libraryName}.json files in specified folder.
      */
     public static final class FolderLibraryResolver implements LibraryResolver {
-        final Path path;
+        private final Path path;
 
         public FolderLibraryResolver(Path path) {
             this.path = path;
+        }
+
+        public Path getPath() {
+            return path;
         }
 
         @Override
@@ -513,11 +515,19 @@ public final class VDJCLibraryRegistry {
         public VDJCLibraryData[] resolve(String libraryName) {
             try {
                 Path filePath = path.resolve(libraryName + ".json");
-                if (!Files.exists(filePath))
-                    return null;
 
-                // Getting libraries from file
-                return GlobalObjectMappers.ONE_LINE.readValue(filePath.toFile(), VDJCLibraryData[].class);
+                if (Files.exists(filePath))
+                    // Getting libraries from file
+                    return GlobalObjectMappers.ONE_LINE.readValue(filePath.toFile(), VDJCLibraryData[].class);
+
+                filePath = path.resolve(libraryName + ".json.gz");
+                if (Files.exists(filePath))
+                    try (InputStream os = new BufferedInputStream(new GZIPInputStream(new FileInputStream(filePath.toFile())))) {
+                        // Getting libraries from gzipped file
+                        return GlobalObjectMappers.ONE_LINE.readValue(os, VDJCLibraryData[].class);
+                    }
+
+                return null;
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -528,12 +538,20 @@ public final class VDJCLibraryRegistry {
      * Load library data from {libraryName}.json files in specified folder.
      */
     public static final class ClasspathLibraryResolver implements LibraryResolver {
-        final String path;
-        final ClassLoader classLoader;
+        private final String path;
+        private final ClassLoader classLoader;
 
         public ClasspathLibraryResolver(String path, ClassLoader classLoader) {
             this.path = path;
             this.classLoader = classLoader;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public ClassLoader getClassLoader() {
+            return classLoader;
         }
 
         @Override

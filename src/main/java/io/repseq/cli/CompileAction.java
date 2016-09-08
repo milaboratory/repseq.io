@@ -9,7 +9,6 @@ import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.provider.SequenceProviderIndexOutOfBoundsException;
-import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryRegistry;
@@ -81,9 +80,7 @@ public class CompileAction implements Action {
                     lib.getData().getGenes(), fragmentsBuilder.getFragments()));
         }
 
-        VDJCDataUtils.sort(result);
-
-        GlobalObjectMappers.ONE_LINE.writeValue(destination.toFile(), result);
+        VDJCDataUtils.writeToFile(result, destination, true);
 
         log.info("{} compiled successfully.", source);
     }
@@ -91,7 +88,7 @@ public class CompileAction implements Action {
     @Parameters(commandDescription = "Compile a library into self-contained compiled library file, by embedding " +
             "sequence information into \"sequenceFragments\" section.")
     public static final class Params extends ActionParametersWithOutput {
-        @Parameter(description = "input.json output.json", arity = 2)
+        @Parameter(description = "input.json[.gz] output.json[.gz]", arity = 2)
         public List<String> parameters;
 
         @Parameter(description = "Length of surrounding sequences to include into library. Number of upstream and " +

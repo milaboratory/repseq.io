@@ -157,7 +157,7 @@ public class DebugAction implements Action {
 
     @Parameters(commandDescription = "Outputs extensive information on genes in the library.")
     public static final class Params extends ActionParameters {
-        @Parameter(description = "input_library.json")
+        @Parameter(description = "input_library.json[.gz]")
         public List<String> parameters;
 
         @Parameter(description = "Print only functional genes with problems.",
