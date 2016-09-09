@@ -2,8 +2,12 @@ package io.repseq.core;
 
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
+import org.apache.commons.codec.binary.Hex;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 /**
@@ -51,7 +55,25 @@ public class VDJCLibrary {
      * @return checksum for this library
      */
     public String getChecksum() {
-        return "00";
+        List<VDJCGene> genes = new ArrayList<>(getGenes());
+        Collections.sort(genes, new Comparator<VDJCGene>() {
+            @Override
+            public int compare(VDJCGene o1, VDJCGene o2) {
+                return o1.getData().compareTo(o2.getData());
+            }
+        });
+
+        StringBuilder bigSeqBuilder = new StringBuilder();
+        for (VDJCGene gene : genes)
+            bigSeqBuilder.append(gene.getFeature(gene.getPartitioning().getWrappingGeneFeature()).toString());
+
+        try {
+            byte[] bytes = bigSeqBuilder.toString().getBytes(StandardCharsets.UTF_8);
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            return new String(Hex.encodeHex(md.digest(bytes)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
