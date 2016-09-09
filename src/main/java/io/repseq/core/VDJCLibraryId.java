@@ -60,8 +60,23 @@ public final class VDJCLibraryId implements Comparable<VDJCLibraryId> {
         return checksum;
     }
 
+    /**
+     * Returns whether this id also contain checksum information
+     *
+     * @return whether this id also contain checksum information
+     */
     public boolean requireChecksumCheck() {
         return checksum != null;
+    }
+
+    /**
+     * Return new instance of VDJCLibraryId with different library name
+     *
+     * @param newLibraryName new library name
+     * @return new instance of VDJCLibraryId with different library name
+     */
+    public VDJCLibraryId setLibraryName(String newLibraryName) {
+        return new VDJCLibraryId(newLibraryName, taxonId, checksum);
     }
 
     @Override

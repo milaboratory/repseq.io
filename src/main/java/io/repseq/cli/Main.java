@@ -31,18 +31,18 @@ public class Main {
             @Override
             public void run() {
                 VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
-                VersionInfo mitools = VersionInfo.getVersionInfoForArtifact("repseqio");
+                VersionInfo repseqio = VersionInfo.getVersionInfoForArtifact("repseqio");
 
                 StringBuilder builder = new StringBuilder();
 
                 builder.append("RepSeq.IO.CLI v")
-                        .append(mitools.getVersion())
+                        .append(repseqio.getVersion())
                         .append(" (built ")
-                        .append(mitools.getTimestamp())
+                        .append(repseqio.getTimestamp())
                         .append("; rev=")
-                        .append(mitools.getRevision())
+                        .append(repseqio.getRevision())
                         .append("; branch=")
-                        .append(mitools.getBranch())
+                        .append(repseqio.getBranch())
                         .append(")")
                         .append("\n");
 

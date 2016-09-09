@@ -37,6 +37,10 @@ public class VDJCLibrary {
      * Name -> VDJCGene
      */
     private final Map<String, VDJCGene> genes = new HashMap<>();
+    /**
+     * Cached checksum value
+     */
+    private volatile String checksum;
 
     public VDJCLibrary(VDJCLibraryData libraryData, String name, VDJCLibraryRegistry registry, Path context) {
         this.libraryData = libraryData;
@@ -55,25 +59,31 @@ public class VDJCLibrary {
      * @return checksum for this library
      */
     public String getChecksum() {
-        List<VDJCGene> genes = new ArrayList<>(getGenes());
-        Collections.sort(genes, new Comparator<VDJCGene>() {
-            @Override
-            public int compare(VDJCGene o1, VDJCGene o2) {
-                return o1.getData().compareTo(o2.getData());
+        if (checksum == null)
+            synchronized (this) {
+                if (checksum == null) {
+                    List<VDJCGene> genes = new ArrayList<>(getGenes());
+                    Collections.sort(genes, new Comparator<VDJCGene>() {
+                        @Override
+                        public int compare(VDJCGene o1, VDJCGene o2) {
+                            return o1.getData().compareTo(o2.getData());
+                        }
+                    });
+
+                    StringBuilder bigSeqBuilder = new StringBuilder();
+                    for (VDJCGene gene : genes)
+                        bigSeqBuilder.append(gene.getFeature(gene.getPartitioning().getWrappingGeneFeature()).toString());
+
+                    try {
+                        byte[] bytes = bigSeqBuilder.toString().getBytes(StandardCharsets.UTF_8);
+                        MessageDigest md = MessageDigest.getInstance("MD5");
+                        checksum = new String(Hex.encodeHex(md.digest(bytes)));
+                    } catch (NoSuchAlgorithmException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
             }
-        });
-
-        StringBuilder bigSeqBuilder = new StringBuilder();
-        for (VDJCGene gene : genes)
-            bigSeqBuilder.append(gene.getFeature(gene.getPartitioning().getWrappingGeneFeature()).toString());
-
-        try {
-            byte[] bytes = bigSeqBuilder.toString().getBytes(StandardCharsets.UTF_8);
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            return new String(Hex.encodeHex(md.digest(bytes)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
+        return checksum;
     }
 
     /**
@@ -141,6 +151,10 @@ public class VDJCLibrary {
      */
     public VDJCLibraryId getLibraryId() {
         return new VDJCLibraryId(name, libraryData.getTaxonId(), getChecksum());
+    }
+
+    VDJCLibraryId getLibraryIdNoChecksum() {
+        return new VDJCLibraryId(name, libraryData.getTaxonId(), null);
     }
 
     /**

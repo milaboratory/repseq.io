@@ -8,8 +8,10 @@ import io.repseq.dto.VDJCLibraryData;
 import io.repseq.seqbase.SequenceAddress;
 import io.repseq.seqbase.SequenceResolver;
 import io.repseq.seqbase.SequenceResolvers;
+import org.apache.commons.io.IOUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,6 +44,10 @@ public final class VDJCLibraryRegistry {
      * Store successfully loaded libraries
      */
     final HashSet<LibraryLoadRequest> loadedLibraries = new HashSet<>();
+    /**
+     * Library name aliases
+     */
+    final HashMap<String, String> aliases = new HashMap<>();
 
     /**
      * Creates new VDJCLibraryRegistry with default sequence resolver
@@ -273,9 +279,13 @@ public final class VDJCLibraryRegistry {
         // Try get from map
         VDJCLibrary vdjcLibrary = libraries.get(libraryId);
 
-        // If not found return null
-        if (vdjcLibrary == null)
-            return null;
+        // If not found try aliases
+        if (vdjcLibrary == null) {
+            if (aliases.containsKey(libraryName))
+                return tryGetLibrary(aliases.get(libraryName), null, taxonId, checksum);
+            else
+                return null;
+        }
 
         // Check for checksum if it was provided
         if (checksum != null && !checksum.equals(vdjcLibrary.getChecksum()))
@@ -340,12 +350,21 @@ public final class VDJCLibraryRegistry {
         // Try resolve
         VDJCLibraryData[] resolved = resolver.resolve(libraryName);
 
-        // If not resolved proceed to next resolver
-        if (resolved == null)
-            return;
-
         // Marking this request as already processed
         loadedLibraries.add(request);
+
+        // If not resolved
+        if (resolved == null) {
+            if (resolver instanceof AliasResolver) {
+                String newLibraryName = ((AliasResolver) resolver).resolveAlias(libraryName);
+                tryResolve(resolver, newLibraryName);
+                if (aliases.containsKey(libraryName) && !aliases.get(libraryName).equals(newLibraryName))
+                    throw new RuntimeException("Conflicting aliases " + libraryName + " -> " + newLibraryName +
+                            " / " + aliases.get(libraryName));
+                aliases.put(libraryName, newLibraryName);
+            }
+            return; // proceed to next resolver
+        }
 
         // Registering loaded library entries
         for (VDJCLibraryData vdjcLibraryData : resolved) {
@@ -373,14 +392,18 @@ public final class VDJCLibraryRegistry {
         // Creating library object
         VDJCLibrary library = new VDJCLibrary(data, name, this, context);
 
+        // Getting library id
+        VDJCLibraryId rootId = library.getLibraryIdNoChecksum();
+
         // Check if such library is already registered
-        if (libraries.containsKey(library.getLibraryId()))
-            throw new RuntimeException("Duplicate library: " + library.getLibraryId());
+        if (libraries.containsKey(rootId))
+            throw new RuntimeException("Duplicate library: " + rootId);
 
         // Loading known sequence fragments from VDJCLibraryData to current SequenceResolver
         SequenceResolver resolver = getSequenceResolver();
         for (KnownSequenceFragmentData fragment : data.getSequenceFragments())
-            resolver.resolve(new SequenceAddress(context, fragment.getUri())).setRegion(fragment.getRange(), fragment.getSequence());
+            resolver.resolve(new SequenceAddress(context, fragment.getUri())).setRegion(fragment.getRange(),
+                    fragment.getSequence());
 
         // Adding genes
         for (VDJCGeneData gene : data.getGenes())
@@ -391,12 +414,13 @@ public final class VDJCLibraryRegistry {
         for (String speciesName : data.getSpeciesNames()) {
             String cSpeciesName = canonicalizeSpeciesName(speciesName);
             if (speciesNames.containsKey(cSpeciesName) && !speciesNames.get(cSpeciesName).equals(taxonId))
-                throw new IllegalArgumentException("Mismatch in common species name between several libraries. (Library name = " + name + "; name = " + speciesName + ").");
+                throw new IllegalArgumentException("Mismatch in common species name between several libraries. " +
+                        "(Library name = " + name + "; name = " + speciesName + ").");
             speciesNames.put(cSpeciesName, taxonId);
         }
 
         // Adding this library to collection
-        libraries.put(library.getLibraryId(), library);
+        libraries.put(library.getLibraryIdNoChecksum(), library);
 
         return library;
     }
@@ -493,6 +517,13 @@ public final class VDJCLibraryRegistry {
     }
 
     /**
+     * Interface implemented by {@link LibraryResolver} if it can also resolve library name aliases
+     */
+    public interface AliasResolver {
+        String resolveAlias(String libraryName);
+    }
+
+    /**
      * Load library data from {libraryName}.json files in specified folder.
      */
     public static final class FolderLibraryResolver implements LibraryResolver {
@@ -537,7 +568,7 @@ public final class VDJCLibraryRegistry {
     /**
      * Load library data from {libraryName}.json files in specified folder.
      */
-    public static final class ClasspathLibraryResolver implements LibraryResolver {
+    public static final class ClasspathLibraryResolver implements LibraryResolver, AliasResolver {
         private final String path;
         private final ClassLoader classLoader;
 
@@ -557,6 +588,15 @@ public final class VDJCLibraryRegistry {
         @Override
         public Path getContext(String libraryName) {
             return null;
+        }
+
+        @Override
+        public String resolveAlias(String libraryName) {
+            try (InputStream aliasStream = classLoader.getResourceAsStream(path + libraryName + ".alias")) {
+                return IOUtils.toString(aliasStream, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
