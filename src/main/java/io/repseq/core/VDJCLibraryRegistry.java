@@ -358,6 +358,8 @@ public final class VDJCLibraryRegistry {
         if (resolved == null) {
             if (resolver instanceof AliasResolver) {
                 String newLibraryName = ((AliasResolver) resolver).resolveAlias(libraryName);
+                if (newLibraryName == null)
+                    return; // proceed to next resolver
                 tryResolve(resolver, newLibraryName);
                 if (aliases.containsKey(libraryName) && !aliases.get(libraryName).equals(newLibraryName))
                     throw new RuntimeException("Conflicting aliases " + libraryName + " -> " + newLibraryName +
@@ -613,8 +615,10 @@ public final class VDJCLibraryRegistry {
 
         @Override
         public String resolveAlias(String libraryName) {
-            try (InputStream aliasStream = classLoader.getResourceAsStream(path + libraryName + ".alias")) {
-                return IOUtils.toString(aliasStream, StandardCharsets.UTF_8);
+            try (InputStream stream = classLoader.getResourceAsStream(path + libraryName + ".alias")) {
+                if (stream == null)
+                    return null;
+                return IOUtils.toString(stream, StandardCharsets.UTF_8);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
