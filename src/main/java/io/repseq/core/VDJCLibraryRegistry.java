@@ -262,9 +262,9 @@ public final class VDJCLibraryRegistry {
     }
 
     /**
-     * Used in {@link #getLibrary(String, String, long, String)}
+     * Used in {@link #getLibrary(String, String, long, byte[])}
      */
-    private VDJCLibrary tryGetLibrary(String libraryName, String species, long taxonId, String checksum) {
+    private VDJCLibrary tryGetLibrary(String libraryName, String species, long taxonId, byte[] checksum) {
         // Try resolve species if it was provided in string form
         if (species != null) {
             Long tId = tryResolveSpecies(species);
@@ -274,7 +274,7 @@ public final class VDJCLibraryRegistry {
         }
 
         // Key to search in map
-        VDJCLibraryId libraryId = new VDJCLibraryId(libraryName, taxonId, checksum);
+        VDJCLibraryId libraryId = new VDJCLibraryId(libraryName, taxonId);
 
         // Try get from map
         VDJCLibrary vdjcLibrary = libraries.get(libraryId);
@@ -288,7 +288,7 @@ public final class VDJCLibraryRegistry {
         }
 
         // Check for checksum if it was provided
-        if (checksum != null && !checksum.equals(vdjcLibrary.getChecksum()))
+        if (checksum != null && !Arrays.equals(checksum, vdjcLibrary.getChecksum()))
             throw new RuntimeException("Different checksums.");
 
         // OK
@@ -305,7 +305,7 @@ public final class VDJCLibraryRegistry {
      * @return library
      * @throws RuntimeException if failed to resolve library
      */
-    private synchronized VDJCLibrary getLibrary(String libraryName, String species, long taxonId, String checksum) {
+    private synchronized VDJCLibrary getLibrary(String libraryName, String species, long taxonId, byte[] checksum) {
         VDJCLibrary vdjcLibrary;
 
         // Search for already loaded libraries and if found return it
@@ -328,7 +328,8 @@ public final class VDJCLibraryRegistry {
         }
 
         // If library was not found nor loaded throw exception
-        throw new RuntimeException("Can't find library for following library name and species: " + libraryName + " + " + (species != null ? species : taxonId));
+        throw new RuntimeException("Can't find library for following library name and species: " + libraryName +
+                " + " + (species != null ? species : taxonId));
     }
 
     /**
@@ -393,7 +394,7 @@ public final class VDJCLibraryRegistry {
         VDJCLibrary library = new VDJCLibrary(data, name, this, context);
 
         // Getting library id
-        VDJCLibraryId rootId = library.getLibraryIdNoChecksum();
+        VDJCLibraryId rootId = library.getLibraryIdWithoutChecksum();
 
         // Check if such library is already registered
         if (libraries.containsKey(rootId))
@@ -420,7 +421,7 @@ public final class VDJCLibraryRegistry {
         }
 
         // Adding this library to collection
-        libraries.put(library.getLibraryIdNoChecksum(), library);
+        libraries.put(library.getLibraryIdWithoutChecksum(), library);
 
         return library;
     }
@@ -497,12 +498,32 @@ public final class VDJCLibraryRegistry {
     }
 
     /**
+     * Creates new instance of basic default registry
+     *
+     * @return new instance of basic default registry
+     */
+    public static VDJCLibraryRegistry createDefaultRegistry() {
+        VDJCLibraryRegistry registry = new VDJCLibraryRegistry();
+        registry.addClasspathResolver("libraries/");
+        return registry;
+    }
+
+    /**
      * Returns default VDJCLibraryRegistry.
      *
      * @return default VDJCLibraryRegistry
      */
     public static VDJCLibraryRegistry getDefault() {
         return defaultRegistry;
+    }
+
+    /**
+     * Return the list of library resolvers used by this registry
+     *
+     * @return list of library resolvers used by this registry
+     */
+    public List<LibraryResolver> getLibraryResolvers() {
+        return Collections.unmodifiableList(libraryResolvers);
     }
 
     /**

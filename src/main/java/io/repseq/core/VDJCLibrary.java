@@ -2,7 +2,6 @@ package io.repseq.core;
 
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
-import org.apache.commons.codec.binary.Hex;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -40,7 +39,7 @@ public class VDJCLibrary {
     /**
      * Cached checksum value
      */
-    private volatile String checksum;
+    private volatile byte[] checksum;
 
     public VDJCLibrary(VDJCLibraryData libraryData, String name, VDJCLibraryRegistry registry, Path context) {
         this.libraryData = libraryData;
@@ -58,7 +57,7 @@ public class VDJCLibrary {
      *
      * @return checksum for this library
      */
-    public String getChecksum() {
+    public byte[] getChecksum() {
         if (checksum == null)
             synchronized (this) {
                 if (checksum == null) {
@@ -77,7 +76,7 @@ public class VDJCLibrary {
                     try {
                         byte[] bytes = bigSeqBuilder.toString().getBytes(StandardCharsets.UTF_8);
                         MessageDigest md = MessageDigest.getInstance("MD5");
-                        checksum = new String(Hex.encodeHex(md.digest(bytes)));
+                        checksum = md.digest(bytes);
                     } catch (NoSuchAlgorithmException e) {
                         throw new RuntimeException(e);
                     }
@@ -153,8 +152,13 @@ public class VDJCLibrary {
         return new VDJCLibraryId(name, libraryData.getTaxonId(), getChecksum());
     }
 
-    VDJCLibraryId getLibraryIdNoChecksum() {
-        return new VDJCLibraryId(name, libraryData.getTaxonId(), null);
+    /**
+     * Return library id with null checksum. For usage as map key.
+     *
+     * @return library id with null checksum. For usage as map key.
+     */
+    VDJCLibraryId getLibraryIdWithoutChecksum() {
+        return new VDJCLibraryId(name, libraryData.getTaxonId());
     }
 
     /**

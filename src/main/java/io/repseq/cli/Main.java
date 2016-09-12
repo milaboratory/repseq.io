@@ -2,6 +2,8 @@ package io.repseq.cli;
 
 import com.milaboratory.cli.JCommanderBasedMain;
 import com.milaboratory.util.VersionInfo;
+import io.repseq.core.VDJCLibrary;
+import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
 
 import java.nio.file.Path;
@@ -30,6 +32,9 @@ public class Main {
         main.setVersionInfoCallback(new Runnable() {
             @Override
             public void run() {
+                VDJCLibraryRegistry reg = VDJCLibraryRegistry.createDefaultRegistry();
+                reg.loadAllLibraries("default");
+
                 VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
                 VersionInfo repseqio = VersionInfo.getVersionInfoForArtifact("repseqio");
 
@@ -50,9 +55,15 @@ public class Main {
                         .append(milib.getVersion())
                         .append(" (rev=").append(milib.getRevision())
                         .append("; branch=").append(milib.getBranch())
-                        .append(")");
+                        .append(")")
+                        .append("\n");
 
-                System.out.println(builder.toString());
+                builder.append("Built-in libraries:\n");
+
+                for (VDJCLibrary lib : reg.getLoadedLibraries())
+                    builder.append(lib.getLibraryId()).append("\n");
+
+                System.out.print(builder.toString());
             }
         });
 
