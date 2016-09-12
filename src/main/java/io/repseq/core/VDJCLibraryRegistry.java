@@ -10,8 +10,12 @@ import io.repseq.seqbase.SequenceResolver;
 import io.repseq.seqbase.SequenceResolvers;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -166,19 +170,38 @@ public final class VDJCLibraryRegistry {
         libraryResolvers.add(resolver);
     }
 
+
     /**
-     * Adds path resolver to search for libraries with {libraryName}.json file names in specified folder.
+     * Adds path resolver to search for libraries with {libraryName}.json[.gz] file names in specified folder.
      *
-     * @param searchPath path to search for {libraryName}.json files
+     * @param searchPath path to search for {libraryName}.json[.gz] files
      */
     public void addPathResolver(Path searchPath) {
-        addLibraryResolver(new FolderLibraryResolver(searchPath.toAbsolutePath()));
+        addLibraryResolver(new FolderLibraryResolver(searchPath.toAbsolutePath(), false));
     }
 
     /**
-     * Adds path resolver to search for libraries with {libraryName}.json file names in specified folder.
+     * Adds path resolver to search for libraries with {libraryName}[.*].json[.gz] file names in specified folder.
      *
-     * @param searchPath path to search for {libraryName}.json files
+     * @param searchPath path to search for {libraryName}[.*].json[.gz] files
+     */
+    public void addPathResolverWithPartialSearch(Path searchPath) {
+        addLibraryResolver(new FolderLibraryResolver(searchPath.toAbsolutePath(), true));
+    }
+
+    /**
+     * Adds path resolver to search for libraries with {libraryName}[.*].json[.gz] file names in specified folder.
+     *
+     * @param searchPath path to search for {libraryName}[.*].json[.gz] files
+     */
+    public void addPathResolverWithPartialSearch(String searchPath) {
+        addPathResolverWithPartialSearch(Paths.get(searchPath));
+    }
+
+    /**
+     * Adds path resolver to search for libraries with {libraryName}.json[.gz] file names in specified folder.
+     *
+     * @param searchPath path to search for {libraryName}.json files[.gz]
      */
     public void addPathResolver(String searchPath) {
         addPathResolver(Paths.get(searchPath));
@@ -453,9 +476,7 @@ public final class VDJCLibraryRegistry {
      * @param file libraries json file
      */
     public void registerLibraries(Path file) {
-        String name = file.getFileName().toString();
-        name = name.toLowerCase().replaceAll("(?i).json(?:\\.gz)$", "");
-        registerLibraries(file, name);
+        registerLibraries(file, libraryNameFromFileName(file.getFileName().toString()));
     }
 
     /**
@@ -546,14 +567,22 @@ public final class VDJCLibraryRegistry {
         String resolveAlias(String libraryName);
     }
 
+    private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("(?i).json(?:\\.gz)$");
+
+    private static String libraryNameFromFileName(String fileName) {
+        return FILE_EXTENSION_PATTERN.matcher(fileName).replaceAll("");
+    }
+
     /**
      * Load library data from {libraryName}.json files in specified folder.
      */
-    public static final class FolderLibraryResolver implements LibraryResolver {
+    public static final class FolderLibraryResolver implements LibraryResolver, AliasResolver {
         private final Path path;
+        private final boolean searchForPartialNames;
 
-        public FolderLibraryResolver(Path path) {
+        public FolderLibraryResolver(Path path, boolean searchForPartialNames) {
             this.path = path;
+            this.searchForPartialNames = searchForPartialNames;
         }
 
         public Path getPath() {
@@ -563,6 +592,36 @@ public final class VDJCLibraryRegistry {
         @Override
         public Path getContext(String libraryName) {
             return path;
+        }
+
+        @Override
+        public String resolveAlias(String libraryName) {
+            if (searchForPartialNames) {
+                List<String> candidates = new ArrayList<>();
+                try (DirectoryStream<Path> paths = Files.newDirectoryStream(path)) {
+                    for (Path subPath : paths) {
+                        String name = subPath.getFileName().toString();
+
+                        if (!name.toLowerCase().endsWith(".json") && !name.toLowerCase().endsWith(".json.gz"))
+                            continue;
+
+                        name = libraryNameFromFileName(name);
+
+                        if (name.startsWith(libraryName + "."))
+                            candidates.add(name);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                if (candidates.isEmpty())
+                    return null;
+
+                Collections.sort(candidates, VDJCDataUtils.SMART_COMPARATOR_INVERSE);
+
+                return candidates.get(0);
+            }
+            return null;
         }
 
         @Override

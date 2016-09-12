@@ -208,4 +208,18 @@ public final class VDJCDataUtils {
 
         return s1.substring(lastPosition1).compareTo(s2.substring(lastPosition2));
     }
+
+    public static final Comparator<String> SMART_COMPARATOR = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            return smartCompare(o1, o2);
+        }
+    };
+
+    public static final Comparator<String> SMART_COMPARATOR_INVERSE = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            return smartCompare(o2, o1);
+        }
+    };
 }
