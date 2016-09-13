@@ -1,6 +1,7 @@
 package io.repseq.cli;
 
 import cc.redberry.pipe.CUtils;
+import cc.redberry.pipe.OutputPortCloseable;
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -45,9 +46,9 @@ public class FromPaddedFastaAction implements Action {
         Path fastaPath = Paths.get(params.getOutputFasta()).toAbsolutePath();
         String relativeFastaPath = jsonPath.getParent().relativize(fastaPath).toString();
 
-        try (FastaReader<?> reader = new FastaReader<>(params.getInput(), null);
+        try (FastaReader reader = new FastaReader<>(params.getInput(), null);
              FastaWriter<NucleotideSequence> seqWriter = new FastaWriter<>(params.getOutputFasta())) {
-            for (FastaReader.RawFastaRecord record : CUtils.it(reader.asRawRecordsPort())) {
+            for (FastaReader.RawFastaRecord record : CUtils.it((OutputPortCloseable<FastaReader.RawFastaRecord>) reader.asRawRecordsPort())) {
                 StringWithMapping swm = StringWithMapping.removeSymbol(record.sequence, params.paddingCharacter);
 
                 NucleotideSequence seq = new NucleotideSequence(swm.getModifiedString());
