@@ -6,18 +6,15 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.ActionParametersWithOutput;
-import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.dto.VDJCDataUtils;
 import io.repseq.dto.VDJCLibraryData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.milaboratory.util.GlobalObjectMappers.ONE_LINE;
 import static java.util.Arrays.asList;
 
 public class MergeAction implements Action {
@@ -29,12 +26,11 @@ public class MergeAction implements Action {
         List<VDJCLibraryData> libs = new ArrayList<>();
 
         for (String input : params.getInput())
-            libs.addAll(asList(ONE_LINE.readValue(new File(input),
-                    VDJCLibraryData[].class)));
+            libs.addAll(asList(VDJCDataUtils.readArrayFromFile(input)));
 
         VDJCLibraryData[] mergeResult = VDJCDataUtils.merge(libs);
 
-        GlobalObjectMappers.PRETTY.writeValue(new File(params.getOutput()), mergeResult);
+        VDJCDataUtils.writeToFile(mergeResult, params.getOutput(), false);
 
         log.info("Merged successfully.");
     }
@@ -51,7 +47,7 @@ public class MergeAction implements Action {
 
     @Parameters(commandDescription = "Merge several libraries into single library.")
     public static final class Params extends ActionParametersWithOutput {
-        @Parameter(description = "[input1.json [ input2.json [...] ] ] output.json")
+        @Parameter(description = "[input1.json[.gz] [ input2.json[.gz] [...] ] ] output.json[.gz]")
         public List<String> parameters;
 
         public List<String> getInput() {

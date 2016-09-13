@@ -3,7 +3,10 @@ package io.repseq.core;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 /**
@@ -33,6 +36,10 @@ public class VDJCLibrary {
      * Name -> VDJCGene
      */
     private final Map<String, VDJCGene> genes = new HashMap<>();
+    /**
+     * Cached checksum value
+     */
+    private volatile byte[] checksum;
 
     public VDJCLibrary(VDJCLibraryData libraryData, String name, VDJCLibraryRegistry registry, Path context) {
         this.libraryData = libraryData;
@@ -50,8 +57,32 @@ public class VDJCLibrary {
      *
      * @return checksum for this library
      */
-    public String getChecksum() {
-        return "00";
+    public byte[] getChecksum() {
+        if (checksum == null)
+            synchronized (this) {
+                if (checksum == null) {
+                    List<VDJCGene> genes = new ArrayList<>(getGenes());
+                    Collections.sort(genes, new Comparator<VDJCGene>() {
+                        @Override
+                        public int compare(VDJCGene o1, VDJCGene o2) {
+                            return o1.getData().compareTo(o2.getData());
+                        }
+                    });
+
+                    StringBuilder bigSeqBuilder = new StringBuilder();
+                    for (VDJCGene gene : genes)
+                        bigSeqBuilder.append(gene.getFeature(gene.getPartitioning().getWrappingGeneFeature()).toString());
+
+                    try {
+                        byte[] bytes = bigSeqBuilder.toString().getBytes(StandardCharsets.UTF_8);
+                        MessageDigest md = MessageDigest.getInstance("MD5");
+                        checksum = md.digest(bytes);
+                    } catch (NoSuchAlgorithmException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        return checksum;
     }
 
     /**
@@ -119,6 +150,15 @@ public class VDJCLibrary {
      */
     public VDJCLibraryId getLibraryId() {
         return new VDJCLibraryId(name, libraryData.getTaxonId(), getChecksum());
+    }
+
+    /**
+     * Return library id with null checksum. For usage as map key.
+     *
+     * @return library id with null checksum. For usage as map key.
+     */
+    VDJCLibraryId getLibraryIdWithoutChecksum() {
+        return new VDJCLibraryId(name, libraryData.getTaxonId());
     }
 
     /**

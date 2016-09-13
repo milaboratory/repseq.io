@@ -3,11 +3,17 @@ package io.repseq.dto;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.provider.CachedSequenceProvider;
+import com.milaboratory.util.GlobalObjectMappers;
 
+import java.io.*;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public final class VDJCDataUtils {
     private VDJCDataUtils() {
@@ -144,6 +150,44 @@ public final class VDJCDataUtils {
         }
     }
 
+    public static VDJCLibraryData[] readArrayFromFile(String file) throws IOException {
+        return readArrayFromFile(Paths.get(file));
+    }
+
+    public static VDJCLibraryData[] readArrayFromFile(Path file) throws IOException {
+        // Ungzipping if file name ends with .gz
+        try (InputStream is = file.getFileName().toString().endsWith(".gz") ?
+                new BufferedInputStream(new GZIPInputStream(new FileInputStream(file.toFile()))) :
+                new BufferedInputStream(new FileInputStream(file.toFile()))) {
+            // Getting libraries from stream
+            return GlobalObjectMappers.ONE_LINE.readValue(is, VDJCLibraryData[].class);
+        }
+    }
+
+    public static void writeToFile(VDJCLibraryData[] data, String file, boolean compact) throws IOException {
+        writeToFile(data, Paths.get(file), compact);
+    }
+
+    public static void writeToFile(VDJCLibraryData[] data, Path file, boolean compact) throws IOException {
+        writeToFile(new ArrayList<>(Arrays.asList(data)), file, compact);
+    }
+
+    public static void writeToFile(List<VDJCLibraryData> data, String file, boolean compact) throws IOException {
+        writeToFile(data, Paths.get(file), compact);
+    }
+
+    public static void writeToFile(List<VDJCLibraryData> data, Path file, boolean compact) throws IOException {
+        VDJCDataUtils.sort(data);
+        try (OutputStream os = file.getFileName().toString().endsWith(".gz") ?
+                new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(file.toFile()))) :
+                new BufferedOutputStream(new FileOutputStream(file.toFile()))) {
+            if (compact)
+                GlobalObjectMappers.ONE_LINE.writeValue(os, data);
+            else
+                GlobalObjectMappers.PRETTY.writeValue(os, data);
+        }
+    }
+
     private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
     public static int smartCompare(String s1, String s2) {
@@ -164,4 +208,18 @@ public final class VDJCDataUtils {
 
         return s1.substring(lastPosition1).compareTo(s2.substring(lastPosition2));
     }
+
+    public static final Comparator<String> SMART_COMPARATOR = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            return smartCompare(o1, o2);
+        }
+    };
+
+    public static final Comparator<String> SMART_COMPARATOR_INVERSE = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            return smartCompare(o2, o1);
+        }
+    };
 }

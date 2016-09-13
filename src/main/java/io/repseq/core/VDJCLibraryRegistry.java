@@ -2,19 +2,26 @@ package io.repseq.core;
 
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.dto.KnownSequenceFragmentData;
+import io.repseq.dto.VDJCDataUtils;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
 import io.repseq.seqbase.SequenceAddress;
 import io.repseq.seqbase.SequenceResolver;
 import io.repseq.seqbase.SequenceResolvers;
+import org.apache.commons.io.IOUtils;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Registry of VDJCLibraries. Central storage for VDJCLibraries objects. VDJCLibraries can be created only using
@@ -41,6 +48,10 @@ public final class VDJCLibraryRegistry {
      * Store successfully loaded libraries
      */
     final HashSet<LibraryLoadRequest> loadedLibraries = new HashSet<>();
+    /**
+     * Library name aliases
+     */
+    final HashMap<String, String> aliases = new HashMap<>();
 
     /**
      * Creates new VDJCLibraryRegistry with default sequence resolver
@@ -159,19 +170,38 @@ public final class VDJCLibraryRegistry {
         libraryResolvers.add(resolver);
     }
 
+
     /**
-     * Adds path resolver to search for libraries with {libraryName}.json file names in specified folder.
+     * Adds path resolver to search for libraries with {libraryName}.json[.gz] file names in specified folder.
      *
-     * @param searchPath path to search for {libraryName}.json files
+     * @param searchPath path to search for {libraryName}.json[.gz] files
      */
     public void addPathResolver(Path searchPath) {
-        addLibraryResolver(new FolderLibraryResolver(searchPath.toAbsolutePath()));
+        addLibraryResolver(new FolderLibraryResolver(searchPath.toAbsolutePath(), false));
     }
 
     /**
-     * Adds path resolver to search for libraries with {libraryName}.json file names in specified folder.
+     * Adds path resolver to search for libraries with {libraryName}[.*].json[.gz] file names in specified folder.
      *
-     * @param searchPath path to search for {libraryName}.json files
+     * @param searchPath path to search for {libraryName}[.*].json[.gz] files
+     */
+    public void addPathResolverWithPartialSearch(Path searchPath) {
+        addLibraryResolver(new FolderLibraryResolver(searchPath.toAbsolutePath(), true));
+    }
+
+    /**
+     * Adds path resolver to search for libraries with {libraryName}[.*].json[.gz] file names in specified folder.
+     *
+     * @param searchPath path to search for {libraryName}[.*].json[.gz] files
+     */
+    public void addPathResolverWithPartialSearch(String searchPath) {
+        addPathResolverWithPartialSearch(Paths.get(searchPath));
+    }
+
+    /**
+     * Adds path resolver to search for libraries with {libraryName}.json[.gz] file names in specified folder.
+     *
+     * @param searchPath path to search for {libraryName}.json files[.gz]
      */
     public void addPathResolver(String searchPath) {
         addPathResolver(Paths.get(searchPath));
@@ -255,9 +285,9 @@ public final class VDJCLibraryRegistry {
     }
 
     /**
-     * Used in {@link #getLibrary(String, String, long, String)}
+     * Used in {@link #getLibrary(String, String, long, byte[])}
      */
-    private VDJCLibrary tryGetLibrary(String libraryName, String species, long taxonId, String checksum) {
+    private VDJCLibrary tryGetLibrary(String libraryName, String species, long taxonId, byte[] checksum) {
         // Try resolve species if it was provided in string form
         if (species != null) {
             Long tId = tryResolveSpecies(species);
@@ -267,17 +297,21 @@ public final class VDJCLibraryRegistry {
         }
 
         // Key to search in map
-        VDJCLibraryId libraryId = new VDJCLibraryId(libraryName, taxonId, checksum);
+        VDJCLibraryId libraryId = new VDJCLibraryId(libraryName, taxonId);
 
         // Try get from map
         VDJCLibrary vdjcLibrary = libraries.get(libraryId);
 
-        // If not found return null
-        if (vdjcLibrary == null)
-            return null;
+        // If not found try aliases
+        if (vdjcLibrary == null) {
+            if (aliases.containsKey(libraryName))
+                return tryGetLibrary(aliases.get(libraryName), null, taxonId, checksum);
+            else
+                return null;
+        }
 
         // Check for checksum if it was provided
-        if (checksum != null && !checksum.equals(vdjcLibrary.getChecksum()))
+        if (checksum != null && !Arrays.equals(checksum, vdjcLibrary.getChecksum()))
             throw new RuntimeException("Different checksums.");
 
         // OK
@@ -294,7 +328,7 @@ public final class VDJCLibraryRegistry {
      * @return library
      * @throws RuntimeException if failed to resolve library
      */
-    private synchronized VDJCLibrary getLibrary(String libraryName, String species, long taxonId, String checksum) {
+    private synchronized VDJCLibrary getLibrary(String libraryName, String species, long taxonId, byte[] checksum) {
         VDJCLibrary vdjcLibrary;
 
         // Search for already loaded libraries and if found return it
@@ -317,7 +351,8 @@ public final class VDJCLibraryRegistry {
         }
 
         // If library was not found nor loaded throw exception
-        throw new RuntimeException("Can't find library for following library name and species: " + libraryName + " + " + (species != null ? species : taxonId));
+        throw new RuntimeException("Can't find library for following library name and species: " + libraryName +
+                " + " + (species != null ? species : taxonId));
     }
 
     /**
@@ -339,12 +374,23 @@ public final class VDJCLibraryRegistry {
         // Try resolve
         VDJCLibraryData[] resolved = resolver.resolve(libraryName);
 
-        // If not resolved proceed to next resolver
-        if (resolved == null)
-            return;
-
         // Marking this request as already processed
         loadedLibraries.add(request);
+
+        // If not resolved
+        if (resolved == null) {
+            if (resolver instanceof AliasResolver) {
+                String newLibraryName = ((AliasResolver) resolver).resolveAlias(libraryName);
+                if (newLibraryName == null)
+                    return; // proceed to next resolver
+                tryResolve(resolver, newLibraryName);
+                if (aliases.containsKey(libraryName) && !aliases.get(libraryName).equals(newLibraryName))
+                    throw new RuntimeException("Conflicting aliases " + libraryName + " -> " + newLibraryName +
+                            " / " + aliases.get(libraryName));
+                aliases.put(libraryName, newLibraryName);
+            }
+            return; // proceed to next resolver
+        }
 
         // Registering loaded library entries
         for (VDJCLibraryData vdjcLibraryData : resolved) {
@@ -372,14 +418,18 @@ public final class VDJCLibraryRegistry {
         // Creating library object
         VDJCLibrary library = new VDJCLibrary(data, name, this, context);
 
+        // Getting library id
+        VDJCLibraryId rootId = library.getLibraryIdWithoutChecksum();
+
         // Check if such library is already registered
-        if (libraries.containsKey(library.getLibraryId()))
-            throw new RuntimeException("Duplicate library: " + library.getLibraryId());
+        if (libraries.containsKey(rootId))
+            throw new RuntimeException("Duplicate library: " + rootId);
 
         // Loading known sequence fragments from VDJCLibraryData to current SequenceResolver
         SequenceResolver resolver = getSequenceResolver();
         for (KnownSequenceFragmentData fragment : data.getSequenceFragments())
-            resolver.resolve(new SequenceAddress(context, fragment.getUri())).setRegion(fragment.getRange(), fragment.getSequence());
+            resolver.resolve(new SequenceAddress(context, fragment.getUri())).setRegion(fragment.getRange(),
+                    fragment.getSequence());
 
         // Adding genes
         for (VDJCGeneData gene : data.getGenes())
@@ -390,12 +440,13 @@ public final class VDJCLibraryRegistry {
         for (String speciesName : data.getSpeciesNames()) {
             String cSpeciesName = canonicalizeSpeciesName(speciesName);
             if (speciesNames.containsKey(cSpeciesName) && !speciesNames.get(cSpeciesName).equals(taxonId))
-                throw new IllegalArgumentException("Mismatch in common species name between several libraries. (Library name = " + name + "; name = " + speciesName + ").");
+                throw new IllegalArgumentException("Mismatch in common species name between several libraries. " +
+                        "(Library name = " + name + "; name = " + speciesName + ").");
             speciesNames.put(cSpeciesName, taxonId);
         }
 
         // Adding this library to collection
-        libraries.put(library.getLibraryId(), library);
+        libraries.put(library.getLibraryIdWithoutChecksum(), library);
 
         return library;
     }
@@ -425,9 +476,7 @@ public final class VDJCLibraryRegistry {
      * @param file libraries json file
      */
     public void registerLibraries(Path file) {
-        String name = file.getFileName().toString();
-        name = name.toLowerCase().replaceAll("(?i).json$", "");
-        registerLibraries(file, name);
+        registerLibraries(file, libraryNameFromFileName(file.getFileName().toString()));
     }
 
     /**
@@ -439,11 +488,8 @@ public final class VDJCLibraryRegistry {
     public void registerLibraries(Path file, String name) {
         file = file.toAbsolutePath();
         try {
-            // Getting libraries from file
-            VDJCLibraryData[] libraries = GlobalObjectMappers.ONE_LINE.readValue(file.toFile(), VDJCLibraryData[].class);
-
             // Registering libraries
-            for (VDJCLibraryData library : libraries)
+            for (VDJCLibraryData library : VDJCDataUtils.readArrayFromFile(file))
                 registerLibrary(file.getParent(), name, library);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -475,12 +521,32 @@ public final class VDJCLibraryRegistry {
     }
 
     /**
+     * Creates new instance of basic default registry
+     *
+     * @return new instance of basic default registry
+     */
+    public static VDJCLibraryRegistry createDefaultRegistry() {
+        VDJCLibraryRegistry registry = new VDJCLibraryRegistry();
+        registry.addClasspathResolver("libraries/");
+        return registry;
+    }
+
+    /**
      * Returns default VDJCLibraryRegistry.
      *
      * @return default VDJCLibraryRegistry
      */
     public static VDJCLibraryRegistry getDefault() {
         return defaultRegistry;
+    }
+
+    /**
+     * Return the list of library resolvers used by this registry
+     *
+     * @return list of library resolvers used by this registry
+     */
+    public List<LibraryResolver> getLibraryResolvers() {
+        return Collections.unmodifiableList(libraryResolvers);
     }
 
     /**
@@ -495,13 +561,32 @@ public final class VDJCLibraryRegistry {
     }
 
     /**
+     * Interface implemented by {@link LibraryResolver} if it can also resolve library name aliases
+     */
+    public interface AliasResolver {
+        String resolveAlias(String libraryName);
+    }
+
+    private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("(?i).json(?:\\.gz)$");
+
+    private static String libraryNameFromFileName(String fileName) {
+        return FILE_EXTENSION_PATTERN.matcher(fileName).replaceAll("");
+    }
+
+    /**
      * Load library data from {libraryName}.json files in specified folder.
      */
-    public static final class FolderLibraryResolver implements LibraryResolver {
-        final Path path;
+    public static final class FolderLibraryResolver implements LibraryResolver, AliasResolver {
+        private final Path path;
+        private final boolean searchForPartialNames;
 
-        public FolderLibraryResolver(Path path) {
+        public FolderLibraryResolver(Path path, boolean searchForPartialNames) {
             this.path = path;
+            this.searchForPartialNames = searchForPartialNames;
+        }
+
+        public Path getPath() {
+            return path;
         }
 
         @Override
@@ -510,14 +595,52 @@ public final class VDJCLibraryRegistry {
         }
 
         @Override
+        public String resolveAlias(String libraryName) {
+            if (searchForPartialNames) {
+                List<String> candidates = new ArrayList<>();
+                try (DirectoryStream<Path> paths = Files.newDirectoryStream(path)) {
+                    for (Path subPath : paths) {
+                        String name = subPath.getFileName().toString();
+
+                        if (!name.toLowerCase().endsWith(".json") && !name.toLowerCase().endsWith(".json.gz"))
+                            continue;
+
+                        name = libraryNameFromFileName(name);
+
+                        if (name.startsWith(libraryName + "."))
+                            candidates.add(name);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                if (candidates.isEmpty())
+                    return null;
+
+                Collections.sort(candidates, VDJCDataUtils.SMART_COMPARATOR_INVERSE);
+
+                return candidates.get(0);
+            }
+            return null;
+        }
+
+        @Override
         public VDJCLibraryData[] resolve(String libraryName) {
             try {
                 Path filePath = path.resolve(libraryName + ".json");
-                if (!Files.exists(filePath))
-                    return null;
 
-                // Getting libraries from file
-                return GlobalObjectMappers.ONE_LINE.readValue(filePath.toFile(), VDJCLibraryData[].class);
+                if (Files.exists(filePath))
+                    // Getting libraries from file
+                    return GlobalObjectMappers.ONE_LINE.readValue(filePath.toFile(), VDJCLibraryData[].class);
+
+                filePath = path.resolve(libraryName + ".json.gz");
+                if (Files.exists(filePath))
+                    try (InputStream os = new BufferedInputStream(new GZIPInputStream(new FileInputStream(filePath.toFile())))) {
+                        // Getting libraries from gzipped file
+                        return GlobalObjectMappers.ONE_LINE.readValue(os, VDJCLibraryData[].class);
+                    }
+
+                return null;
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -527,18 +650,37 @@ public final class VDJCLibraryRegistry {
     /**
      * Load library data from {libraryName}.json files in specified folder.
      */
-    public static final class ClasspathLibraryResolver implements LibraryResolver {
-        final String path;
-        final ClassLoader classLoader;
+    public static final class ClasspathLibraryResolver implements LibraryResolver, AliasResolver {
+        private final String path;
+        private final ClassLoader classLoader;
 
         public ClasspathLibraryResolver(String path, ClassLoader classLoader) {
             this.path = path;
             this.classLoader = classLoader;
         }
 
+        public String getPath() {
+            return path;
+        }
+
+        public ClassLoader getClassLoader() {
+            return classLoader;
+        }
+
         @Override
         public Path getContext(String libraryName) {
             return null;
+        }
+
+        @Override
+        public String resolveAlias(String libraryName) {
+            try (InputStream stream = classLoader.getResourceAsStream(path + libraryName + ".alias")) {
+                if (stream == null)
+                    return null;
+                return IOUtils.toString(stream, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override

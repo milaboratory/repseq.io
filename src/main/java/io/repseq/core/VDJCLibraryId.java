@@ -1,12 +1,16 @@
 package io.repseq.core;
 
+import org.apache.commons.codec.binary.Hex;
+
+import java.util.Arrays;
+
 /**
  * Taxon id and library name and optional library checksum
  */
 public final class VDJCLibraryId implements Comparable<VDJCLibraryId> {
     private final String libraryName;
     private final long taxonId;
-    private final String checksum;
+    private final byte[] checksum;
 
     /**
      * Creates VDJCLibraryId from taxonId and library name
@@ -27,7 +31,7 @@ public final class VDJCLibraryId implements Comparable<VDJCLibraryId> {
      * @param taxonId     taxon id
      * @param checksum    checksum
      */
-    public VDJCLibraryId(String libraryName, long taxonId, String checksum) {
+    public VDJCLibraryId(String libraryName, long taxonId, byte[] checksum) {
         this.taxonId = taxonId;
         this.libraryName = libraryName;
         this.checksum = checksum;
@@ -56,12 +60,40 @@ public final class VDJCLibraryId implements Comparable<VDJCLibraryId> {
      *
      * @return checksum
      */
-    public String getChecksum() {
+    public byte[] getChecksum() {
         return checksum;
     }
 
+    /**
+     * Returns copy of this VDJCLibraryId with checksum set to null
+     *
+     * @return copy of this VDJCLibraryId with checksum set to null
+     */
+    public VDJCLibraryId withoutChecksum() {
+        if (checksum == null)
+            // If checksum already null return this
+            return this;
+        
+        return new VDJCLibraryId(libraryName, taxonId, null);
+    }
+
+    /**
+     * Returns whether this id also contain checksum information
+     *
+     * @return whether this id also contain checksum information
+     */
     public boolean requireChecksumCheck() {
         return checksum != null;
+    }
+
+    /**
+     * Return new instance of VDJCLibraryId with different library name
+     *
+     * @param newLibraryName new library name
+     * @return new instance of VDJCLibraryId with different library name
+     */
+    public VDJCLibraryId setLibraryName(String newLibraryName) {
+        return new VDJCLibraryId(newLibraryName, taxonId, checksum);
     }
 
     @Override
@@ -71,7 +103,23 @@ public final class VDJCLibraryId implements Comparable<VDJCLibraryId> {
         if ((c = libraryName.compareTo(o.getLibraryName())) != 0)
             return c;
 
-        return Long.compare(taxonId, o.taxonId);
+        if ((c = Long.compare(taxonId, o.taxonId)) != 0)
+            return c;
+
+        if (checksum == null && o.checksum == null)
+            return 0;
+
+        if (checksum == null)
+            return -1;
+
+        if (o.checksum == null)
+            return 1;
+
+        for (int i = 0; i < checksum.length; i++)
+            if ((c = Byte.compare(checksum[i], o.checksum[i])) != 0)
+                return c;
+
+        return 0;
     }
 
     @Override
@@ -79,23 +127,26 @@ public final class VDJCLibraryId implements Comparable<VDJCLibraryId> {
         if (this == o) return true;
         if (!(o instanceof VDJCLibraryId)) return false;
 
-        VDJCLibraryId that = (VDJCLibraryId) o;
+        VDJCLibraryId libraryId = (VDJCLibraryId) o;
 
-        if (taxonId != that.taxonId) return false;
-        return libraryName.equals(that.libraryName);
+        if (taxonId != libraryId.taxonId) return false;
+        if (libraryName != null ? !libraryName.equals(libraryId.libraryName) : libraryId.libraryName != null)
+            return false;
+        return Arrays.equals(checksum, libraryId.checksum);
 
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (taxonId ^ (taxonId >>> 32));
-        result = 31 * result + libraryName.hashCode();
+        int result = libraryName != null ? libraryName.hashCode() : 0;
+        result = 31 * result + (int) (taxonId ^ (taxonId >>> 32));
+        result = 31 * result + Arrays.hashCode(checksum);
         return result;
     }
 
     @Override
     public String toString() {
         return libraryName + ":" + taxonId +
-                (checksum == null ? "" : " (" + checksum + ")");
+                (checksum == null ? "" : " (" + new String(Hex.encodeHex(checksum)) + ")");
     }
 }

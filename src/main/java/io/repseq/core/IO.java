@@ -33,7 +33,7 @@ import com.milaboratory.primitivio.PrimitivO;
 import com.milaboratory.primitivio.Serializer;
 
 class IO {
-    public static class VDJCGeneSerializer implements Serializer<VDJCGene> {
+    public final static class VDJCGeneSerializer implements Serializer<VDJCGene> {
         @Override
         public void write(PrimitivO output, VDJCGene object) {
             throw new RuntimeException("Serializer only for knownReference serialization.");
@@ -55,7 +55,7 @@ class IO {
         }
     }
 
-    public static class VDJCGeneIdSerializer implements Serializer<VDJCGeneId> {
+    public final static class VDJCGeneIdSerializer implements Serializer<VDJCGeneId> {
         @Override
         public void write(PrimitivO output, VDJCGeneId object) {
             output.writeUTF(object.libraryId.getLibraryName());
@@ -68,9 +68,9 @@ class IO {
         public VDJCGeneId read(PrimitivI input) {
             String lName = input.readUTF();
             long taxonId = input.readVarLong();
-            String chgecksum = input.readObject(String.class);
+            byte[] checksum = input.readObject(byte[].class);
             String geneName = input.readUTF();
-            return new VDJCGeneId(new VDJCLibraryId(lName, taxonId, chgecksum), geneName);
+            return new VDJCGeneId(new VDJCLibraryId(lName, taxonId, checksum), geneName);
         }
 
         @Override
@@ -84,7 +84,7 @@ class IO {
         }
     }
 
-    public static class ReferencePointSerializer implements Serializer<ReferencePoint> {
+    public final static class ReferencePointSerializer implements Serializer<ReferencePoint> {
         @Override
         public void write(PrimitivO output, ReferencePoint object) {
             output.writeUTF(object.basicPoint.name());
@@ -109,7 +109,7 @@ class IO {
         }
     }
 
-    public static class GeneFeatureReferenceRangeSerializer implements Serializer<GeneFeature.ReferenceRange> {
+    public final static class GeneFeatureReferenceRangeSerializer implements Serializer<GeneFeature.ReferenceRange> {
         @Override
         public void write(PrimitivO output, GeneFeature.ReferenceRange object) {
             output.writeObject(object.begin);
@@ -133,30 +133,4 @@ class IO {
         }
     }
 
-    public static class GeneFeatureSerializer implements Serializer<GeneFeature> {
-        @Override
-        public void write(PrimitivO output, GeneFeature object) {
-            output.writeObject(object.regions);
-            // Saving this gene feature for the all subsequent serializations
-            //output.putKnownReference(object);
-        }
-
-        @Override
-        public GeneFeature read(PrimitivI input) {
-            GeneFeature object = new GeneFeature(input.readObject(GeneFeature.ReferenceRange[].class), true);
-            // Saving this gene feature for the all subsequent deserializations
-            //input.putKnownReference(object);
-            return object;
-        }
-
-        @Override
-        public boolean isReference() {
-            return true;
-        }
-
-        @Override
-        public boolean handlesReference() {
-            return false;
-        }
-    }
 }

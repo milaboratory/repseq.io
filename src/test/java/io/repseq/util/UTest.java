@@ -43,6 +43,12 @@ public class UTest {
         print(maxs);
     }
 
+    @Ignore
+    @Test
+    public void t2() throws Exception {
+        System.out.println(VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").getLibraryId());
+    }
+
     public void print(Map<String, Integer> m) {
         for (Map.Entry<String, Integer> entry : m.entrySet()) {
             System.out.println(entry.getKey() + ": " + entry.getValue());
@@ -50,7 +56,7 @@ public class UTest {
     }
 
     public void add(Map<String, Integer> m, String key, int val, boolean max) {
-        if(val < 0)
+        if (val < 0)
             return;
         if (!m.containsKey(key))
             m.put(key, val);

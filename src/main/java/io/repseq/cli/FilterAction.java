@@ -6,11 +6,11 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.ActionParametersWithOutput;
-import com.milaboratory.util.GlobalObjectMappers;
+import io.repseq.dto.VDJCDataUtils;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
 
-import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,8 +21,7 @@ public class FilterAction implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
-        VDJCLibraryData[] libs = GlobalObjectMappers.ONE_LINE.readValue(new File(params.getInput()),
-                VDJCLibraryData[].class);
+        VDJCLibraryData[] libs = VDJCDataUtils.readArrayFromFile(Paths.get(params.getInput()));
 
         List<VDJCLibraryData> filtered = new ArrayList<>();
 
@@ -69,7 +68,7 @@ public class FilterAction implements Action {
         System.out.println("Filtered libraries: " + filteredLibraries);
         System.out.println("Filtered genes: " + filteredGenes);
 
-        GlobalObjectMappers.PRETTY.writeValue(new File(params.getOutput()), filtered);
+        VDJCDataUtils.writeToFile(filtered, params.getOutput(), false);
     }
 
     @Override
@@ -84,7 +83,7 @@ public class FilterAction implements Action {
 
     @Parameters(commandDescription = "Filter libraries and library records.")
     public static final class Params extends ActionParametersWithOutput {
-        @Parameter(description = "input_library.json output_library.json", arity = 2)
+        @Parameter(description = "input_library.json[.gz] output_library.json[.gz]", arity = 2)
         public List<String> parameters;
 
         @Parameter(description = "Taxon id (filter multi-library file to leave single library for specified taxon id)",

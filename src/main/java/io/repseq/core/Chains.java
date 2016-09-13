@@ -59,10 +59,39 @@ public final class Chains implements Iterable<String> {
         if (chains == null || other.chains == null)
             return ALL;
 
+        if (other.chains.equals(this.chains))
+            return this;
+
         HashSet<String> s = new HashSet<>();
         s.addAll(this.chains);
         s.addAll(other.chains);
         return new Chains(s);
+    }
+
+    public Chains intersection(Chains other) {
+        if (chains == null && other.chains == null)
+            return ALL;
+
+        if (chains == null || (other.chains != null && this.chains.containsAll(other.chains)))
+            return other;
+
+        if (other.chains == null || other.chains.containsAll(this.chains))
+            return this;
+
+        HashSet<String> s = new HashSet<>();
+        s.addAll(this.chains);
+        s.retainAll(other.chains);
+        return new Chains(s);
+    }
+
+    public boolean isEmpty() {
+        return chains != null && chains.isEmpty();
+    }
+
+    public boolean contains(String chain) {
+        if (this.chains == null)
+            return true;
+        return chains.contains(chain);
     }
 
     public boolean intersects(Chains other) {

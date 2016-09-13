@@ -58,7 +58,7 @@ import static io.repseq.core.ReferencePoint.*;
 //[DRegionBegin(-10, +6), DRegionBegin(-10, +6)]
 @JsonDeserialize(using = GeneFeature.Deserializer.class)
 @JsonSerialize(using = GeneFeature.Serializer.class)
-@Serializable(by = IO.GeneFeatureSerializer.class)
+@Serializable(by = GeneFeatureSerializer.class)
 public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, Comparable<GeneFeature>,
         java.io.Serializable {
     /* V, D, J, Regions */

@@ -17,18 +17,12 @@ import com.milaboratory.core.alignment.batch.SimpleBatchAlignerParameters;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
-import com.milaboratory.util.GlobalObjectMappers;
-import io.repseq.core.VDJCGene;
-import io.repseq.core.VDJCLibrary;
-import io.repseq.core.VDJCLibraryRegistry;
+import io.repseq.core.*;
+import io.repseq.dto.VDJCDataUtils;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
-import io.repseq.core.GeneFeature;
-import io.repseq.core.ReferencePoint;
-import io.repseq.core.ReferencePoints;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -269,7 +263,7 @@ public class InferAnchorPointsAction implements Action {
             result.add(new VDJCLibraryData(lib.getData(), genes));
         }
 
-        GlobalObjectMappers.PRETTY.writeValue(new File(params.getOutput()), result);
+        VDJCDataUtils.writeToFile(result, params.getOutput(), false);
     }
 
     @Override

@@ -32,7 +32,7 @@
 
     <groupId>io.repseq</groupId>
     <artifactId>repseqio</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
     <name>RepSeqIO</name>
 
@@ -45,7 +45,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.5-SNAPSHOT</milib.version>
+        <milib.version>1.5</milib.version>
     </properties>
 
     <dependencies>

@@ -2,6 +2,8 @@ package io.repseq.cli;
 
 import com.milaboratory.cli.JCommanderBasedMain;
 import com.milaboratory.util.VersionInfo;
+import io.repseq.core.VDJCLibrary;
+import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
 
 import java.nio.file.Path;
@@ -24,24 +26,28 @@ public class Main {
                 new InferAnchorPointsAction(),
                 new DebugAction(),
                 new FormatAction(),
-                new StatAction());
+                new StatAction(),
+                new FromPaddedFastaAction());
 
         main.setVersionInfoCallback(new Runnable() {
             @Override
             public void run() {
+                VDJCLibraryRegistry reg = VDJCLibraryRegistry.createDefaultRegistry();
+                reg.loadAllLibraries("default");
+
                 VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
-                VersionInfo mitools = VersionInfo.getVersionInfoForArtifact("repseqio");
+                VersionInfo repseqio = VersionInfo.getVersionInfoForArtifact("repseqio");
 
                 StringBuilder builder = new StringBuilder();
 
                 builder.append("RepSeq.IO.CLI v")
-                        .append(mitools.getVersion())
+                        .append(repseqio.getVersion())
                         .append(" (built ")
-                        .append(mitools.getTimestamp())
+                        .append(repseqio.getTimestamp())
                         .append("; rev=")
-                        .append(mitools.getRevision())
+                        .append(repseqio.getRevision())
                         .append("; branch=")
-                        .append(mitools.getBranch())
+                        .append(repseqio.getBranch())
                         .append(")")
                         .append("\n");
 
@@ -49,9 +55,15 @@ public class Main {
                         .append(milib.getVersion())
                         .append(" (rev=").append(milib.getRevision())
                         .append("; branch=").append(milib.getBranch())
-                        .append(")");
+                        .append(")")
+                        .append("\n");
 
-                System.out.println(builder.toString());
+                builder.append("Built-in libraries:\n");
+
+                for (VDJCLibrary lib : reg.getLoadedLibraries())
+                    builder.append(lib.getLibraryId()).append("\n");
+
+                System.out.print(builder.toString());
             }
         });
 
