@@ -1,0 +1,1 @@
+This fixes bug when FolderResolver fails to resolve partial library name for files without .gz
