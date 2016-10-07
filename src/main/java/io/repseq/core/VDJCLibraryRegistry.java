@@ -597,6 +597,9 @@ public final class VDJCLibraryRegistry {
         @Override
         public String resolveAlias(String libraryName) {
             if (searchForPartialNames) {
+                if (!Files.exists(path))
+                    return null;
+
                 List<String> candidates = new ArrayList<>();
                 try (DirectoryStream<Path> paths = Files.newDirectoryStream(path)) {
                     for (Path subPath : paths) {

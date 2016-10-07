@@ -1,0 +1,1 @@
+Fixes IO exception if library search folder not exists
