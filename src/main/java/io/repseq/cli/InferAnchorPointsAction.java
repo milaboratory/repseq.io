@@ -32,7 +32,7 @@ import static com.milaboratory.core.sequence.TranslationParameters.withIncomplet
 public class InferAnchorPointsAction implements Action {
     private static final String TARGET_LIBRARY_NAME = "target";
     private static final String REFERENCE_LIBRARY_PREFIX = "ref";
-    private static final Pattern REFERENCE_LIBRARY_PATTERN = Pattern.compile(REFERENCE_LIBRARY_PREFIX + "\\d+|default");
+    private static final Pattern REFERENCE_LIBRARY_PATTERN = Pattern.compile(REFERENCE_LIBRARY_PREFIX + "\\d+|repseqio.*");
     private static final TranslationParameters[] TRANSLATION_PARAMETERS = new TranslationParameters[]{
             withIncompleteCodon(0), withIncompleteCodon(1), withIncompleteCodon(2)
     };
@@ -41,9 +41,6 @@ public class InferAnchorPointsAction implements Action {
     @Override
     public void go(ActionHelper helper) throws Exception {
         VDJCLibraryRegistry reg = VDJCLibraryRegistry.getDefault();
-
-        // Registering target library
-        reg.registerLibraries(params.getInput(), TARGET_LIBRARY_NAME);
 
         // Map of library names
         Map<String, String> libraryNameToAddress = new HashMap<>();
@@ -59,8 +56,12 @@ public class InferAnchorPointsAction implements Action {
 
         if (params.getReference().isEmpty()) {
             reg.loadAllLibraries("default");
-            libraryNameToAddress.put("default", "default");
+            for (VDJCLibrary library : reg.getLoadedLibraries())
+                libraryNameToAddress.put(library.getName(), "built-in");
         }
+
+        // Registering target library
+        reg.registerLibraries(params.getInput(), TARGET_LIBRARY_NAME);
 
         // Compile gene filter
         Pattern namePattern = params.name == null ? null : Pattern.compile(params.name);

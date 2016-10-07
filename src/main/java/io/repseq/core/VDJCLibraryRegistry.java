@@ -567,9 +567,9 @@ public final class VDJCLibraryRegistry {
         String resolveAlias(String libraryName);
     }
 
-    private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("(?i).json(?:\\.gz)$");
+    static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("(?i).json(?:\\.gz)?$");
 
-    private static String libraryNameFromFileName(String fileName) {
+    static String libraryNameFromFileName(String fileName) {
         return FILE_EXTENSION_PATTERN.matcher(fileName).replaceAll("");
     }
 
