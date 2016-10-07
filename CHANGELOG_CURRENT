@@ -1,2 +1,0 @@
-Fixes bug when FolderResolver fails to resolve partial library name for files without .gz
-Fixes bug not allowing to inferPoints using built-in library

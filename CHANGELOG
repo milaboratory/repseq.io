@@ -1,4 +1,11 @@
 
+RepSeqIO 1.2.1 ( 7 Oct 2016)
+========================
+
+-- Fixes bug when FolderResolver fails to resolve partial library name for files without .gz
+-- Fixes bug not allowing to inferPoints using built-in library
+
+
 RepSeqIO 1.2.0 (13 Sep 2016)
 ========================
 
