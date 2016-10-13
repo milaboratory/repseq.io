@@ -15,7 +15,7 @@ import java.util.*;
  *
  * VDJCLibrary can be loaded using {@link VDJCLibraryRegistry}.
  */
-public class VDJCLibrary {
+public class VDJCLibrary implements Comparable<VDJCLibrary> {
     /**
      * Original DTO
      */
@@ -196,5 +196,10 @@ public class VDJCLibrary {
                 library.registry.getSequenceResolver()), rpBuilder.build());
         library.put(gene);
         return gene;
+    }
+
+    @Override
+    public int compareTo(VDJCLibrary o) {
+        return getLibraryId().compareTo(o.getLibraryId());
     }
 }

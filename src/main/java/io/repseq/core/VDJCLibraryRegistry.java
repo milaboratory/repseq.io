@@ -43,6 +43,10 @@ public final class VDJCLibraryRegistry {
      */
     final Map<String, Long> speciesNames = new HashMap<>();
     /**
+     * Collected from all loaded VDJCLibrary
+     */
+    final Map<Long, List<String>> speciesNamesReverse = new HashMap<>();
+    /**
      * Loaded libraries
      */
     final Map<VDJCLibraryId, VDJCLibrary> libraries = new HashMap<>();
@@ -151,6 +155,16 @@ public final class VDJCLibraryRegistry {
         } catch (NumberFormatException e) {
         }
         return speciesNames.get(name);
+    }
+
+    /**
+     * Returns list of known species names for a given taxon id.
+     *
+     * @param taxonId taxon id
+     * @return list of known species names for a given taxon id
+     */
+    public List<String> getSpeciesNames(long taxonId) {
+        return speciesNamesReverse.containsKey(taxonId) ? speciesNamesReverse.get(taxonId) : Collections.<String>emptyList();
     }
 
     /**
@@ -459,6 +473,10 @@ public final class VDJCLibraryRegistry {
                 throw new IllegalArgumentException("Mismatch in common species name between several libraries. " +
                         "(Library name = " + name + "; name = " + speciesName + ").");
             speciesNames.put(cSpeciesName, taxonId);
+            List<String> names = speciesNamesReverse.get(taxonId);
+            if (names == null)
+                speciesNamesReverse.put(taxonId, names = new ArrayList<>());
+            names.add(speciesName);
         }
 
         // Adding this library to collection
@@ -727,7 +745,7 @@ public final class VDJCLibraryRegistry {
             Set<String> resources = reflections.getResources(Pattern.compile(".*\\.json"));
             List<String> result = new ArrayList<>();
             for (String resource : resources)
-                result.add(libraryNameFromFileName(resource));
+                result.add(libraryNameFromFileName(resource).replace("libraries/", ""));
             return result;
         }
 
