@@ -1,3 +1,4 @@
 Fixes IO exception if library search folder not exists
-`loadAllLibraries` method in VDJCLibraryRegistry
+`loadAllLibraries` method in `VDJCLibraryRegistry`
 `LibraryNameListProvider` interface for library resolvers
+Reverse species name search in `VDJCLibraryRegistry`
