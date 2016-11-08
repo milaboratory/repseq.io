@@ -25,7 +25,7 @@ public final class HTTPSequenceResolvers {
 
         @Override
         protected URI resolveHTTPAddress(URI address) {
-            return URI.create("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" +
+            return URI.create("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" +
                     extractId(address) +
                     "&rettype=fasta&retmode=text");
         }
