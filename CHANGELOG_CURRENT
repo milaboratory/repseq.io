@@ -1,7 +1,0 @@
-Fixes IO exception if library search folder not exists
-`loadAllLibraries` method in `VDJCLibraryRegistry`
-`LibraryNameListProvider` interface for library resolvers
-Reverse species name search in `VDJCLibraryRegistry`
-Built-in library updated to v1.1 (fixed human IGHV4-61 and IGLC7, IGLC3)
-NCBI sequence resolver now works over https
-Additional sequence id extractor for new NCBI naming convention
