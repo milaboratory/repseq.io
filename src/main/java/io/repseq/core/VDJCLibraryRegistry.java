@@ -9,6 +9,8 @@ import io.repseq.seqbase.SequenceAddress;
 import io.repseq.seqbase.SequenceResolver;
 import io.repseq.seqbase.SequenceResolvers;
 import org.apache.commons.io.IOUtils;
+import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -40,6 +42,10 @@ public final class VDJCLibraryRegistry {
      * Collected from all loaded VDJCLibrary
      */
     final Map<String, Long> speciesNames = new HashMap<>();
+    /**
+     * Collected from all loaded VDJCLibrary
+     */
+    final Map<Long, List<String>> speciesNamesReverse = new HashMap<>();
     /**
      * Loaded libraries
      */
@@ -149,6 +155,16 @@ public final class VDJCLibraryRegistry {
         } catch (NumberFormatException e) {
         }
         return speciesNames.get(name);
+    }
+
+    /**
+     * Returns list of known species names for a given taxon id.
+     *
+     * @param taxonId taxon id
+     * @return list of known species names for a given taxon id
+     */
+    public List<String> getSpeciesNames(long taxonId) {
+        return speciesNamesReverse.containsKey(taxonId) ? speciesNamesReverse.get(taxonId) : Collections.<String>emptyList();
     }
 
     /**
@@ -365,6 +381,20 @@ public final class VDJCLibraryRegistry {
             tryResolve(resolver, name);
     }
 
+    /**
+     * Load all possible libraries using all available resolvers (resolvers having such feature)
+     */
+    public void loadAllLibraries() {
+        List<String> allNames = new ArrayList<>();
+
+        for (LibraryResolver resolver : libraryResolvers)
+            if (resolver instanceof LibraryNameListProvider)
+                allNames.addAll(((LibraryNameListProvider) resolver).getLibraryNameList());
+
+        for (String name : allNames)
+            loadAllLibraries(name);
+    }
+
     private void tryResolve(LibraryResolver resolver, String libraryName) {
         // Check if this combination of resolver and libraryName was already being processed
         LibraryLoadRequest request = new LibraryLoadRequest(resolver, libraryName);
@@ -443,6 +473,10 @@ public final class VDJCLibraryRegistry {
                 throw new IllegalArgumentException("Mismatch in common species name between several libraries. " +
                         "(Library name = " + name + "; name = " + speciesName + ").");
             speciesNames.put(cSpeciesName, taxonId);
+            List<String> names = speciesNamesReverse.get(taxonId);
+            if (names == null)
+                speciesNamesReverse.put(taxonId, names = new ArrayList<>());
+            names.add(speciesName);
         }
 
         // Adding this library to collection
@@ -567,6 +601,13 @@ public final class VDJCLibraryRegistry {
         String resolveAlias(String libraryName);
     }
 
+    /**
+     * Interface implemented by {@link LibraryResolver} if it can provide list of all base library names it can resolve
+     */
+    public interface LibraryNameListProvider {
+        List<String> getLibraryNameList();
+    }
+
     static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("(?i).json(?:\\.gz)?$");
 
     static String libraryNameFromFileName(String fileName) {
@@ -576,7 +617,7 @@ public final class VDJCLibraryRegistry {
     /**
      * Load library data from {libraryName}.json files in specified folder.
      */
-    public static final class FolderLibraryResolver implements LibraryResolver, AliasResolver {
+    public static final class FolderLibraryResolver implements LibraryResolver, AliasResolver, LibraryNameListProvider {
         private final Path path;
         private final boolean searchForPartialNames;
 
@@ -595,8 +636,34 @@ public final class VDJCLibraryRegistry {
         }
 
         @Override
+        public List<String> getLibraryNameList() {
+            if (!Files.exists(path))
+                return Collections.EMPTY_LIST;
+
+            List<String> result = new ArrayList<>();
+
+            try (DirectoryStream<Path> paths = Files.newDirectoryStream(path)) {
+                for (Path subPath : paths) {
+                    String name = subPath.getFileName().toString();
+
+                    if (!name.toLowerCase().endsWith(".json") && !name.toLowerCase().endsWith(".json.gz"))
+                        continue;
+
+                    result.add(libraryNameFromFileName(name));
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            return result;
+        }
+
+        @Override
         public String resolveAlias(String libraryName) {
             if (searchForPartialNames) {
+                if (!Files.exists(path))
+                    return null;
+
                 List<String> candidates = new ArrayList<>();
                 try (DirectoryStream<Path> paths = Files.newDirectoryStream(path)) {
                     for (Path subPath : paths) {
@@ -650,7 +717,7 @@ public final class VDJCLibraryRegistry {
     /**
      * Load library data from {libraryName}.json files in specified folder.
      */
-    public static final class ClasspathLibraryResolver implements LibraryResolver, AliasResolver {
+    public static final class ClasspathLibraryResolver implements LibraryResolver, AliasResolver, LibraryNameListProvider {
         private final String path;
         private final ClassLoader classLoader;
 
@@ -670,6 +737,16 @@ public final class VDJCLibraryRegistry {
         @Override
         public Path getContext(String libraryName) {
             return null;
+        }
+
+        @Override
+        public List<String> getLibraryNameList() {
+            Reflections reflections = new Reflections("libraries", new ResourcesScanner());
+            Set<String> resources = reflections.getResources(Pattern.compile(".*\\.json"));
+            List<String> result = new ArrayList<>();
+            for (String resource : resources)
+                result.add(libraryNameFromFileName(resource).replace("libraries/", ""));
+            return result;
         }
 
         @Override
