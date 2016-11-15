@@ -213,7 +213,7 @@ public class InferAnchorPointsAction implements Action {
                                 continue;
                             }
 
-                            int aaPositionInTarget = Alignment.aabs(bestAlignment.convertPosition(aaPositionInReferece.aminoAcidPosition));
+                            int aaPositionInTarget = Alignment.aabs(bestAlignment.convertToSeq2Position(aaPositionInReferece.aminoAcidPosition));
 
                             if (aaPositionInTarget == -1) {
                                 localPS.println("failed to project using alignment");
