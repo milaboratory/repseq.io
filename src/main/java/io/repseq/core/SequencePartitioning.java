@@ -131,35 +131,35 @@ public abstract class SequencePartitioning {
     }
 
     /**
-     * Returns a relative range of specified {@code subfeature} in specified {@code feature} or null if this is not
+     * Returns a relative range of specified {@code subFeature} in specified {@code feature} or null if this is not
      * available.
      *
      * @param feature    gene feature
-     * @param subfeature a part of feature
-     * @return relative range of specified {@code subfeature} in specified {@code feature} or null if this is not
+     * @param subFeature a part of feature
+     * @return relative range of specified {@code subFeature} in specified {@code feature} or null if this is not
      * available
      */
-    public Range getRelativeRange(GeneFeature feature, GeneFeature subfeature) {
+    public Range getRelativeRange(GeneFeature feature, GeneFeature subFeature) {
         Range[] featureRanges = getRanges(feature);
         if (featureRanges == null)
             return null;
-        Range[] subfeatureRanges = getRanges(subfeature);
-        if (subfeatureRanges == null)
+        Range[] subFeatureRanges = getRanges(subFeature);
+        if (subFeatureRanges == null)
             return null;
         int offset = 0, begin = -1, end = -1;
-        int subfeaturePointer = 0;
+        int subFeaturePointer = 0;
         int state = 0; // 0 - before; 1 - rightOnBegin; 2 - inside
         for (Range range : featureRanges) {
-            int from = subfeatureRanges[subfeaturePointer].getFrom();
+            int from = subFeatureRanges[subFeaturePointer].getFrom();
             if (state == 0
                     && range.containsBoundary(from)) {
                 state = 1;
                 begin = offset + range.convertBoundaryToRelativePosition(from);
             }
 
-            int to = subfeatureRanges[subfeaturePointer].getTo();
+            int to = subFeatureRanges[subFeaturePointer].getTo();
             if (state > 0
-                    && subfeaturePointer == subfeatureRanges.length - 1) {
+                    && subFeaturePointer == subFeatureRanges.length - 1) {
                 if (!range.containsBoundary(to))
                     return null;
                 end = offset + range.convertBoundaryToRelativePosition(to);
@@ -170,11 +170,11 @@ public abstract class SequencePartitioning {
                 if (to != range.getTo())
                     return null;
                 state = 2;
-                ++subfeaturePointer;
+                ++subFeaturePointer;
             } else if (state == 2) {
-                if (!subfeatureRanges[subfeaturePointer].equals(range))
+                if (!subFeatureRanges[subFeaturePointer].equals(range))
                     return null;
-                ++subfeaturePointer;
+                ++subFeaturePointer;
             }
 
             offset += range.length();
