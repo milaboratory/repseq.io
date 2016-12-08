@@ -53,7 +53,7 @@ public class DebugAction implements Action {
                         if (l3 == null)
                             warnings.add("unable to find CDR3 start");
                         else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.C)
-                            warnings.add("CDR3 does not start with Cys");
+                            warnings.add("CDR3 does not start with C, was: " + AminoAcidSequence.translate(l3).toString());
                     }
 
                     if (gene.getGeneType() == GeneType.Joining) {
@@ -63,7 +63,7 @@ public class DebugAction implements Action {
                             warnings.add("unable to find CDR3 end");
                         else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.W &&
                                 AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.F)
-                            warnings.add("CDR3 does not end with Trp or Phe");
+                            warnings.add("CDR3 does not end with W or F, was: " + AminoAcidSequence.translate(l3).toString());
                     }
 
                     //flag suspicious exon borders
