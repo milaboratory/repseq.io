@@ -16,6 +16,7 @@ import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import io.repseq.core.ReferencePoints;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,54 +42,80 @@ public class DebugAction implements Action {
                 if (namePattern != null && !namePattern.matcher(gene.getName()).matches())
                     continue;
 
-                if (params.getProblemOnly()) {
-                    if (!gene.isFunctional())
-                        continue;
-
-                    boolean good = true;
+                //first generate list of warning messages
+                //note: it might be useful to generate these for non-functional genes as well
+                List<String> warnings = new ArrayList<>();
+                if (gene.isFunctional()) {
+                    //flag AA residues flanking CDR3
                     if (gene.getGeneType() == GeneType.Variable) {
                         NucleotideSequence l3 = gene.getFeature(l3VFeature);
 
                         if (l3 == null)
-                            good = false;
+                            warnings.add("unable to find CDR3 start");
                         else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.C)
-                            good = false;
+                            warnings.add("CDR3 does not start with Cys");
                     }
 
                     if (gene.getGeneType() == GeneType.Joining) {
                         NucleotideSequence l3 = gene.getFeature(l3JFeature);
 
                         if (l3 == null)
-                            good = false;
+                            warnings.add("unable to find CDR3 end");
                         else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.W &&
                                 AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.F)
-                            good = false;
+                            warnings.add("CDR3 does not end with Trp or Phe");
                     }
 
-                    if (good)
-                        continue;
+                    //flag suspicious exon borders
+                    //https://schneider.ncifcrf.gov/gallery/SequenceLogoSculpture.gif
+                    if (gene.getGeneType() == GeneType.Variable) {
+                        NucleotideSequence intronSequence = gene.getFeature(GeneFeature.VIntron);
+                        if (intronSequence != null) {
+                            String seq = intronSequence.toString();
+                            if (!seq.startsWith("GT")) {
+                                warnings.add("expected VIntron sequence to start with GT, was: " + seq.substring(0, 2));
+                            }
+
+                            if (!seq.endsWith("AG")) {
+                                warnings.add("expected VIntron sequence to end with AG, was: " + seq.substring(seq.length() - 2));
+                            }
+                        }
+                    }
+
+                    //now iterate all segments and flag premature stop codons:
+                    for (GeneFeature geneFeature : geneFeatures.get(gene.getGeneType())) {
+                        NucleotideSequence nSequence = gene.getFeature(geneFeature);
+                        AminoAcidSequence aaSequence = getAminoAcidSequence(gene, geneFeature, nSequence);
+                        if (aaSequence != null && GeneFeature.getFrameReference(geneFeature) != null) {
+                            //flag if contains stop codon
+                            if (aaSequence.numberOfStops() > 0) {
+                                warnings.add(GeneFeature.encode(geneFeature) + " contains a stop codon");
+                            }
+                        }
+                    }
+                }
+
+                if (params.getProblemOnly() && warnings.isEmpty()) {
+                    continue;
                 }
 
                 System.out.println(gene.getName() + " (" + (gene.isFunctional() ? "F" : "P") + ") " + gene.getChains());
+
+                if (!warnings.isEmpty()) {
+                    System.out.println();
+                    System.out.println("WARNINGS: ");
+                    for (String warning : warnings){
+                        System.out.println(warning);
+                    }
+                    System.out.println();
+                }
 
                 for (GeneFeature geneFeature : geneFeatures.get(gene.getGeneType())) {
                     System.out.println();
                     System.out.println(GeneFeature.encode(geneFeature));
 
-                    ReferencePoint frameReference = GeneFeature.getFrameReference(geneFeature);
-                    ReferencePoints partitioning = gene.getPartitioning();
-
                     NucleotideSequence nSequence = gene.getFeature(geneFeature);
-
-                    AminoAcidSequence aaSequence;
-                    if (frameReference != null) {
-                        int relativePosition = partitioning.getRelativePosition(geneFeature, frameReference);
-                        aaSequence = nSequence == null || relativePosition < 0 ?
-                                null :
-                                AminoAcidSequence.translate(nSequence,
-                                        withIncompleteCodon(relativePosition));
-                    } else
-                        aaSequence = null;
+                    AminoAcidSequence aaSequence = getAminoAcidSequence(gene, geneFeature, nSequence);
 
                     System.out.print("N:   ");
                     if (nSequence == null)
@@ -96,7 +123,7 @@ public class DebugAction implements Action {
                     else
                         System.out.println(nSequence);
 
-                    if (frameReference != null) {
+                    if (GeneFeature.getFrameReference(geneFeature) != null) {
                         System.out.print("AA:  ");
                         if (aaSequence == null)
                             System.out.println("Not Available");
@@ -108,6 +135,22 @@ public class DebugAction implements Action {
                 System.out.println();
             }
         }
+    }
+
+    private static AminoAcidSequence getAminoAcidSequence(VDJCGene gene, GeneFeature geneFeature, NucleotideSequence nSequence) {
+        ReferencePoints partitioning = gene.getPartitioning();
+        ReferencePoint frameReference = GeneFeature.getFrameReference(geneFeature);
+
+        AminoAcidSequence aaSequence;
+        if (frameReference != null) {
+            int relativePosition = partitioning.getRelativePosition(geneFeature, frameReference);
+            aaSequence = nSequence == null || relativePosition < 0 ?
+                    null :
+                    AminoAcidSequence.translate(nSequence, withIncompleteCodon(relativePosition));
+        } else
+            aaSequence = null;
+
+        return aaSequence;
     }
 
     private static final Map<GeneType, GeneFeature[]> geneFeatures = new HashMap<>();
