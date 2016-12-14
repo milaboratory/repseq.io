@@ -50,20 +50,30 @@ public class DebugAction implements Action {
                     if (gene.getGeneType() == GeneType.Variable) {
                         NucleotideSequence l3 = gene.getFeature(l3VFeature);
 
-                        if (l3 == null)
-                            warnings.add("unable to find CDR3 start");
-                        else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.C)
-                            warnings.add("CDR3 does not start with C, was: " + l3.toString() + " / " + AminoAcidSequence.translate(l3).toString() + " / CDR3Begin: " + gene.getData().getAnchorPoints().get(ReferencePoint.CDR3Begin));
+                        try {
+                            if (l3 == null)
+                                warnings.add("unable to find CDR3 start");
+                            else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.C)
+                                warnings.add("CDR3 does not start with C, was: " + l3.toString() + " / " + AminoAcidSequence.translate(l3).toString() + " / CDR3Begin: " + gene.getData().getAnchorPoints().get(ReferencePoint.CDR3Begin));
+                        }
+                        catch (IllegalArgumentException e){
+                            System.out.print("Unable to translate sequence: " + gene.getName() + " / " + l3);
+                        }
                     }
 
                     if (gene.getGeneType() == GeneType.Joining) {
                         NucleotideSequence l3 = gene.getFeature(l3JFeature);
 
-                        if (l3 == null)
-                            warnings.add("unable to find CDR3 end");
-                        else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.W &&
-                                AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.F)
-                            warnings.add("CDR3 does not end with W or F, was: " + l3.toString() + " / " + AminoAcidSequence.translate(l3).toString() + " / CDR3End: " + gene.getData().getAnchorPoints().get(ReferencePoint.CDR3End));
+                        try {
+                            if (l3 == null)
+                                warnings.add("unable to find CDR3 end");
+                            else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.W &&
+                                    AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.F)
+                                warnings.add("CDR3 does not end with W or F, was: " + l3.toString() + " / " + AminoAcidSequence.translate(l3).toString() + " / CDR3End: " + gene.getData().getAnchorPoints().get(ReferencePoint.CDR3End));
+                        }
+                        catch (IllegalArgumentException e){
+                            System.out.print("Unable to translate sequence: " + gene.getName() + " / " + l3);
+                        }
                     }
 
                     //flag suspicious exon borders
