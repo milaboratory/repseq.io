@@ -34,89 +34,90 @@ public class DebugAction implements Action {
 
         Pattern namePattern = params.name == null ? null : Pattern.compile(params.name);
 
-        GeneFeature l3VFeature = new GeneFeature(ReferencePoint.CDR3Begin, 0, 3);
-        GeneFeature l3JFeature = new GeneFeature(ReferencePoint.CDR3End, -3, 0);
+        GeneFeature cdr3FirstTriplet = new GeneFeature(ReferencePoint.CDR3Begin, 0, 3);
+        GeneFeature cdr3LastTriplet = new GeneFeature(ReferencePoint.CDR3End, -3, 0);
+        GeneFeature vIntronDonor = new GeneFeature(ReferencePoint.VIntronBegin, 0, 2);
+        GeneFeature vIntronAcceptor = new GeneFeature(ReferencePoint.VIntronEnd, -2, 0);
 
         for (VDJCLibrary lib : reg.getLoadedLibraries()) {
             for (VDJCGene gene : lib.getGenes()) {
                 if (namePattern != null && !namePattern.matcher(gene.getName()).matches())
                     continue;
 
-                //first generate list of warning messages
-                //note: it might be useful to generate these for non-functional genes as well
+                // First generate list of warning messages
                 List<String> warnings = new ArrayList<>();
-                if (gene.isFunctional()) {
-                    //flag AA residues flanking CDR3
-                    if (gene.getGeneType() == GeneType.Variable) {
-                        NucleotideSequence l3 = gene.getFeature(l3VFeature);
+                if (gene.isFunctional() || params.getCheckAll()) {
+                    NucleotideSequence l3;
+                    switch (gene.getGeneType()) {
+                        case Variable:
 
-                        try {
+                            // Flag AA residues flanking CDR3
+
+                            l3 = gene.getFeature(cdr3FirstTriplet);
                             if (l3 == null)
-                                warnings.add("unable to find CDR3 start");
+                                warnings.add("Unable to find CDR3 start");
+                            else if (l3.size() != 3)
+                                warnings.add("Unable to translate sequence: " + gene.getName() + " / " + l3);
                             else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.C)
-                                warnings.add("CDR3 does not start with C, was: " + l3.toString() + " / " + AminoAcidSequence.translate(l3).toString() + " / CDR3Begin: " + gene.getData().getAnchorPoints().get(ReferencePoint.CDR3Begin));
-                        }
-                        catch (IllegalArgumentException e){
-                            System.out.print("Unable to translate sequence: " + gene.getName() + " / " + l3);
-                        }
-                    }
+                                warnings.add("CDR3 does not start with C, was: " + l3.toString() +
+                                        " / " + AminoAcidSequence.translate(l3).toString() + " / CDR3Begin: " +
+                                        gene.getData().getAnchorPoints().get(ReferencePoint.CDR3Begin));
 
-                    if (gene.getGeneType() == GeneType.Joining) {
-                        NucleotideSequence l3 = gene.getFeature(l3JFeature);
+                            // Flag suspicious exon borders
+                            // https://schneider.ncifcrf.gov/gallery/SequenceLogoSculpture.gif
 
-                        try {
+                            NucleotideSequence vIntronDonorSeq = gene.getFeature(vIntronDonor);
+                            if (vIntronDonorSeq != null && !vIntronDonorSeq.toString().equals("GT") &&
+                                    !vIntronDonorSeq.toString().equals("GC"))
+                                warnings.add("Expected VIntron sequence to start with GT, was: " + vIntronDonorSeq.toString());
+
+                            NucleotideSequence vIntronAcceptorSeq = gene.getFeature(vIntronAcceptor);
+                            if (vIntronAcceptorSeq != null && !vIntronAcceptorSeq.toString().equals("AG"))
+                                warnings.add("Expected VIntron sequence to end with AG, was: " + vIntronAcceptorSeq.toString());
+
+                            break;
+
+                        case Joining:
+
+                            // Flag AA residues flanking CDR3
+
+                            l3 = gene.getFeature(cdr3LastTriplet);
                             if (l3 == null)
-                                warnings.add("unable to find CDR3 end");
+                                warnings.add("Unable to find CDR3 end");
+                            else if (l3.size() != 3)
+                                warnings.add("Unable to translate sequence: " + gene.getName() + " / " + l3);
                             else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.W &&
                                     AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.F)
-                                warnings.add("CDR3 does not end with W or F, was: " + l3.toString() + " / " + AminoAcidSequence.translate(l3).toString() + " / CDR3End: " + gene.getData().getAnchorPoints().get(ReferencePoint.CDR3End));
-                        }
-                        catch (IllegalArgumentException e){
-                            System.out.print("Unable to translate sequence: " + gene.getName() + " / " + l3);
-                        }
+                                warnings.add("CDR3 does not end with W or F, was: " + l3.toString() + " / " +
+                                        AminoAcidSequence.translate(l3).toString() + " / CDR3End: " +
+                                        gene.getData().getAnchorPoints().get(ReferencePoint.CDR3End));
+
+                            break;
+
                     }
 
-                    //flag suspicious exon borders
-                    //https://schneider.ncifcrf.gov/gallery/SequenceLogoSculpture.gif
-                    if (gene.getGeneType() == GeneType.Variable) {
-                        NucleotideSequence intronStart = gene.getFeature(new GeneFeature(ReferencePoint.VIntronBegin, 0, 2));
-                        if (intronStart != null) {
-                            if (!intronStart.toString().equals("GT")) {
-                                warnings.add("expected VIntron sequence to start with GT, was: " + intronStart.toString());
-                            }
-                        }
+                    // Now iterate all segments and flag premature stop codons:
 
-                        NucleotideSequence intronEnd = gene.getFeature(new GeneFeature(ReferencePoint.VIntronEnd, -2, 0));
-                        if (intronEnd != null) {
-                            if (!intronEnd.toString().equals("AG")) {
-                                warnings.add("expected VIntron sequence to end with AG, was: " + intronEnd.toString());
-                            }
-                        }
-                    }
-
-                    //now iterate all segments and flag premature stop codons:
-                    for (GeneFeature geneFeature : geneFeatures.get(gene.getGeneType())) {
-                        NucleotideSequence nSequence = gene.getFeature(geneFeature);
-                        AminoAcidSequence aaSequence = getAminoAcidSequence(gene, geneFeature, nSequence);
-                        if (aaSequence != null && GeneFeature.getFrameReference(geneFeature) != null) {
-                            //flag if contains stop codon
-                            if (aaSequence.numberOfStops() > 0) {
+                    for (GeneFeature geneFeature : aaGeneFeatures.get(gene.getGeneType())) {
+                        AminoAcidSequence aaSequence = getAminoAcidSequence(gene, geneFeature,
+                                gene.getFeature(geneFeature));
+                        if (aaSequence != null) {
+                            // Flag if contains stop codon
+                            if (aaSequence.numberOfStops() > 0)
                                 warnings.add(GeneFeature.encode(geneFeature) + " contains a stop codon");
-                            }
                         }
                     }
                 }
 
-                if (params.getProblemOnly() && warnings.isEmpty()) {
+                if (params.getProblemOnly() && warnings.isEmpty())
                     continue;
-                }
 
                 System.out.println(gene.getName() + " (" + (gene.isFunctional() ? "F" : "P") + ") " + gene.getChains());
 
                 if (!warnings.isEmpty()) {
                     System.out.println();
                     System.out.println("WARNINGS: ");
-                    for (String warning : warnings){
+                    for (String warning : warnings) {
                         System.out.println(warning);
                     }
                     System.out.println();
@@ -143,6 +144,7 @@ public class DebugAction implements Action {
                             System.out.println(aaSequence);
                     }
                 }
+
                 System.out.println("=========");
                 System.out.println();
             }
@@ -166,6 +168,7 @@ public class DebugAction implements Action {
     }
 
     private static final Map<GeneType, GeneFeature[]> geneFeatures = new HashMap<>();
+    private static final Map<GeneType, GeneFeature[]> aaGeneFeatures = new HashMap<>();
 
     static {
         geneFeatures.put(GeneType.Variable, new GeneFeature[]{
@@ -198,6 +201,29 @@ public class DebugAction implements Action {
                 GeneFeature.CExon1
         });
 
+        aaGeneFeatures.put(GeneType.Variable, new GeneFeature[]{
+                GeneFeature.L1,
+                GeneFeature.L2,
+                GeneFeature.L,
+                GeneFeature.FR1,
+                GeneFeature.CDR1,
+                GeneFeature.FR2,
+                GeneFeature.CDR2,
+                GeneFeature.FR3,
+                GeneFeature.GermlineVCDR3Part,
+                GeneFeature.VRegion,
+                GeneFeature.VTranscriptWithout5UTR
+        });
+
+        aaGeneFeatures.put(GeneType.Diversity, new GeneFeature[]{});
+
+        aaGeneFeatures.put(GeneType.Joining, new GeneFeature[]{
+                GeneFeature.GermlineJCDR3Part,
+                GeneFeature.FR4,
+                GeneFeature.JRegion
+        });
+
+        aaGeneFeatures.put(GeneType.Constant, new GeneFeature[]{});
     }
 
     @Override
@@ -215,9 +241,13 @@ public class DebugAction implements Action {
         @Parameter(description = "input_library.json[.gz]")
         public List<String> parameters;
 
-        @Parameter(description = "Print only functional genes with problems.",
+        @Parameter(description = "Print only genes with problems, checks only functional genes by default (see -a option).",
                 names = {"-p", "--problems"})
         public Boolean problemOnly;
+
+        @Parameter(description = "Check all genes, used with -p option.",
+                names = {"-a", "--all"})
+        public Boolean checkAllGenes;
 
         @Parameter(description = "Gene name pattern, regexp string, all genes with matching gene name will be exported.",
                 names = {"-n", "--name"})
@@ -225,6 +255,10 @@ public class DebugAction implements Action {
 
         public boolean getProblemOnly() {
             return problemOnly != null && problemOnly;
+        }
+
+        public boolean getCheckAll() {
+            return checkAllGenes != null && checkAllGenes;
         }
 
         public String getInput() {
