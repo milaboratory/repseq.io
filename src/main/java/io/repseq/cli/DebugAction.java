@@ -50,34 +50,46 @@ public class DebugAction implements Action {
                     if (gene.getGeneType() == GeneType.Variable) {
                         NucleotideSequence l3 = gene.getFeature(l3VFeature);
 
-                        if (l3 == null)
-                            warnings.add("unable to find CDR3 start");
-                        else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.C)
-                            warnings.add("CDR3 does not start with Cys");
+                        try {
+                            if (l3 == null)
+                                warnings.add("unable to find CDR3 start");
+                            else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.C)
+                                warnings.add("CDR3 does not start with C, was: " + l3.toString() + " / " + AminoAcidSequence.translate(l3).toString() + " / CDR3Begin: " + gene.getData().getAnchorPoints().get(ReferencePoint.CDR3Begin));
+                        }
+                        catch (IllegalArgumentException e){
+                            System.out.print("Unable to translate sequence: " + gene.getName() + " / " + l3);
+                        }
                     }
 
                     if (gene.getGeneType() == GeneType.Joining) {
                         NucleotideSequence l3 = gene.getFeature(l3JFeature);
 
-                        if (l3 == null)
-                            warnings.add("unable to find CDR3 end");
-                        else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.W &&
-                                AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.F)
-                            warnings.add("CDR3 does not end with Trp or Phe");
+                        try {
+                            if (l3 == null)
+                                warnings.add("unable to find CDR3 end");
+                            else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.W &&
+                                    AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.F)
+                                warnings.add("CDR3 does not end with W or F, was: " + l3.toString() + " / " + AminoAcidSequence.translate(l3).toString() + " / CDR3End: " + gene.getData().getAnchorPoints().get(ReferencePoint.CDR3End));
+                        }
+                        catch (IllegalArgumentException e){
+                            System.out.print("Unable to translate sequence: " + gene.getName() + " / " + l3);
+                        }
                     }
 
                     //flag suspicious exon borders
                     //https://schneider.ncifcrf.gov/gallery/SequenceLogoSculpture.gif
                     if (gene.getGeneType() == GeneType.Variable) {
-                        NucleotideSequence intronSequence = gene.getFeature(GeneFeature.VIntron);
-                        if (intronSequence != null) {
-                            String seq = intronSequence.toString();
-                            if (!seq.startsWith("GT")) {
-                                warnings.add("expected VIntron sequence to start with GT, was: " + seq.substring(0, 2));
+                        NucleotideSequence intronStart = gene.getFeature(new GeneFeature(ReferencePoint.VIntronBegin, 0, 2));
+                        if (intronStart != null) {
+                            if (!intronStart.toString().equals("GT")) {
+                                warnings.add("expected VIntron sequence to start with GT, was: " + intronStart.toString());
                             }
+                        }
 
-                            if (!seq.endsWith("AG")) {
-                                warnings.add("expected VIntron sequence to end with AG, was: " + seq.substring(seq.length() - 2));
+                        NucleotideSequence intronEnd = gene.getFeature(new GeneFeature(ReferencePoint.VIntronEnd, -2, 0));
+                        if (intronEnd != null) {
+                            if (!intronEnd.toString().equals("AG")) {
+                                warnings.add("expected VIntron sequence to end with AG, was: " + intronEnd.toString());
                             }
                         }
                     }
