@@ -515,6 +515,60 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return rp == NULL_FRAME ? null : rp;
     }
 
+    /**
+     * Special value
+     */
+    private static final GeneFeature NULL_GENE_FEATURE = new GeneFeature(UTR5Begin, UTR5Begin);
+    /**
+     * Cache for getFrameReference method
+     */
+    private static final Map<GeneFeature, GeneFeature> codingGeneFeaturesCache = new HashMap<>();
+
+    /**
+     * Returns coding gene feature contained in input gene feature
+     *
+     * @param feature input gene feature
+     * @return coding gene feature contained in input gene feature or null
+     */
+    public static synchronized GeneFeature getCodingGeneFeature(GeneFeature feature) {
+        GeneFeature result = codingGeneFeaturesCache.get(feature);
+        if (result == null) {
+
+            List<ReferenceRange> resultRanges = new ArrayList<>();
+            ReferencePoint previousPoint = null, lastPoint = null;
+
+            for (ReferenceRange region : feature.regions)
+                for (ReferencePoint intermediatePoint : region.getIntermediatePoints()) {
+                    if (previousPoint == null && intermediatePoint.isCodingSequenceOnTheRight())
+                        previousPoint = intermediatePoint;
+                    else if (previousPoint != null && !intermediatePoint.isCodingSequenceOnTheRight()) {
+                        if (!intermediatePoint.isCodingSequenceOnTheLeft())
+                            throw new IllegalArgumentException(
+                                    "Can't calculate coding feature for " + feature + ".");
+                        resultRanges.add(new ReferenceRange(previousPoint, intermediatePoint));
+                        previousPoint = null;
+                    }
+                    lastPoint = intermediatePoint;
+                }
+
+            if (previousPoint != null && previousPoint != lastPoint) {
+                if (!lastPoint.isCodingSequenceOnTheLeft())
+                    throw new IllegalArgumentException(
+                            "Can't calculate coding feature for " + feature + ".");
+                resultRanges.add(new ReferenceRange(previousPoint, lastPoint));
+            }
+
+            if (resultRanges.isEmpty())
+                // Caching null result
+                codingGeneFeaturesCache.put(feature, result = NULL_GENE_FEATURE);
+            else
+                codingGeneFeaturesCache.put(feature, result = new GeneFeature(
+                        resultRanges.toArray(new ReferenceRange[resultRanges.size()]), true));
+
+        }
+        return result == NULL_GENE_FEATURE ? null : result;
+    }
+
     private static ReferenceRange[] merge(final ReferenceRange[] ranges) {
         if (ranges.length == 1)
             return ranges;
@@ -827,11 +881,6 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return a.begin.basicPoint == b.regions[0].begin.basicPoint
                 && a.end.basicPoint == b.regions[0].end.basicPoint;
     }
-
-    public static final GeneFeature[] NONCODING_FEATURES = {
-            VIntron,
-            new GeneFeature(CExon1End, CEnd) // Gene structure for C region is not fully specified
-    };
 
     public static class Deserializer extends JsonDeserializer<GeneFeature> {
         @Override
