@@ -248,19 +248,19 @@ public abstract class SequencePartitioning {
      * @return translation parameters
      */
     public TranslationParameters getTranslationParameters(GeneFeature feature) {
-        if (!GeneFeature.getCodingGeneFeature(feature).equals(feature))
+        if (!feature.equals(GeneFeature.getCodingGeneFeature(feature)))
             return null;
 
         if (feature.getFirstPoint().isTripletBoundary() && feature.getLastPoint().isTripletBoundary())
             return TranslationParameters.FromCenter;
 
         if (feature.getFirstPoint().getWithoutOffset().isTripletBoundary())
-            return TranslationParameters.withoutIncompleteCodon(feature.getFirstPoint().getOffset());
+            return TranslationParameters.withIncompleteCodon(floorMod(feature.getFirstPoint().getOffset(), 3));
 
         int featureLength = getLength(feature);
 
         if (feature.getLastPoint().getWithoutOffset().isTripletBoundary())
-            return TranslationParameters.withoutIncompleteCodon(floorMod(
+            return TranslationParameters.withIncompleteCodon(floorMod(
                     feature.getFirstPoint().getOffset() - featureLength,
                     3));
 
@@ -269,7 +269,7 @@ public abstract class SequencePartitioning {
             for (ReferencePoint point : range.getIntermediatePoints())
                 if (point.isTripletBoundary())
                     if ((relativePosition = getRelativePosition(feature, point)) >= 0)
-                        return TranslationParameters.withoutIncompleteCodon(relativePosition);
+                        return TranslationParameters.withIncompleteCodon(relativePosition);
 
         return null;
     }
@@ -277,7 +277,7 @@ public abstract class SequencePartitioning {
     public static int floorDiv(int x, int y) {
         int r = x / y;
         // if the signs are different and modulo not zero, round down
-        if ((x ^ y) < 0 && (r * y != x)) {
+        if ((x^y) < 0 && (r * y != x)) {
             r--;
         }
         return r;

@@ -623,6 +623,8 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
         public List<ReferencePoint> getIntermediatePoints() {
             List<ReferencePoint> rps = new ArrayList<>();
+            if (begin.offset != 0)
+                rps.add(begin);
             for (int i = begin.basicPoint.index; i <= end.basicPoint.index; i++) {
                 ReferencePoint rp = new ReferencePoint(BasicReferencePoint.getByIndex(i));
                 if (rp.compareTo(begin) < 0)
@@ -631,6 +633,8 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
                     continue;
                 rps.add(rp);
             }
+            if (end.offset != 0)
+                rps.add(end);
             return rps;
         }
 
@@ -721,7 +725,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
     private static void ensureInitialized() {
         if (featuresByName == null) {
-            synchronized (GeneFeature.class) {
+            synchronized ( GeneFeature.class ){
                 if (featuresByName == null) {
                     try {
                         Map<String, GeneFeature> fbn = new HashMap<>();
