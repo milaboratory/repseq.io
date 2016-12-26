@@ -74,7 +74,7 @@ public abstract class SequencePartitioning {
      */
     public Range getRange(GeneFeature feature) {
         if (feature.isComposite())
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Composite feature");
 
         return getRange(feature.getReferenceRange(0));
     }
