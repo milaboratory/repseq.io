@@ -311,7 +311,7 @@ public class GeneFeatureTest {
 
         Assert.assertEquals(GeneFeature.parse("{DBegin(-20):FR4End}"),
                 getCodingGeneFeature(GeneFeature.parse("{DBegin(-20):FR4End(20)}")));
-        Assert.assertEquals(GeneFeature.parse("{DEnd:FR4End}"),
+        Assert.assertEquals(GeneFeature.parse("{DBegin(1):FR4End}"),
                 getCodingGeneFeature(GeneFeature.parse("{DBegin(1):FR4End(20)}")));
         
         Assert.assertNull(getCodingGeneFeature(VIntron));
