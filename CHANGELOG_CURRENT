@@ -1,0 +1,5 @@
+Explicit warning messages in `debug` action (thanks to @bbimber).
+New checks in `debug` action (thanks to @bbimber): intron splice site validation, etc...
+Added `getTranslationParameters(...)` in `SequencePartitioning`, unified way to infer translation frame for given gene feature
+Added `getCodingFeature` in `GeneFeature`, extracts coding sub-feature from given gene feature
+minor: Fix for space in io.repseq.core.GeneFeature#encode
