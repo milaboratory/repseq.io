@@ -32,7 +32,7 @@
 
     <groupId>io.repseq</groupId>
     <artifactId>repseqio</artifactId>
-    <version>1.2.4-SNAPSHOT</version>
+    <version>1.2.4</version>
     <packaging>jar</packaging>
     <name>RepSeqIO</name>
 
