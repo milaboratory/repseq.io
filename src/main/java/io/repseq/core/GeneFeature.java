@@ -861,7 +861,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
                 if (base != null) {
                     if (region.hasOffsets())
-                        base += "(" + region.begin.offset + ", " + region.end.offset + ")";
+                        base += "(" + region.begin.offset + "," + region.end.offset + ")";
                     encodes[i] = base;
                     continue out;
                 }
