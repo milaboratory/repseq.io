@@ -55,12 +55,12 @@ enum BasicReferencePoint implements java.io.Serializable {
     JBegin(13, GeneType.Joining, 17, true, true, false),
     JBeginTrimmed(-1, GeneType.Joining, 18, true, true, false, "CDR3End(+3)"),
     CDR3EndFR4Begin(14, GeneType.Joining, 19, true, true, true),
-    FR4End(15, GeneType.Joining, 20, true, true, false),
+    FR4End(15, GeneType.Joining, 20, true, false, false),
 
     // Points in C
-    CBegin(16, GeneType.Constant, 21, true, true, false),
-    CExon1End(17, GeneType.Constant, 22, true, true, false),
-    CEnd(18, GeneType.Constant, 23, true, true, false);
+    CBegin(16, GeneType.Constant, 21, false, true, false),
+    CExon1End(17, GeneType.Constant, 22, true, false, false),
+    CEnd(18, GeneType.Constant, 23, false, false, false);
 
     final int orderingIndex;
     final int index;

@@ -38,6 +38,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+import static io.repseq.core.GeneFeature.*;
 import static org.junit.Assert.*;
 
 /**
@@ -266,7 +267,7 @@ public class GeneFeatureTest {
         //Assert.assertEquals(CDR1Begin, GeneFeature.getFrameReference(CDR1));
         //Assert.assertEquals(CDR2Begin, GeneFeature.getFrameReference(CDR2));
         //Assert.assertEquals(CDR3End, GeneFeature.getFrameReference(JRegion));
-        Assert.assertEquals(ReferencePoint.L1Begin, GeneFeature.getFrameReference(GeneFeature.VTranscriptWithout5UTR));
+        Assert.assertEquals(ReferencePoint.L1Begin, GeneFeature.getFrameReference(VTranscriptWithout5UTR));
     }
 
     @Test
@@ -300,6 +301,20 @@ public class GeneFeatureTest {
                 assertEquals(create(expectedPoints.toArray()), actual);
                 assertEquals(expectedPoints.size() / 2, actual.regions.length);
             }
+    }
+
+    @Test
+    public void testCodingSubfeature() throws Exception {
+        Assert.assertEquals(VTranscriptWithout5UTR, getCodingGeneFeature(VGene));
+        Assert.assertEquals(VTranscriptWithout5UTR, getCodingGeneFeature(VTranscriptWithout5UTR));
+        Assert.assertEquals(VDJTranscriptWithout5UTR, getCodingGeneFeature(VDJTranscript));
+
+        Assert.assertEquals(GeneFeature.parse("{DBegin(-20):FR4End}"),
+                getCodingGeneFeature(GeneFeature.parse("{DBegin(-20):FR4End(20)}")));
+        Assert.assertEquals(GeneFeature.parse("{DBegin(1):FR4End}"),
+                getCodingGeneFeature(GeneFeature.parse("{DBegin(1):FR4End(20)}")));
+        
+        Assert.assertNull(getCodingGeneFeature(VIntron));
     }
 
     @Test
@@ -394,6 +409,13 @@ public class GeneFeatureTest {
         GeneFeature dd2 = GeneFeature.GermlineDPSegment.append(GeneFeature.DRegion).append(new GeneFeature(ReferencePoint.DEnd, ReferencePoint.DBegin.move(3)));
         GeneFeature dd3 = new GeneFeature(ReferencePoint.DEnd.move(-3), ReferencePoint.DBegin).append(GeneFeature.DRegion).append(new GeneFeature(ReferencePoint.DEnd, ReferencePoint.DBegin.move(3)));
         Assert.assertEquals(dd3, GeneFeature.intersection(dd1, dd2));
+    }
+
+    @Test
+    public void testCoding1() throws Exception {
+        GeneFeature input = GeneFeature.parse("{CDR3Begin(-10):CDR3Begin(-1)}");
+        GeneFeature cf = GeneFeature.getCodingGeneFeature(input);
+        assertEquals(cf, input);
     }
 
     @Test

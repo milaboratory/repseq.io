@@ -190,7 +190,11 @@ public class VDJCLibrary implements Comparable<VDJCLibrary> {
         ReferencePointsBuilder rpBuilder = new ReferencePointsBuilder();
         for (Map.Entry<ReferencePoint, Long> entry : geneData.getAnchorPoints().entrySet())
             // TODO convert base reference point position type to long ?
-            rpBuilder.setPosition(entry.getKey(), entry.getValue().intValue());
+            try {
+                rpBuilder.setPosition(entry.getKey(), entry.getValue().intValue());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Error parsing gene: " + geneData.getName(), e);
+            }
 
         VDJCGene gene = new VDJCGene(library, geneData, geneData.getBaseSequence().resolve(library.getContext(),
                 library.registry.getSequenceResolver()), rpBuilder.build());

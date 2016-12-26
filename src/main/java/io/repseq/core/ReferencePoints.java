@@ -172,7 +172,7 @@ public final class ReferencePoints extends SequencePartitioning implements java.
         for (int i = 0; i < points.length; ++i)
             if (points[i] == -1)
                 newPoints[i] = -1;
-            else if ((newPoints[i] = mutations.convertPosition(points[i])) < -1)
+            else if ((newPoints[i] = mutations.convertToSeq2Position(points[i])) < -1)
                 newPoints[i] = ~newPoints[i];
         return new ReferencePoints(newPoints);
     }
