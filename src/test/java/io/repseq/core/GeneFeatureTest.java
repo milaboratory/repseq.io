@@ -29,8 +29,8 @@
 package io.repseq.core;
 
 import com.milaboratory.util.IntArrayList;
-import org.junit.Assert;
 import org.apache.commons.math3.random.Well44497a;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -313,7 +313,7 @@ public class GeneFeatureTest {
                 getCodingGeneFeature(GeneFeature.parse("{DBegin(-20):FR4End(20)}")));
         Assert.assertEquals(GeneFeature.parse("{DBegin(1):FR4End}"),
                 getCodingGeneFeature(GeneFeature.parse("{DBegin(1):FR4End(20)}")));
-        
+
         Assert.assertNull(getCodingGeneFeature(VIntron));
     }
 
@@ -409,6 +409,14 @@ public class GeneFeatureTest {
         GeneFeature dd2 = GeneFeature.GermlineDPSegment.append(GeneFeature.DRegion).append(new GeneFeature(ReferencePoint.DEnd, ReferencePoint.DBegin.move(3)));
         GeneFeature dd3 = new GeneFeature(ReferencePoint.DEnd.move(-3), ReferencePoint.DBegin).append(GeneFeature.DRegion).append(new GeneFeature(ReferencePoint.DEnd, ReferencePoint.DBegin.move(3)));
         Assert.assertEquals(dd3, GeneFeature.intersection(dd1, dd2));
+    }
+
+    @Test
+    public void testIntersection16() throws Exception {
+        GeneFeature aa1 = GeneFeature.DRegion;
+        GeneFeature aa2 = GeneFeature.DRegionWithP;
+        System.out.println(intersection(aa1, aa2));
+
     }
 
     @Test

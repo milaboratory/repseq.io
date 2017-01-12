@@ -382,14 +382,14 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     }
 
     private static GeneFeature intersection1R(GeneFeature gf1r, GeneFeature gf2r, GeneFeature gf1, GeneFeature gf2) {
-        if (gf1r == null && gf2r == null)
+        if (gf1r == null || gf2r == null)
             return null;
 
-        if (gf1r == null)
-            return reverse(intersection0(gf2r.reverse(), gf1));
-
-        if (gf2r == null)
-            return reverse(intersection0(gf1r.reverse(), gf2));
+//        if (gf1r == null)
+//            return reverse(intersection0(gf2r.reverse(), gf1));
+//
+//        if (gf2r == null)
+//            return reverse(intersection0(gf1r.reverse(), gf2));
 
         GeneFeature i = intersection0(gf1r.reverse(), gf2r.reverse());
         return i == null ? null : i.reverse();
