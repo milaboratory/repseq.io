@@ -78,6 +78,7 @@ public class DebugAction implements Action {
 
                     //flag suspicious exon borders
                     //https://schneider.ncifcrf.gov/gallery/SequenceLogoSculpture.gif
+                    //consider allowing: GT-AG, GC-AG or AT-AC
                     if (gene.getGeneType() == GeneType.Variable) {
                         NucleotideSequence intronStart = gene.getFeature(new GeneFeature(ReferencePoint.VIntronBegin, 0, 2));
                         if (intronStart != null) {

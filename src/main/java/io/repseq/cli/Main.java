@@ -23,6 +23,7 @@ public class Main {
                 new MergeAction(),
                 new CompileAction(),
                 new FastaAction(),
+                new TsvAction(),
                 new InferAnchorPointsAction(),
                 new DebugAction(),
                 new FormatAction(),
