@@ -29,6 +29,7 @@
 package io.repseq.core;
 
 import com.milaboratory.core.Range;
+import com.milaboratory.core.sequence.TranslationParameters;
 
 /**
  * Object stores information about sequence partitioning (positions of specific anchor points)
@@ -73,7 +74,7 @@ public abstract class SequencePartitioning {
      */
     public Range getRange(GeneFeature feature) {
         if (feature.isComposite())
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Composite feature");
 
         return getRange(feature.getReferenceRange(0));
     }
@@ -152,7 +153,8 @@ public abstract class SequencePartitioning {
         for (Range range : featureRanges) {
             int from = subFeatureRanges[subFeaturePointer].getFrom();
             if (state == 0
-                    && range.containsBoundary(from)) {
+                    && range.containsBoundary(from)
+                    && subFeatureRanges[subFeaturePointer].isReverse() == range.isReverse()) {
                 state = 1;
                 begin = offset + range.convertBoundaryToRelativePosition(from);
             }
@@ -237,5 +239,53 @@ public abstract class SequencePartitioning {
             return range.convertBoundaryToAbsolutePosition(positionInFeature);
         }
         return -1;
+    }
+
+    /**
+     * Calculates translation parameters ( ~ translation frame ) for given gene feature using current sequence
+     * partitioning. Return null for untranslatable gene features (like 5'UTR).
+     *
+     * @param feature target gene feature
+     * @return translation parameters
+     */
+    public TranslationParameters getTranslationParameters(GeneFeature feature) {
+        if (!feature.equals(GeneFeature.getCodingGeneFeature(feature)))
+            return null;
+
+        if (feature.getFirstPoint().isTripletBoundary() && feature.getLastPoint().isTripletBoundary())
+            return TranslationParameters.FromCenter;
+
+        if (feature.getFirstPoint().getWithoutOffset().isTripletBoundary())
+            return TranslationParameters.withIncompleteCodon(floorMod(feature.getFirstPoint().getOffset(), 3));
+
+        int featureLength = getLength(feature);
+
+        if (feature.getLastPoint().getWithoutOffset().isTripletBoundary())
+            return TranslationParameters.withIncompleteCodon(floorMod(
+                    feature.getFirstPoint().getOffset() - featureLength,
+                    3));
+
+        int relativePosition;
+        for (GeneFeature.ReferenceRange range : feature)
+            for (ReferencePoint point : range.getIntermediatePoints())
+                if (point.isTripletBoundary())
+                    if ((relativePosition = getRelativePosition(feature, point)) >= 0)
+                        return TranslationParameters.withIncompleteCodon(relativePosition);
+
+        return null;
+    }
+
+    public static int floorDiv(int x, int y) {
+        int r = x / y;
+        // if the signs are different and modulo not zero, round down
+        if ((x^y) < 0 && (r * y != x)) {
+            r--;
+        }
+        return r;
+    }
+
+    public static int floorMod(int x, int y) {
+        int r = x - floorDiv(x, y) * y;
+        return r;
     }
 }

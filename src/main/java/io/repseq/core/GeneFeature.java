@@ -382,14 +382,14 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     }
 
     private static GeneFeature intersection1R(GeneFeature gf1r, GeneFeature gf2r, GeneFeature gf1, GeneFeature gf2) {
-        if (gf1r == null && gf2r == null)
+        if (gf1r == null || gf2r == null)
             return null;
 
-        if (gf1r == null)
-            return reverse(intersection0(gf2r.reverse(), gf1));
-
-        if (gf2r == null)
-            return reverse(intersection0(gf1r.reverse(), gf2));
+//        if (gf1r == null)
+//            return reverse(intersection0(gf2r.reverse(), gf1));
+//
+//        if (gf2r == null)
+//            return reverse(intersection0(gf1r.reverse(), gf2));
 
         GeneFeature i = intersection0(gf1r.reverse(), gf2r.reverse());
         return i == null ? null : i.reverse();
@@ -515,6 +515,60 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return rp == NULL_FRAME ? null : rp;
     }
 
+    /**
+     * Special value
+     */
+    private static final GeneFeature NULL_GENE_FEATURE = new GeneFeature(UTR5Begin, UTR5Begin);
+    /**
+     * Cache for getFrameReference method
+     */
+    private static final Map<GeneFeature, GeneFeature> codingGeneFeaturesCache = new HashMap<>();
+
+    /**
+     * Returns coding gene feature contained in input gene feature
+     *
+     * @param feature input gene feature
+     * @return coding gene feature contained in input gene feature or null
+     */
+    public static synchronized GeneFeature getCodingGeneFeature(GeneFeature feature) {
+        GeneFeature result = codingGeneFeaturesCache.get(feature);
+        if (result == null) {
+
+            List<ReferenceRange> resultRanges = new ArrayList<>();
+            ReferencePoint previousPoint = null, lastPoint = null;
+
+            for (ReferenceRange region : feature.regions)
+                for (ReferencePoint intermediatePoint : region.getIntermediatePoints()) {
+                    if (previousPoint == null && intermediatePoint.isCodingSequenceOnTheRight())
+                        previousPoint = intermediatePoint;
+                    else if (previousPoint != null && !intermediatePoint.isCodingSequenceOnTheRight()) {
+                        if (!intermediatePoint.isCodingSequenceOnTheLeft())
+                            throw new IllegalArgumentException(
+                                    "Can't calculate coding feature for " + feature + ".");
+                        resultRanges.add(new ReferenceRange(previousPoint, intermediatePoint));
+                        previousPoint = null;
+                    }
+                    lastPoint = intermediatePoint;
+                }
+
+            if (previousPoint != null && previousPoint != lastPoint) {
+                if (!lastPoint.isCodingSequenceOnTheLeft())
+                    throw new IllegalArgumentException(
+                            "Can't calculate coding feature for " + feature + ".");
+                resultRanges.add(new ReferenceRange(previousPoint, lastPoint));
+            }
+
+            if (resultRanges.isEmpty())
+                // Caching null result
+                codingGeneFeaturesCache.put(feature, result = NULL_GENE_FEATURE);
+            else
+                codingGeneFeaturesCache.put(feature, result = new GeneFeature(
+                        resultRanges.toArray(new ReferenceRange[resultRanges.size()]), true));
+
+        }
+        return result == NULL_GENE_FEATURE ? null : result;
+    }
+
     private static ReferenceRange[] merge(final ReferenceRange[] ranges) {
         if (ranges.length == 1)
             return ranges;
@@ -569,6 +623,8 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
         public List<ReferencePoint> getIntermediatePoints() {
             List<ReferencePoint> rps = new ArrayList<>();
+            if (begin.offset != 0)
+                rps.add(begin);
             for (int i = begin.basicPoint.index; i <= end.basicPoint.index; i++) {
                 ReferencePoint rp = new ReferencePoint(BasicReferencePoint.getByIndex(i));
                 if (rp.compareTo(begin) < 0)
@@ -577,6 +633,8 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
                     continue;
                 rps.add(rp);
             }
+            if (end.offset != 0)
+                rps.add(end);
             return rps;
         }
 
@@ -667,7 +725,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
     private static void ensureInitialized() {
         if (featuresByName == null) {
-            synchronized (GeneFeature.class) {
+            synchronized ( GeneFeature.class ){
                 if (featuresByName == null) {
                     try {
                         Map<String, GeneFeature> fbn = new HashMap<>();
@@ -803,7 +861,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
                 if (base != null) {
                     if (region.hasOffsets())
-                        base += "(" + region.begin.offset + ", " + region.end.offset + ")";
+                        base += "(" + region.begin.offset + "," + region.end.offset + ")";
                     encodes[i] = base;
                     continue out;
                 }
@@ -827,11 +885,6 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return a.begin.basicPoint == b.regions[0].begin.basicPoint
                 && a.end.basicPoint == b.regions[0].end.basicPoint;
     }
-
-    public static final GeneFeature[] NONCODING_FEATURES = {
-            VIntron,
-            new GeneFeature(CExon1End, CEnd) // Gene structure for C region is not fully specified
-    };
 
     public static class Deserializer extends JsonDeserializer<GeneFeature> {
         @Override
