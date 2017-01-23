@@ -65,6 +65,7 @@ public class DebugAction implements Action {
 
                             // Flag suspicious exon borders
                             // https://schneider.ncifcrf.gov/gallery/SequenceLogoSculpture.gif
+
                             NucleotideSequence vIntronDonorSeq = gene.getFeature(vIntronDonor);
                             if (vIntronDonorSeq != null && !vIntronDonorSeq.toString().equals("GT") &&
                                     !vIntronDonorSeq.toString().equals("GC"))
@@ -108,16 +109,15 @@ public class DebugAction implements Action {
                     }
                 }
 
-                if (params.getProblemOnly() && warnings.isEmpty()) {
+                if (params.getProblemOnly() && warnings.isEmpty())
                     continue;
-                }
 
                 System.out.println(gene.getName() + " (" + (gene.isFunctional() ? "F" : "P") + ") " + gene.getChains());
 
                 if (!warnings.isEmpty()) {
                     System.out.println();
                     System.out.println("WARNINGS: ");
-                    for (String warning : warnings){
+                    for (String warning : warnings) {
                         System.out.println(warning);
                     }
                     System.out.println();
@@ -144,6 +144,7 @@ public class DebugAction implements Action {
                             System.out.println(aaSequence);
                     }
                 }
+
                 System.out.println("=========");
                 System.out.println();
             }
