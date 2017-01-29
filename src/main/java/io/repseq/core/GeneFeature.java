@@ -94,10 +94,12 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
     public static final GeneFeature VRegionTrimmed = new GeneFeature(FR1Begin, VEndTrimmed);
     @Doc("Full D Region; germline")
     public static final GeneFeature DRegion = new GeneFeature(DBegin, DEnd);
-    @Doc("Full D Region with P-segment; to be used as alignment reference")
+    @Doc("Full D Region with P-segment; germline; to be used as alignment reference")
     public static final GeneFeature DRegionWithP = GermlineDPSegment.append(DRegion).append(GermlineDPSegment);
-    @Doc("Full D Region in rearranged sequence, e.g. after trimming")
+    @Doc("Full D Region in rearranged sequence, e.g. after trimming; same as DRegionTrimmed")
     public static final GeneFeature DCDR3Part = new GeneFeature(DBeginTrimmed, DEndTrimmed);
+    @Doc("Full D Region in rearranged sequence, e.g. after trimming; same as DCDR3Part")
+    public static final GeneFeature DRegionTrimmed = DCDR3Part;
     @Doc("Full J Region; germline")
     public static final GeneFeature JRegion = new GeneFeature(JBegin, FR4End);
     @Doc("Full J Region with P-segment; to be used as alignment reference")
