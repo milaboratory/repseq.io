@@ -345,7 +345,15 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return new GeneFeature(Arrays.copyOf(regions, regions.length - 1), true);
     }
 
+    public static GeneFeature intersectionStrict(GeneFeature gf1, GeneFeature gf2) {
+        return intersection(gf1, gf2, true);
+    }
+
     public static GeneFeature intersection(GeneFeature gf1, GeneFeature gf2) {
+        return intersection(gf1, gf2, false);
+    }
+
+    public static GeneFeature intersection(GeneFeature gf1, GeneFeature gf2, boolean strict) {
         //tnj t,exbq rjcnskm
         GeneFeature gf1left = null, gf1right = null;
         if (gf1.firstRegion().isReversed()) {
@@ -366,8 +374,12 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
             gf2 = gf2.withoutLast();
         }
 
-        GeneFeature gfLeft = intersection1R(gf1left, gf2left, gf1, gf2),
-                gfRight = intersection1R(gf1right, gf2right, gf1, gf2);
+        GeneFeature gfLeft = strict ?
+                intersection1RStrict(gf1left, gf2left, gf1, gf2) :
+                intersection1R(gf1left, gf2left, gf1, gf2);
+        GeneFeature gfRight = strict ?
+                intersection1RStrict(gf1right, gf2right, gf1, gf2) :
+                intersection1R(gf1right, gf2right, gf1, gf2);
 
         GeneFeature r = intersection0(gf1, gf2);
 
@@ -383,18 +395,24 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return gf == null ? null : gf.reverse();
     }
 
-    private static GeneFeature intersection1R(GeneFeature gf1r, GeneFeature gf2r, GeneFeature gf1, GeneFeature gf2) {
+    private static GeneFeature intersection1RStrict(GeneFeature gf1r, GeneFeature gf2r, GeneFeature gf1, GeneFeature gf2) {
         if (gf1r == null || gf2r == null)
             return null;
+        else
+            return reverse(intersection0(gf1r.reverse(), gf2r.reverse()));
+    }
 
-//        if (gf1r == null)
-//            return reverse(intersection0(gf2r.reverse(), gf1));
-//
-//        if (gf2r == null)
-//            return reverse(intersection0(gf1r.reverse(), gf2));
+    private static GeneFeature intersection1R(GeneFeature gf1r, GeneFeature gf2r, GeneFeature gf1, GeneFeature gf2) {
+        if (gf1r == null && gf2r == null)
+            return null;
 
-        GeneFeature i = intersection0(gf1r.reverse(), gf2r.reverse());
-        return i == null ? null : i.reverse();
+        if (gf1r == null)
+            return reverse(intersection0(gf2r.reverse(), gf1));
+
+        if (gf2r == null)
+            return reverse(intersection0(gf1r.reverse(), gf2));
+
+        return reverse(intersection0(gf1r.reverse(), gf2r.reverse()));
     }
 
     private static GeneFeature intersection0(GeneFeature gf1, GeneFeature gf2) {
@@ -727,7 +745,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
     private static void ensureInitialized() {
         if (featuresByName == null) {
-            synchronized ( GeneFeature.class ){
+            synchronized (GeneFeature.class) {
                 if (featuresByName == null) {
                     try {
                         Map<String, GeneFeature> fbn = new HashMap<>();
