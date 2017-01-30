@@ -153,7 +153,8 @@ public abstract class SequencePartitioning {
         for (Range range : featureRanges) {
             int from = subFeatureRanges[subFeaturePointer].getFrom();
             if (state == 0
-                    && range.containsBoundary(from)) {
+                    && range.containsBoundary(from)
+                    && subFeatureRanges[subFeaturePointer].isReverse() == range.isReverse()) {
                 state = 1;
                 begin = offset + range.convertBoundaryToRelativePosition(from);
             }

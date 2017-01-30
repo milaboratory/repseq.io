@@ -1,4 +1,13 @@
 
+RepSeqIO 1.2.5 (30 Jan 2017)
+========================
+
+-- Added alias anchor point `DRegionTrimmed` = `DCDR3Part`
+-- Fix for wrong behaviour of `io.repseq.core.GeneFeature#intersection` for gene features with two 
+   P segments (like D gene with both right and left P segment)
+-- minor: NPE in getRelativeRange with PSergments fixed
+
+
 RepSeqIO 1.2.4 (26 Dec 2016)
 ========================
 
