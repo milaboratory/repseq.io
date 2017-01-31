@@ -75,6 +75,19 @@ public class DebugAction implements Action {
                             if (vIntronAcceptorSeq != null && !vIntronAcceptorSeq.toString().equals("AG"))
                                 warnings.add("Expected VIntron sequence to end with AG, was: " + vIntronAcceptorSeq.toString());
 
+                            NucleotideSequence vTranscriptWithout5UTR = gene.getFeature(GeneFeature.VTranscriptWithout5UTR);
+                            if (vTranscriptWithout5UTR != null){
+                                NucleotideSequence vRegion = gene.getFeature(GeneFeature.VRegion);
+                                if (vRegion != null){
+                                    AminoAcidSequence vTranscriptWithout5UTRAA = getAminoAcidSequence(gene, GeneFeature.VTranscriptWithout5UTR, vTranscriptWithout5UTR);
+                                    AminoAcidSequence vRegionAA = getAminoAcidSequence(gene, GeneFeature.VRegion, vRegion);
+
+                                    if (!vTranscriptWithout5UTRAA.toString().contains(vRegionAA.toString())){
+                                        warnings.add("Expected VTranscriptWithout5UTR translation to contain VRegion translation.  This may indicate an error in the L2 boundaries");
+                                    }
+                                }
+                            }
+
                             break;
 
                         case Joining:
