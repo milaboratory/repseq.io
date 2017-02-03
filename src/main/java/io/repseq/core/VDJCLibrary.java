@@ -135,12 +135,25 @@ public class VDJCLibrary implements Comparable<VDJCLibrary> {
     }
 
     /**
-     * Get gene by name
+     * Get gene by name. Returns VDJCGene or null if gene with provided name is not found
      *
-     * @return gene
+     * @return VDJCGene or null if gene with provided name is not found
      */
     public VDJCGene get(String geneName) {
         return genes.get(geneName);
+    }
+
+    /**
+     * Get gene by name. Returns VDJCGene or throws {@link GeneNotFoundException} if gene not found.
+     *
+     * @return gene
+     * @throws GeneNotFoundException
+     */
+    public VDJCGene getSafe(String geneName) {
+        VDJCGene gene = genes.get(geneName);
+        if (gene == null)
+            throw new GeneNotFoundException(geneName, this);
+        return gene;
     }
 
     /**

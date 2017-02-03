@@ -1,1 +1,2 @@
 Additional modification to `io.repseq.core.GeneFeature#intersection`. Split into two methods `intersection` and `intersectionStrict`.
+`getSafe()` method added to VDJCGene class
