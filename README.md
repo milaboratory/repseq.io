@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/repseqio/repseqio.svg)](https://travis-ci.org/repseqio/repseqio)
+
 # RepSeq.IO.CLI
 
 Command line helper to manipulate RepSeq.IO formatted V/D/J/C reference data.
