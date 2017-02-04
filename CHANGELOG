@@ -1,4 +1,12 @@
 
+RepSeqIO 1.2.6 ( 4 Feb 2017)
+========================
+
+-- Additional modification to `io.repseq.core.GeneFeature#intersection`. Split into two methods 
+   `intersection` and `intersectionStrict`.
+-- `getSafe()` method added to VDJCGene class
+
+
 RepSeqIO 1.2.5 (30 Jan 2017)
 ========================
 

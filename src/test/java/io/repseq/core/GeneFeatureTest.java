@@ -401,6 +401,12 @@ public class GeneFeatureTest {
     }
 
     @Test
+    public void testIntersection15() throws Exception {
+        Assert.assertEquals(GermlineVCDR3Part.append(GermlineVPSegment),
+                GeneFeature.intersection(GeneFeature.VRegionWithP, CDR3));
+    }
+
+    @Test
     public void testIntersection14() throws Exception {
         GeneFeature aa1 = GeneFeature.VRegion.append(new GeneFeature(ReferencePoint.VEnd, ReferencePoint.VEnd.move(-20)));
         GeneFeature aa2 = GeneFeature.VRegion.append(new GeneFeature(ReferencePoint.VEnd, ReferencePoint.VEnd.move(-15)));
@@ -413,10 +419,10 @@ public class GeneFeatureTest {
 
     @Test
     public void testIntersection16() throws Exception {
-        GeneFeature aa1 = GeneFeature.DRegion;
-        GeneFeature aa2 = GeneFeature.DRegionWithP;
-        System.out.println(intersection(aa1, aa2));
-
+        Assert.assertEquals(GeneFeature.DRegion,
+                GeneFeature.intersectionStrict(GeneFeature.DRegionWithP, GeneFeature.DRegion));
+        Assert.assertEquals(GeneFeature.DRegionWithP,
+                GeneFeature.intersection(GeneFeature.DRegionWithP, GeneFeature.DRegion));
     }
 
     @Test
