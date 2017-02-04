@@ -1,7 +1,16 @@
 language: java
+
+sudo: false
+
+git:
+    submodules_depth: 2
+
+before_install:
+  - cd milib && mvn clean install -DskipTests
+
 jdk:
   - openjdk7
-sudo: false
+
 cache:
   directories:
   - $HOME/.m2
