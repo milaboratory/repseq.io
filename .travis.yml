@@ -3,9 +3,11 @@ language: java
 sudo: false
 
 git:
-    submodules_depth: 2
+  submodules: false
 
 before_install:
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - git submodule update --init --recursive
   - cd milib && mvn clean install -DskipTests
 
 jdk:
