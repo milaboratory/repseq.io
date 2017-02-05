@@ -54,4 +54,12 @@ public class SequencePartitioningTest {
         r = refPoints.getRelativeRange(GeneFeature.VGeneWithP, GeneFeature.GermlineVPSegment);
         assertEquals(new Range(1930, 1950), r);
     }
+
+    @Test
+    public void test5() throws Exception {
+        ReferencePoints refPoints = new ReferencePoints(
+                BasicReferencePoint.DBegin.index, new int[]{0, 100});
+        Assert.assertEquals(100, refPoints.getRelativePosition(GeneFeature.DRegionWithP, ReferencePoint.DBegin));
+        Assert.assertEquals(200, refPoints.getRelativePosition(GeneFeature.DRegionWithP, ReferencePoint.DEnd));
+    }
 }
