@@ -40,9 +40,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.primitivio.annotations.Serializable;
 import com.milaboratory.util.ArrayIterator;
 import com.milaboratory.util.ParseUtil;
+import io.repseq.util.Doc;
 
 import java.io.IOException;
-import java.lang.annotation.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -923,10 +923,4 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         }
     }
 
-    @Documented
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.FIELD)
-    public @interface Doc {
-        String value();
-    }
 }

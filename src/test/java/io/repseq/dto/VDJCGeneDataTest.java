@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.EnumSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -24,7 +25,8 @@ public class VDJCGeneDataTest {
         SortedMap<ReferencePoint, Long> referencePoints = new TreeMap<>();
         referencePoints.put(ReferencePoint.V5UTREnd, 123L);
         referencePoints.put(ReferencePoint.CDR3Begin, 189L);
-        VDJCGeneData gene = new VDJCGeneData(seq, "TRBV12-3*01", GeneType.Variable, true, new Chains("TRA", "TRB"), referencePoints);
+        VDJCGeneData gene = new VDJCGeneData(seq, "TRBV12-3*01", GeneType.Variable, true,
+                new Chains("TRA", "TRB"), EnumSet.noneOf(GeneTag.class), referencePoints);
         ObjectMapper om = new ObjectMapper();
         om.setDefaultPrettyPrinter(new DefaultPrettyPrinter() {
             @Override

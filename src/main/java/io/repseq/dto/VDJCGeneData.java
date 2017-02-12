@@ -2,6 +2,7 @@ package io.repseq.dto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -23,6 +24,8 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
     final GeneType geneType;
     final boolean isFunctional;
     final Chains chains;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    final EnumSet<GeneTag> tags;
     @JsonDeserialize(keyUsing = ReferencePoint.JsonKeyDeserializer.class)
     @JsonSerialize(keyUsing = ReferencePoint.JsonKeySerializer.class)
     final SortedMap<ReferencePoint, Long> anchorPoints;
@@ -33,12 +36,14 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
                         @JsonProperty("geneType") GeneType geneType,
                         @JsonProperty("isFunctional") boolean isFunctional,
                         @JsonProperty("chains") Chains chains,
+                        @JsonProperty("tags") Set<GeneTag> tags,
                         @JsonProperty("anchorPoints") SortedMap<ReferencePoint, Long> anchorPoints) {
         this.baseSequence = baseSequence;
         this.name = name;
         this.geneType = geneType;
         this.isFunctional = isFunctional;
         this.chains = chains;
+        this.tags = EnumSet.copyOf(tags);
         this.anchorPoints = anchorPoints;
     }
 
@@ -46,6 +51,11 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
         return baseSequence;
     }
 
+    /**
+     * Full gene name
+     *
+     * @return full gene name
+     */
     public String getName() {
         return name;
     }
@@ -86,13 +96,17 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
         return chains;
     }
 
+    public EnumSet<GeneTag> getTags() {
+        return tags;
+    }
+
     public Map<ReferencePoint, Long> getAnchorPoints() {
         return anchorPoints;
     }
 
     public VDJCGeneData clone() {
         return new VDJCGeneData(baseSequence, name, geneType, isFunctional,
-                chains, new TreeMap<>(anchorPoints));
+                chains, EnumSet.copyOf(tags), new TreeMap<>(anchorPoints));
     }
 
     /**
@@ -129,17 +143,20 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
         if (isFunctional != that.isFunctional) return false;
         if (baseSequence != null ? !baseSequence.equals(that.baseSequence) : that.baseSequence != null) return false;
         if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (geneType != that.geneType) return false;
         if (chains != null ? !chains.equals(that.chains) : that.chains != null) return false;
+        if (tags != null ? !tags.equals(that.tags) : that.tags != null) return false;
         return anchorPoints != null ? anchorPoints.equals(that.anchorPoints) : that.anchorPoints == null;
-
     }
 
     @Override
     public int hashCode() {
         int result = baseSequence != null ? baseSequence.hashCode() : 0;
         result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (geneType != null ? geneType.hashCode() : 0);
         result = 31 * result + (isFunctional ? 1 : 0);
         result = 31 * result + (chains != null ? chains.hashCode() : 0);
+        result = 31 * result + (tags != null ? tags.hashCode() : 0);
         result = 31 * result + (anchorPoints != null ? anchorPoints.hashCode() : 0);
         return result;
     }

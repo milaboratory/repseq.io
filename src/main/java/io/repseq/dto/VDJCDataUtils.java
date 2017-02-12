@@ -100,8 +100,13 @@ public final class VDJCDataUtils {
 
                 List<KnownSequenceFragmentData> fragments = fragmentsBuilder.getFragments();
 
+                Set<VDJCLibraryComment> comments = new HashSet<>();
+                for (VDJCLibraryData lib : libsToMerge)
+                    comments.addAll(lib.getComments());
+
                 // Putting back merged result
-                resultMap.put(library1.getTaxonId(), new VDJCLibraryData(library1.getTaxonId(), speciesNames, genes, fragments));
+                resultMap.put(library1.getTaxonId(), new VDJCLibraryData(library1.getTaxonId(), speciesNames, genes,
+                        new ArrayList<>(comments), fragments));
             }
         }
 

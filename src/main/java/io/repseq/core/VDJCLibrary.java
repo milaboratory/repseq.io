@@ -1,6 +1,8 @@
 package io.repseq.core;
 
 import io.repseq.dto.VDJCGeneData;
+import io.repseq.dto.VDJCLibraryComment;
+import io.repseq.dto.VDJCLibraryCommentType;
 import io.repseq.dto.VDJCLibraryData;
 
 import java.nio.charset.StandardCharsets;
@@ -190,6 +192,25 @@ public class VDJCLibrary implements Comparable<VDJCLibrary> {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * All comment blocks associated with the library
+     *
+     * @return all comment blocks associated with the library
+     */
+    public List<VDJCLibraryComment> getComments() {
+        return libraryData.getComments();
+    }
+
+    /**
+     * Return comments of a particular type
+     *
+     * @param type comment type
+     * @return list of comments of a particular type
+     */
+    public List<VDJCLibraryComment> getComments(VDJCLibraryCommentType type) {
+        return libraryData.getComments(type);
     }
 
     /**

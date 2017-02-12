@@ -16,6 +16,8 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
     private final List<String> speciesNames;
     private final List<VDJCGeneData> genes;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private final List<VDJCLibraryComment> comments;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private final List<KnownSequenceFragmentData> sequenceFragments;
 
     /**
@@ -29,16 +31,19 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
         this.speciesNames = new ArrayList<>(other.speciesNames); // clone just in case
         this.genes = genes;
         this.sequenceFragments = new ArrayList<>(other.sequenceFragments); // clone just in case
+        this.comments = new ArrayList<>(other.comments); // clone just in case
     }
 
     @JsonCreator
     public VDJCLibraryData(@JsonProperty("taxonId") long taxonId,
                            @JsonProperty("speciesNames") List<String> speciesNames,
                            @JsonProperty("genes") List<VDJCGeneData> genes,
+                           @JsonProperty("comments") List<VDJCLibraryComment> comments,
                            @JsonProperty("sequenceFragments") List<KnownSequenceFragmentData> sequenceFragments) {
         this.taxonId = taxonId;
         this.speciesNames = speciesNames == null ? Collections.EMPTY_LIST : speciesNames;
         this.genes = genes;
+        this.comments = comments == null ? Collections.EMPTY_LIST : comments;
         this.sequenceFragments = sequenceFragments == null ? Collections.EMPTY_LIST : sequenceFragments;
     }
 
@@ -52,6 +57,24 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
 
     public List<VDJCGeneData> getGenes() {
         return genes;
+    }
+
+    public List<VDJCLibraryComment> getComments() {
+        return comments;
+    }
+
+    /**
+     * Return comments of a particular type
+     *
+     * @param type comment type
+     * @return list of comments of a particular type
+     */
+    public List<VDJCLibraryComment> getComments(VDJCLibraryCommentType type) {
+        List<VDJCLibraryComment> ret = new ArrayList<>();
+        for (VDJCLibraryComment c : comments)
+            if (c.getType() == type)
+                ret.add(c);
+        return ret;
     }
 
     public List<KnownSequenceFragmentData> getSequenceFragments() {
