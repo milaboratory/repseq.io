@@ -75,16 +75,20 @@ public class DebugAction implements Action {
                             if (vIntronAcceptorSeq != null && !vIntronAcceptorSeq.toString().equals("AG"))
                                 warnings.add("Expected VIntron sequence to end with AG, was: " + vIntronAcceptorSeq.toString());
 
-                            NucleotideSequence vTranscriptWithout5UTR = gene.getFeature(GeneFeature.VTranscriptWithout5UTR);
-                            if (vTranscriptWithout5UTR != null){
-                                NucleotideSequence vRegion = gene.getFeature(GeneFeature.VRegion);
-                                if (vRegion != null){
-                                    AminoAcidSequence vTranscriptWithout5UTRAA = getAminoAcidSequence(gene, GeneFeature.VTranscriptWithout5UTR, vTranscriptWithout5UTR);
-                                    AminoAcidSequence vRegionAA = getAminoAcidSequence(gene, GeneFeature.VRegion, vRegion);
+                            ReferencePoints partitioning = gene.getPartitioning();
+                            if (partitioning.isAvailable(GeneFeature.VTranscriptWithout5UTR)) { // This also means that it is V gene
+                                // Iterating over all reading-frame bound anchor points of V gene
+                                for (ReferencePoint anchorPoint : ReferencePoint.DefaultReferencePoints) {
+                                    if (anchorPoint.getGeneType() != GeneType.Variable ||
+                                            !anchorPoint.isTripletBoundary())
+                                        continue;
 
-                                    if (!vTranscriptWithout5UTRAA.toString().contains(vRegionAA.toString())){
-                                        warnings.add("Expected VTranscriptWithout5UTR translation to contain VRegion translation.  This may indicate an error in the L2 boundaries");
-                                    }
+                                    // And checking that they are in the same frame as Start (L1Begin)
+                                    int relativePosition = partitioning.getRelativePosition(GeneFeature.VTranscriptWithout5UTR, anchorPoint);
+                                    if (relativePosition >= 0 && // Point is defined
+                                            relativePosition % 3 != 0)
+                                        warnings.add("Expected " + anchorPoint + " to have position dividable by three inside VTranscriptWithout5UTR. " +
+                                                "This may indicate an error in the L2 boundaries.");
                                 }
                             }
 
