@@ -119,7 +119,7 @@ public class FromPaddedFastaAction implements Action {
                 }
 
                 VDJCGeneData gene = new VDJCGeneData(new BaseSequence("file://" + relativeFastaPath + "#" + geneName),
-                        geneName, geneType, functionality, new Chains(params.chain),
+                        geneName, geneType, functionality, new Chains(params.chain), record.description,
                         tags, anchorPoints);
 
                 if (genes.containsKey(geneName)) {
@@ -137,7 +137,7 @@ public class FromPaddedFastaAction implements Action {
         }
 
         VDJCLibraryData library = new VDJCLibraryData(params.taxonId, Collections.EMPTY_LIST, new ArrayList<>(genes.values()),
-                Arrays.asList(new VDJCLibraryComment(VDJCLibraryCommentType.Note, "Imported from: " +
+                Arrays.asList(new VDJCLibraryNote(VDJCLibraryNoteType.Comment, "Imported from: " +
                         fastaPath.getFileName().toString())),
                 Collections.EMPTY_LIST);
 

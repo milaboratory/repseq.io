@@ -25,6 +25,8 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
     final boolean isFunctional;
     final Chains chains;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    final String note;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     final EnumSet<GeneTag> tags;
     @JsonDeserialize(keyUsing = ReferencePoint.JsonKeyDeserializer.class)
     @JsonSerialize(keyUsing = ReferencePoint.JsonKeySerializer.class)
@@ -36,6 +38,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
                         @JsonProperty("geneType") GeneType geneType,
                         @JsonProperty("isFunctional") boolean isFunctional,
                         @JsonProperty("chains") Chains chains,
+                        @JsonProperty("note") String note,
                         @JsonProperty("tags") Set<GeneTag> tags,
                         @JsonProperty("anchorPoints") SortedMap<ReferencePoint, Long> anchorPoints) {
         this.baseSequence = baseSequence;
@@ -43,7 +46,8 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
         this.geneType = geneType;
         this.isFunctional = isFunctional;
         this.chains = chains;
-        this.tags = EnumSet.copyOf(tags);
+        this.note = note == null ? "" : note;
+        this.tags = tags == null ? EnumSet.noneOf(GeneTag.class) : EnumSet.copyOf(tags);
         this.anchorPoints = anchorPoints;
     }
 
@@ -106,7 +110,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
 
     public VDJCGeneData clone() {
         return new VDJCGeneData(baseSequence, name, geneType, isFunctional,
-                chains, EnumSet.copyOf(tags), new TreeMap<>(anchorPoints));
+                chains, note, EnumSet.copyOf(tags), new TreeMap<>(anchorPoints));
     }
 
     /**

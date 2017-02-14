@@ -55,6 +55,7 @@ public final class VDJCDataUtils {
     public static void sort(VDJCLibraryData library) {
         Collections.sort(library.getGenes());
         Collections.sort(library.getSpeciesNames());
+        Collections.sort(library.getNotes());
         Collections.sort(library.getSequenceFragments());
     }
 
@@ -100,9 +101,9 @@ public final class VDJCDataUtils {
 
                 List<KnownSequenceFragmentData> fragments = fragmentsBuilder.getFragments();
 
-                Set<VDJCLibraryComment> comments = new HashSet<>();
+                Set<VDJCLibraryNote> comments = new HashSet<>();
                 for (VDJCLibraryData lib : libsToMerge)
-                    comments.addAll(lib.getComments());
+                    comments.addAll(lib.getNotes());
 
                 // Putting back merged result
                 resultMap.put(library1.getTaxonId(), new VDJCLibraryData(library1.getTaxonId(), speciesNames, genes,

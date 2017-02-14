@@ -14,6 +14,7 @@ public class VDJCDataUtilsTest {
         smartCompareAssert("A1ZZZ", "A123");
         smartCompareAssert("A123ZZZ12", "A123ZZZ14");
         smartCompareAssert("A123ZZZ12", "A123ZZZ12d");
+        smartCompareAssert("A123ZZZ12d", "AZZZ12");
     }
 
     public void smartCompareAssert(String lower, String higher) {

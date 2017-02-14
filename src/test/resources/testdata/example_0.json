@@ -1,0 +1,36 @@
+[
+  {
+    "taxonId": 9606,
+    "speciesNames": [
+      "homosapiens",
+      "homsap",
+      "hs",
+      "hsa",
+      "human"
+    ],
+    "genes": [
+      {
+        "baseSequence": "nuccore://NG_001333.2",
+        "name": "TRBV1*00",
+        "geneType": "V",
+        "isFunctional": false,
+        "chains": [
+          "TRB"
+        ],
+        "anchorPoints": {
+          "UTR5Begin": 91456,
+          "L1Begin": 91556,
+          "VIntronBegin": 91597,
+          "L2Begin": 91714,
+          "FR1Begin": 91722,
+          "CDR1Begin": 91797,
+          "FR2Begin": 91812,
+          "CDR2Begin": 91863,
+          "FR3Begin": 91881,
+          "CDR3Begin": 91989,
+          "VEnd": 92006
+        }
+      }
+    ]
+  }
+]
