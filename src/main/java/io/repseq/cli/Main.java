@@ -33,9 +33,6 @@ public class Main {
         main.setVersionInfoCallback(new Runnable() {
             @Override
             public void run() {
-                VDJCLibraryRegistry reg = VDJCLibraryRegistry.createDefaultRegistry();
-                reg.loadAllLibraries("default");
-
                 VersionInfo milib = VersionInfo.getVersionInfoForArtifact("milib");
                 VersionInfo repseqio = VersionInfo.getVersionInfoForArtifact("repseqio");
 
@@ -61,6 +58,8 @@ public class Main {
 
                 builder.append("Built-in libraries:\n");
 
+                VDJCLibraryRegistry reg = VDJCLibraryRegistry.createDefaultRegistry();
+                reg.loadAllLibraries("default");
                 for (VDJCLibrary lib : reg.getLoadedLibraries())
                     builder.append(lib.getLibraryId()).append("\n");
 
