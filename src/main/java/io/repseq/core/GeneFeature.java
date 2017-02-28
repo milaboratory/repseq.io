@@ -779,7 +779,6 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return nameByFeature.get(point);
     }
 
-
     public static GeneFeature parse(String string) {
         string = string.replaceAll(" ", "");
 
