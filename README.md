@@ -1,3 +1,4 @@
+[![Javadocs](http://javadoc.io/badge/io.repseq/repseqio.svg)](http://javadoc.io/doc/io.repseq/repseqio)
 [![Build Status](https://travis-ci.org/repseqio/repseqio.svg)](https://travis-ci.org/repseqio/repseqio)
 
 # RepSeq.IO.CLI
