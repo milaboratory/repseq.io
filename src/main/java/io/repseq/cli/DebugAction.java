@@ -75,6 +75,23 @@ public class DebugAction implements Action {
                             if (vIntronAcceptorSeq != null && !vIntronAcceptorSeq.toString().equals("AG"))
                                 warnings.add("Expected VIntron sequence to end with AG, was: " + vIntronAcceptorSeq.toString());
 
+                            ReferencePoints partitioning = gene.getPartitioning();
+                            if (partitioning.isAvailable(GeneFeature.VTranscriptWithout5UTR)) { // This also means that it is V gene
+                                // Iterating over all reading-frame bound anchor points of V gene
+                                for (ReferencePoint anchorPoint : ReferencePoint.DefaultReferencePoints) {
+                                    if (anchorPoint.getGeneType() != GeneType.Variable ||
+                                            !anchorPoint.isTripletBoundary())
+                                        continue;
+
+                                    // And checking that they are in the same frame as Start (L1Begin)
+                                    int relativePosition = partitioning.getRelativePosition(GeneFeature.VTranscriptWithout5UTR, anchorPoint);
+                                    if (relativePosition >= 0 && // Point is defined
+                                            relativePosition % 3 != 0)
+                                        warnings.add("Expected " + anchorPoint + " to have position dividable by three inside VTranscriptWithout5UTR. " +
+                                                "This may indicate an error in the L2 boundaries.");
+                                }
+                            }
+
                             break;
 
                         case Joining:

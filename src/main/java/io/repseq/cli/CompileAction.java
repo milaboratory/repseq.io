@@ -77,7 +77,7 @@ public class CompileAction implements Action {
                 fragmentsBuilder.addRegion(uri, region, seq);
             }
             result.add(new VDJCLibraryData(lib.getTaxonId(), lib.getData().getSpeciesNames(),
-                    lib.getData().getGenes(), fragmentsBuilder.getFragments()));
+                    lib.getData().getGenes(), lib.getData().getNotes(), fragmentsBuilder.getFragments()));
         }
 
         VDJCDataUtils.writeToFile(result, destination, true);

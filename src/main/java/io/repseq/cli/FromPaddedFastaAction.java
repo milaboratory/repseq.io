@@ -19,9 +19,7 @@ import io.repseq.core.BaseSequence;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
-import io.repseq.dto.VDJCDataUtils;
-import io.repseq.dto.VDJCGeneData;
-import io.repseq.dto.VDJCLibraryData;
+import io.repseq.dto.*;
 import io.repseq.util.StringWithMapping;
 
 import java.nio.file.Path;
@@ -59,6 +57,8 @@ public class FromPaddedFastaAction implements Action {
                 }
 
                 String[] fields = record.description.split("\\|");
+
+                EnumSet<GeneTag> tags = EnumSet.noneOf(GeneTag.class);
 
                 String geneName = fields[params.nameIndex];
 
@@ -119,7 +119,8 @@ public class FromPaddedFastaAction implements Action {
                 }
 
                 VDJCGeneData gene = new VDJCGeneData(new BaseSequence("file://" + relativeFastaPath + "#" + geneName),
-                        geneName, geneType, functionality, new Chains(params.chain), anchorPoints);
+                        geneName, geneType, functionality, new Chains(params.chain), record.description,
+                        tags, anchorPoints);
 
                 if (genes.containsKey(geneName)) {
                     if (params.getIgnoreDuplicates()) {
@@ -135,7 +136,10 @@ public class FromPaddedFastaAction implements Action {
             }
         }
 
-        VDJCLibraryData library = new VDJCLibraryData(params.taxonId, Collections.EMPTY_LIST, new ArrayList<>(genes.values()), Collections.EMPTY_LIST);
+        VDJCLibraryData library = new VDJCLibraryData(params.taxonId, Collections.EMPTY_LIST, new ArrayList<>(genes.values()),
+                Arrays.asList(new VDJCLibraryNote(VDJCLibraryNoteType.Comment, "Imported from: " +
+                        fastaPath.getFileName().toString())),
+                Collections.EMPTY_LIST);
 
         VDJCDataUtils.writeToFile(new VDJCLibraryData[]{library}, params.getOutputJSON(), false);
     }

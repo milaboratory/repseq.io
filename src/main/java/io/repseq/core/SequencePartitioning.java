@@ -141,6 +141,7 @@ public abstract class SequencePartitioning {
      * available
      */
     public Range getRelativeRange(GeneFeature feature, GeneFeature subFeature) {
+        // Get target ranges of
         Range[] featureRanges = getRanges(feature);
         if (featureRanges == null)
             return null;
@@ -154,7 +155,7 @@ public abstract class SequencePartitioning {
             int from = subFeatureRanges[subFeaturePointer].getFrom();
             if (state == 0
                     && range.containsBoundary(from)
-                    && subFeatureRanges[subFeaturePointer].isReverse() == range.isReverse()) {
+                    && subFeatureRanges[subFeaturePointer].hasSameDirection(range)) {
                 state = 1;
                 begin = offset + range.convertBoundaryToRelativePosition(from);
             }
@@ -278,7 +279,7 @@ public abstract class SequencePartitioning {
     public static int floorDiv(int x, int y) {
         int r = x / y;
         // if the signs are different and modulo not zero, round down
-        if ((x^y) < 0 && (r * y != x)) {
+        if ((x ^ y) < 0 && (r * y != x)) {
             r--;
         }
         return r;

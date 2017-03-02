@@ -29,6 +29,7 @@
 package io.repseq.core;
 
 import com.milaboratory.util.IntArrayList;
+import io.repseq.util.Doc;
 import org.apache.commons.math3.random.Well44497a;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -454,7 +455,7 @@ public class GeneFeatureTest {
                     field.getType() == GeneFeature.class) {
                 GeneFeature value = (GeneFeature) field.get(null);
                 String name = field.getName();
-                gfts.add(new GFT(value, name, field.getAnnotation(GeneFeature.Doc.class).value()));
+                gfts.add(new GFT(value, name, field.getAnnotation(Doc.class).value()));
             }
 
         Collections.sort(gfts);

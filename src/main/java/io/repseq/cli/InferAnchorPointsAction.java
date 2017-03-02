@@ -191,16 +191,16 @@ public class InferAnchorPointsAction implements Action {
                         for (ReferencePoint point : range.getIntermediatePoints()) {
                             localPS.print(point + ": ");
 
-                            if (targetPartitioning.isAvailable(point)) {
+                            boolean isAvailable = targetPartitioning.isAvailable(point);
+                            if (isAvailable) {
                                 localPS.println("already set");
-                                continue;
                             }
 
                             if (!referencePartitioning.isAvailable(point)) {
-                                localPS.println("not set in reference gene");
+                                if (!isAvailable)
+                                    localPS.println("not set in reference gene");
                                 continue;
                             }
-
                             int ntPositionInReference = referencePartitioning.getRelativePosition(geneFeature, point);
 
                             // Projecting position
@@ -209,7 +209,8 @@ public class InferAnchorPointsAction implements Action {
                                     .convertNtPositionToAA(ntPositionInReference, bestRef.ntSeqLength, bestRef.frame);
 
                             if (aaPositionInReferece == null) {
-                                localPS.println("failed to convert to aa position in ref");
+                                if (!isAvailable)
+                                    localPS.println("failed to convert to aa position in ref");
                                 continue;
                             }
 
@@ -217,14 +218,16 @@ public class InferAnchorPointsAction implements Action {
                                     .convertToSeq2Position(aaPositionInReferece.aminoAcidPosition));
 
                             if (aaPositionInTarget == -1) {
-                                localPS.println("failed to project using alignment");
+                                if (!isAvailable)
+                                    localPS.println("failed to project using alignment");
                                 continue;
                             }
 
                             int ntPositionInTarget = AminoAcidSequence.convertAAPositionToNt(aaPositionInTarget, nSeq.size(), bestFrame);
 
                             if (ntPositionInTarget == -1) {
-                                localPS.println("failed");
+                                if (!isAvailable)
+                                    localPS.println("failed");
                                 continue;
                             }
 
@@ -233,7 +236,16 @@ public class InferAnchorPointsAction implements Action {
                             ntPositionInTarget = targetPartitioning.getAbsolutePosition(geneFeature, ntPositionInTarget);
 
                             if (ntPositionInTarget == -1) {
-                                localPS.println("failed");
+                                if (!isAvailable)
+                                    localPS.println("failed");
+                                continue;
+                            }
+
+                            if (isAvailable) {
+                                int existingPosition = targetPartitioning.getPosition(point);
+                                if (existingPosition != ntPositionInTarget){
+                                    localPS.println("inferred position differs from existing value.  existing: " + existingPosition + ", inferred: " + ntPositionInTarget);
+                                }
                                 continue;
                             }
 

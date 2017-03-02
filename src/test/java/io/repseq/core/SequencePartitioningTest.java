@@ -4,6 +4,7 @@ import com.milaboratory.core.Range;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static io.repseq.core.GeneFeature.CDR2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -53,5 +54,21 @@ public class SequencePartitioningTest {
 
         r = refPoints.getRelativeRange(GeneFeature.VGeneWithP, GeneFeature.GermlineVPSegment);
         assertEquals(new Range(1930, 1950), r);
+    }
+
+    @Test
+    public void testTouchingGeneFeatures() throws Exception {
+        ReferencePoints points2 = new ReferencePoints(0, new int[]{2, 52, 63, 84, 155, 455, 645, 1255, 1255});
+        Assert.assertNotNull(points2.getRelativeRange(new GeneFeature(ReferencePoint.FR1Begin, ReferencePoint.FR3Begin), CDR2));
+        ReferencePoints points1 = new ReferencePoints(0, new int[]{2142, 1255, 645, 455, 155, 84, 63, 52, 52});
+        Assert.assertNotNull(points1.getRelativeRange(new GeneFeature(ReferencePoint.FR1Begin, ReferencePoint.FR3Begin), CDR2));
+    }
+
+    @Test
+    public void test5() throws Exception {
+        ReferencePoints refPoints = new ReferencePoints(
+                BasicReferencePoint.DBegin.index, new int[]{0, 100});
+        Assert.assertEquals(100, refPoints.getRelativePosition(GeneFeature.DRegionWithP, ReferencePoint.DBegin));
+        Assert.assertEquals(200, refPoints.getRelativePosition(GeneFeature.DRegionWithP, ReferencePoint.DEnd));
     }
 }

@@ -129,6 +129,20 @@ public final class Chains implements Iterable<String> {
 
     @Override
     public String toString() {
-        return chains.toString();
+        if (chains == null)
+            return "ALL";
+        else if (chains.isEmpty())
+            return "";
+        else {
+            String[] c = chains.toArray(new String[chains.size()]);
+            Arrays.sort(c);
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; ; i++) {
+                b.append(c[i]);
+                if (i == c.length - 1)
+                    return b.toString();
+                b.append(",");
+            }
+        }
     }
 }
