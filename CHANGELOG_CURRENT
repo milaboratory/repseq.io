@@ -1,0 +1,6 @@
+New action `tsv` to export library content to tab-delimited table (pull-request from @bbimber)
+Added more validations for `debug` action (pull-request from @bbimber)
+Warning messages for `inferPoints` action in case the inferred point doesn't match point from target library (pull-request from @bbimber)
+Fixed bug in `SequencePartitioning`, bug affected results of getRelativeRange for zero-length gene features
+(alpha) Support for notes in the library files
+(alpha) Tags for individual genes
