@@ -111,6 +111,34 @@ public final class Chains implements Iterable<String> {
         return false;
     }
 
+    /**
+     * Parse chains including TCR, TR, IG and ALL abbreviations, can parse coma-separated list.
+     *
+     * Example: "TR", "TCR,IGH"
+     *
+     * @param value string representation
+     */
+    public static Chains parse(String value) {
+        String[] split = value.split(",");
+        Chains chains = new Chains();
+        for (String s : split)
+            chains = chains.merge(parse0(s.trim()));
+        return chains;
+    }
+
+    private static Chains parse0(String value) {
+        switch (value.toLowerCase().trim()) {
+            case "tcr":
+            case "tr":
+                return Chains.TCR;
+            case "ig":
+                return Chains.IG;
+            case "all":
+                return Chains.ALL;
+        }
+        return new Chains(value);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
