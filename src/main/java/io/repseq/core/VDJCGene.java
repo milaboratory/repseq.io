@@ -138,6 +138,15 @@ public final class VDJCGene extends PartitionedSequenceCached<NucleotideSequence
     }
 
     /**
+     * Returns whether all reference points for this gene are defined
+     *
+     * @return whether all reference points for this gene are defined
+     */
+    public boolean isComplete() {
+        return getGeneType().getCompleteNumberOfReferencePoints() == referencePoints.numberOfDefinedPoints();
+    }
+
+    /**
      * Returns reference point object for this gene
      *
      * @return reference point object for this gene
