@@ -1,1 +1,3 @@
 Added method Chains#parse
+Two implementations for `ReferencePoints` (normal and extended)
+Infrastructure for artificial repretoire generation + possible format for description of V(D)J rearengements

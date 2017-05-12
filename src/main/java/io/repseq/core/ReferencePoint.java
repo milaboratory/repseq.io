@@ -287,6 +287,10 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
         return basicPoint.index;
     }
 
+    int getExtendedIndex() {
+        return basicPoint.extendedIndex;
+    }
+
     public GeneType getGeneType() {
         return basicPoint.geneType;
     }

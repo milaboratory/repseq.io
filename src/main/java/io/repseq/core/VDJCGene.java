@@ -1,5 +1,7 @@
 package io.repseq.core;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.provider.SequenceProvider;
@@ -9,9 +11,16 @@ import io.repseq.dto.VDJCGeneData;
 /**
  * This class represents the same entity as Allele class in previous abstraction version.
  */
+@JsonSerialize(using = IO.VDJCGeneJSONSerializer.class)
+@JsonDeserialize(using = IO.VDJCGeneJSONDeserializer.class)
 @Serializable(by = IO.VDJCGeneSerializer.class)
 public final class VDJCGene extends PartitionedSequenceCached<NucleotideSequence>
         implements Comparable<VDJCGene> {
+    /**
+     * Attribute key used to set current VDJCLibrary during serialization / deserialization. If not set full gene names
+     * will be written to the output file, and global VDJCLibraryRegistry will be used for gene lookup.
+     */
+    public static final String JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY = "currentLibrary";
     /**
      * Any gene stores a reference to it's parent library
      */
@@ -78,6 +87,15 @@ public final class VDJCGene extends PartitionedSequenceCached<NucleotideSequence
     }
 
     /**
+     * Return full gene name, including library id (e.g. repseqio.v.1.2:9060:6dc0513f4400b2abd19487474154a77e/TRBV12-3*00)
+     *
+     * @return full gene name, including library id (e.g. repseqio.v.1.2:9060:6dc0513f4400b2abd19487474154a77e/TRBV12-3*00)
+     */
+    public String getFullName() {
+        return getId().getFullName();
+    }
+
+    /**
      * Returns gene name (e.g. TRBV12-2*01)
      *
      * @return gene name (e.g. TRBV12-2*01)
@@ -132,6 +150,17 @@ public final class VDJCGene extends PartitionedSequenceCached<NucleotideSequence
         return data.getChains();
     }
 
+    /**
+     * Returns tuple of {@link com.milaboratory.core.sequence.provider.SequenceProvider} and {@link ReferencePoints}
+     * with useful methods
+     *
+     * @return tuple of {@link com.milaboratory.core.sequence.provider.SequenceProvider} and {@link ReferencePoints}
+     * with useful methods
+     */
+    public SequenceProviderAndReferencePoints getSPAndRPs() {
+        return new SequenceProviderAndReferencePoints(sequenceProvider, referencePoints);
+    }
+
     @Override
     protected NucleotideSequence getSequence(Range range) {
         return sequenceProvider.getRegion(range);
@@ -159,5 +188,20 @@ public final class VDJCGene extends PartitionedSequenceCached<NucleotideSequence
     @Override
     public int compareTo(VDJCGene o) {
         return getId().compareTo(o.getId());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        VDJCGene vdjcGene = (VDJCGene) o;
+
+        return vdjcGene.getId().equals(getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
     }
 }

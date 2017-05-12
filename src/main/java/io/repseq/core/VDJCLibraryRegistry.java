@@ -31,6 +31,11 @@ import java.util.zip.GZIPInputStream;
  */
 public final class VDJCLibraryRegistry {
     /**
+     * Name or alias-name of default V, D, J, C gene library. Now it is built-in RepSeq.IO library,
+     * hosted at https://github.com/repseqio/library . This name is uset to retrive library by
+     */
+    public static final String DEFAULT_LIBRARY_NAME = "default";
+    /**
      * If this field is null -> default sequence resolver is used
      */
     final SequenceResolver sequenceResolver;
@@ -572,6 +577,35 @@ public final class VDJCLibraryRegistry {
      */
     public static VDJCLibraryRegistry getDefault() {
         return defaultRegistry;
+    }
+
+    /**
+     * Retrieves default library (see description for {@link #DEFAULT_LIBRARY_NAME}) from default registry for the
+     * specified species name.
+     *
+     * Equivalent of calling:
+     * getDefault().getLibrary(DEFAULT_LIBRARY_NAME, species);
+     *
+     * @param species species name
+     * @return library
+     * @throws IllegalArgumentException if species can't be resolved
+     */
+    public static VDJCLibrary getDefaultLibrary(String species) {
+        return getDefault().getLibrary(DEFAULT_LIBRARY_NAME, species);
+    }
+
+    /**
+     * Retrieves default library (see description for {@link #DEFAULT_LIBRARY_NAME}) from default registry for the
+     * specified species.
+     *
+     * Equivalent of calling:
+     * getDefault().getLibrary(DEFAULT_LIBRARY_NAME, taxonId);
+     *
+     * @param taxonId taxon id
+     * @return library
+     */
+    public static VDJCLibrary getDefaultLibrary(long taxonId) {
+        return getDefault().getLibrary(DEFAULT_LIBRARY_NAME, taxonId);
     }
 
     /**

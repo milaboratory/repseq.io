@@ -63,7 +63,7 @@ public class CompileAction implements Action {
                 if (!gene.getData().getBaseSequence().isPureOriginalSequence())
                     throw new IllegalArgumentException("Don't support mutated sequences yet.");
                 URI uri = gene.getData().getBaseSequence().getOrigin();
-                Range region = gene.getPartitioning().getContainigRegion();
+                Range region = gene.getPartitioning().getContainingRegion();
                 region = region.expand(surroundings);
                 NucleotideSequence seq;
                 try {

@@ -1,8 +1,12 @@
 package io.repseq.core;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.milaboratory.primitivio.annotations.Serializable;
 
 @Serializable(by = IO.VDJCGeneIdSerializer.class)
+@JsonSerialize(using = IO.VDJCGeneIdJSONSerializer.class)
+@JsonDeserialize(using = IO.VDJCGeneIdJSONDeserializer.class)
 public final class VDJCGeneId implements Comparable<VDJCGeneId> {
     final VDJCLibraryId libraryId;
     final String geneName;
@@ -18,8 +22,23 @@ public final class VDJCGeneId implements Comparable<VDJCGeneId> {
         return libraryId;
     }
 
-    public String getGeneName() {
+    /**
+     * Return gene name. Like: TRBV12-3*00, etc...
+     */
+    public String getName() {
         return geneName;
+    }
+
+    /**
+     * Return full gene name.
+     *
+     * Can be decoded using {@link #decode(String)}
+     *
+     * Format:
+     * {@code libraryName:taxonId[:checksum]/geneName}
+     */
+    public String getFullName() {
+        return libraryId + "/" + geneName;
     }
 
     @Override
@@ -53,9 +72,22 @@ public final class VDJCGeneId implements Comparable<VDJCGeneId> {
 
     @Override
     public String toString() {
-        return "VDJCGeneId{" +
-                "libraryId=" + libraryId +
-                ", geneName='" + geneName + '\'' +
-                '}';
+        return getFullName();
+    }
+
+    /**
+     * Decode string representation returned by {@link #getFullName()} into VDJCGeneId object
+     *
+     * Format:
+     * {@code libraryName:taxonId[:checksum]/geneName}
+     *
+     * @param str string representation
+     * @return VDJCGeneId object
+     */
+    public static VDJCGeneId decode(String str) {
+        String[] split = str.split("/");
+        if (split.length != 2)
+            throw new IllegalArgumentException("Wrong format: " + str);
+        return new VDJCGeneId(VDJCLibraryId.decode(split[0]), split[1]);
     }
 }

@@ -1,5 +1,8 @@
 package io.repseq.core;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import java.util.Arrays;
@@ -7,6 +10,8 @@ import java.util.Arrays;
 /**
  * Taxon id and library name and optional library checksum
  */
+@JsonSerialize(using = IO.VDJCLibraryIdJSONSerializer.class)
+@JsonDeserialize(using = IO.VDJCLibraryIdJSONDeserializer.class)
 public final class VDJCLibraryId implements Comparable<VDJCLibraryId> {
     private final String libraryName;
     private final long taxonId;
@@ -73,7 +78,7 @@ public final class VDJCLibraryId implements Comparable<VDJCLibraryId> {
         if (checksum == null)
             // If checksum already null return this
             return this;
-        
+
         return new VDJCLibraryId(libraryName, taxonId, null);
     }
 
@@ -147,6 +152,30 @@ public final class VDJCLibraryId implements Comparable<VDJCLibraryId> {
     @Override
     public String toString() {
         return libraryName + ":" + taxonId +
-                (checksum == null ? "" : " (" + new String(Hex.encodeHex(checksum)) + ")");
+                (checksum == null ? "" : ":" + new String(Hex.encodeHex(checksum)) + "");
+    }
+
+    /**
+     * Return VDJCLibraryId object from string representation returned by {@link #toString()}.
+     *
+     * Format:
+     * {@code libraryName:taxonId[:checksum]}
+     *
+     * @param str string representation
+     * @return VDJCLibraryId object
+     * @throws IllegalArgumentException if string has wrong format
+     */
+    public static VDJCLibraryId decode(String str) {
+        String[] split = str.split(":");
+        if (split.length > 3 || split.length < 2)
+            throw new IllegalArgumentException("Wrong string format: " + str);
+        else if (split.length == 2)
+            return new VDJCLibraryId(split[0], Long.parseLong(split[1]));
+        else
+            try {
+                return new VDJCLibraryId(split[0], Long.parseLong(split[1]), Hex.decodeHex(split[2].toCharArray()));
+            } catch (DecoderException e) {
+                throw new IllegalArgumentException("Wrong string format:" + str + ". Can't decode checksum.");
+            }
     }
 }

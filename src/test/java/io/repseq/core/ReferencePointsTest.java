@@ -50,6 +50,11 @@ public class ReferencePointsTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void test2e() throws Exception {
+        new ExtendedReferencePoints(3, new int[]{1, 3, 2});
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void test3() throws Exception {
         new ReferencePoints(0, new int[]{1, -1, 5, -1, 3});
     }
@@ -150,6 +155,37 @@ public class ReferencePointsTest {
                 points.getRelativeReferencePoints(feature).applyMutations(mutations));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testBuilders1() throws Exception {
+        ReferencePointsBuilder builder = new ReferencePointsBuilder();
+        builder.setPosition(ReferencePoint.FR3Begin.move(1), 12);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testBuilders2() throws Exception {
+        ReferencePointsBuilder builder = new ReferencePointsBuilder();
+        builder.setPosition(ReferencePoint.V5UTRBeginTrimmed, 12);
+    }
+
+    @Test
+    public void testBuilders3() throws Exception {
+        ReferencePointsBuilder builder = new ReferencePointsBuilder();
+        builder.setPosition(ReferencePoint.FR3Begin, 12);
+        builder.setPosition(ReferencePoint.JBegin, 17);
+        ReferencePoints rp = builder.build();
+        Assert.assertEquals(12, rp.getPosition(ReferencePoint.FR3Begin));
+        Assert.assertEquals(-1, rp.getPosition(ReferencePoint.DBegin));
+        Assert.assertEquals(17, rp.getPosition(ReferencePoint.JBegin));
+        ExtendedReferencePointsBuilder ebuilder = new ExtendedReferencePointsBuilder();
+        ebuilder.setPositionsFrom(rp);
+        ebuilder.setPosition(ReferencePoint.V5UTRBeginTrimmed, 11);
+        ExtendedReferencePoints rpe = ebuilder.build();
+        Assert.assertEquals(12, rpe.getPosition(ReferencePoint.FR3Begin));
+        Assert.assertEquals(-1, rpe.getPosition(ReferencePoint.DBegin));
+        Assert.assertEquals(17, rpe.getPosition(ReferencePoint.JBegin));
+        Assert.assertEquals(11, rpe.getPosition(ReferencePoint.V5UTRBeginTrimmed));
+    }
+
     @Test
     public void testSerialization1() throws Exception {
         ReferencePoints points = new ReferencePoints(0, new int[]{2, 52, 63, 84, 155, 455, 645, 1255, 2142});
@@ -162,7 +198,7 @@ public class ReferencePointsTest {
                 "\"UTR5Begin\":2,\n" +
                 "\"L1Begin\":52,\n" +
                 "\"VIntronBegin\":87,\n" +
-                "\"L2Begin\":84,\n" +
+                "\"L2Begin\":84,\n" + // <-- here
                 "\"FR1Begin\":155,\n" +
                 "\"CDR1Begin\":455,\n" +
                 "\"FR2Begin\":645,\n" +

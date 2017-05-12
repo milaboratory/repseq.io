@@ -62,7 +62,7 @@ enum BasicReferencePoint implements java.io.Serializable {
     CExon1End(17, GeneType.Constant, 22, true, false, false),
     CEnd(18, GeneType.Constant, 23, false, false, false);
 
-    final int orderingIndex;
+    final int extendedIndex;
     final int index;
     final GeneType geneType;
     final boolean codingSequenceOnTheLeft, codingSequenceOnTheRight, isTripletBoundary;
@@ -77,13 +77,13 @@ enum BasicReferencePoint implements java.io.Serializable {
     volatile ReferencePoint activationPoint;
 
 
-    BasicReferencePoint(int index, GeneType geneType, int orderingIndex, boolean codingSequenceOnTheLeft,
+    BasicReferencePoint(int index, GeneType geneType, int extendedIndex, boolean codingSequenceOnTheLeft,
                         boolean codingSequenceOnTheRight, boolean isTripletBoundary) {
-        this(index, geneType, orderingIndex, codingSequenceOnTheLeft, codingSequenceOnTheRight, isTripletBoundary,
+        this(index, geneType, extendedIndex, codingSequenceOnTheLeft, codingSequenceOnTheRight, isTripletBoundary,
                 null);
     }
 
-    BasicReferencePoint(int index, GeneType geneType, int orderingIndex, boolean codingSequenceOnTheLeft,
+    BasicReferencePoint(int index, GeneType geneType, int extendedIndex, boolean codingSequenceOnTheLeft,
                         boolean codingSequenceOnTheRight, boolean isTripletBoundary, String activationPoint) {
         this.activationPointString = activationPoint;
         this.index = index;
@@ -91,10 +91,14 @@ enum BasicReferencePoint implements java.io.Serializable {
         this.codingSequenceOnTheLeft = codingSequenceOnTheLeft;
         this.codingSequenceOnTheRight = codingSequenceOnTheRight;
         this.isTripletBoundary = isTripletBoundary;
-        this.orderingIndex = orderingIndex;
+        this.extendedIndex = extendedIndex;
     }
 
     public static BasicReferencePoint getByIndex(int index) {
+        return allBasicReferencePoints[index];
+    }
+
+    public static BasicReferencePoint getByExtendedIndex(int index) {
         return allReferencePoints[index];
     }
 
@@ -148,20 +152,21 @@ enum BasicReferencePoint implements java.io.Serializable {
         return activationPoint;
     }
 
+    private final static BasicReferencePoint[] allBasicReferencePoints;
     private final static BasicReferencePoint[] allReferencePoints;
     public static final int TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS = 19;
 
     static {
-        allReferencePoints = new BasicReferencePoint[TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS];
+        allBasicReferencePoints = new BasicReferencePoint[TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS];
 
         for (BasicReferencePoint rp : values()) {
             if (rp.isAttachedToAlignmentBound())
                 continue;
-            assert allReferencePoints[rp.index] == null;
-            allReferencePoints[rp.index] = rp;
+            assert allBasicReferencePoints[rp.index] == null;
+            allBasicReferencePoints[rp.index] = rp;
         }
 
-        for (BasicReferencePoint rp : allReferencePoints)
+        for (BasicReferencePoint rp : allBasicReferencePoints)
             assert rp != null;
 
         V5UTRBegin.trimmedVersion = V5UTRBeginTrimmed;
@@ -169,5 +174,13 @@ enum BasicReferencePoint implements java.io.Serializable {
         DBegin.trimmedVersion = DBeginTrimmed;
         DEnd.trimmedVersion = DEndTrimmed;
         JBegin.trimmedVersion = JBeginTrimmed;
+
+        allReferencePoints = new BasicReferencePoint[values().length];
+        for (BasicReferencePoint rp : values()) {
+            assert allReferencePoints[rp.extendedIndex] == null;
+            allReferencePoints[rp.extendedIndex] = rp;
+        }
+        for (BasicReferencePoint rp : allReferencePoints)
+            assert rp != null;
     }
 }
