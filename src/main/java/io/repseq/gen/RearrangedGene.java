@@ -209,12 +209,12 @@ public final class RearrangedGene extends PartitionedSequenceCached<NucleotideSe
                           @JsonProperty("c") VDJCGene c,
                           @JsonProperty("vTrimming") int vTrimming,
                           @JsonProperty("jTrimming") int jTrimming,
-                          @JsonProperty("d3Trimming") Integer d3Trimming,
                           @JsonProperty("d5Trimming") Integer d5Trimming,
+                          @JsonProperty("d3Trimming") Integer d3Trimming,
                           @JsonProperty("vInsert") NucleotideSequence vInsert,
                           @JsonProperty("djInsert") NucleotideSequence djInsert) {
         this(definedIn, new VDJCGenes(v, d, j, c), new VJTrimming(vTrimming, jTrimming),
-                d3Trimming != null ? new DTrimming(d3Trimming, d5Trimming) : null, vInsert, djInsert);
+                d3Trimming != null ? new DTrimming(d5Trimming, d3Trimming) : null, vInsert, djInsert);
     }
 
     @Override
