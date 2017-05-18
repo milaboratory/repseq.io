@@ -3,14 +3,14 @@ package io.repseq.gen;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
 import com.milaboratory.test.TestUtil;
-import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.*;
-import org.junit.Assert;
+import org.apache.commons.math3.random.RandomDataGenerator;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class RearrangedGeneTest {
+public class GGeneTest {
     @Test
     public void serializationDeserializationTest() throws Exception {
         VDJCLibrary library = VDJCLibraryRegistry
@@ -20,14 +20,12 @@ public class RearrangedGeneTest {
         VDJCGene j = library.getSafe("TRBJ1-2*00");
         VDJCGene c = library.getSafe("TRBC1*00");
 
-        RearrangedGene rWithD = new RearrangedGene(null, new VDJCGenes(v, d, j, c),
-                new VJTrimming(-3, 1),
-                new DTrimming(2, 3),
+        GGene rWithD = new GGene(null, new VDJCGenes(v, d, j, c),
+                new VDJTrimming(-3, 1, new DTrimming(2, 3)),
                 new NucleotideSequence("ATAAG"), new NucleotideSequence("GACAT"));
 
-        RearrangedGene rWithoutD = new RearrangedGene(null, new VDJCGenes(v, null, j, c),
-                new VJTrimming(-3, 1),
-                null,
+        GGene rWithoutD = new GGene(null, new VDJCGenes(v, null, j, c),
+                new VDJTrimming(-3, 1),
                 new NucleotideSequence("ATAAG"), null);
 
         TestUtil.assertJson(rWithD);
@@ -45,12 +43,11 @@ public class RearrangedGeneTest {
 
         NucleotideSequence s0 = new NucleotideSequence("ATAAG");
         NucleotideSequence s1 = new NucleotideSequence("GACAT");
-        RearrangedGene rg;
+        GGene rg;
 
         // Custom 1
-        rg = new RearrangedGene(null, new VDJCGenes(v, d, j, c),
-                new VJTrimming(-3, 1),
-                new DTrimming(2, 3),
+        rg = new GGene(null, new VDJCGenes(v, d, j, c),
+                new VDJTrimming(-3, 1, 2, 3),
                 s0, s1);
         assertSequences(rg.getFeature(GeneFeature.CDR3),
                 v.getFeature(new GeneFeature(GeneFeature.GermlineVCDR3Part, 0, -3)),
@@ -73,9 +70,8 @@ public class RearrangedGeneTest {
                 c.getFeature(GeneFeature.CExon1));
 
         // All P segments 1
-        rg = new RearrangedGene(null, new VDJCGenes(v, d, j, c),
-                new VJTrimming(3, 1),
-                new DTrimming(2, 3),
+        rg = new GGene(null, new VDJCGenes(v, d, j, c),
+                new VDJTrimming(3, 1, 2, 3),
                 s0, s1);
         assertSequences(rg.getFeature(GeneFeature.CDR3),
                 v.getFeature(new GeneFeature(GeneFeature.GermlineVCDR3Part, 0, 0)),
@@ -100,9 +96,8 @@ public class RearrangedGeneTest {
                 c.getFeature(GeneFeature.CExon1));
 
         // No P segments 1
-        rg = new RearrangedGene(null, new VDJCGenes(v, d, j, c),
-                new VJTrimming(-4, -5),
-                new DTrimming(-2, -4),
+        rg = new GGene(null, new VDJCGenes(v, d, j, c),
+                new VDJTrimming(-4, -5, -2, -4),
                 s0, s1);
         assertSequences(rg.getFeature(GeneFeature.CDR3),
                 v.getFeature(new GeneFeature(GeneFeature.GermlineVCDR3Part, 0, -4)),
@@ -119,9 +114,8 @@ public class RearrangedGeneTest {
                 c.getFeature(GeneFeature.CExon1));
 
         // No D gene segments 1
-        rg = new RearrangedGene(null, new VDJCGenes(v, null, j, c),
-                new VJTrimming(-4, -5),
-                null,
+        rg = new GGene(null, new VDJCGenes(v, null, j, c),
+                new VDJTrimming(-4, -5),
                 s0, null);
         assertSequences(rg.getFeature(GeneFeature.CDR3),
                 v.getFeature(new GeneFeature(GeneFeature.GermlineVCDR3Part, 0, -4)),

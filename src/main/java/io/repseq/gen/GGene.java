@@ -20,7 +20,7 @@ import static com.milaboratory.core.sequence.provider.SequenceProviderUtils.subP
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public final class RearrangedGene extends PartitionedSequenceCached<NucleotideSequence> {
+public final class GGene extends PartitionedSequenceCached<NucleotideSequence> {
     /**
      * Gene region where this gene is defined. Access to sequences outside this region is forbidden.
      */
@@ -32,17 +32,11 @@ public final class RearrangedGene extends PartitionedSequenceCached<NucleotideSe
     @JsonProperty(access = READ_ONLY)
     public final VDJCGenes vdjcGenes;
     /**
-     * V, J genes trimming.
+     * V, D, J genes trimming.
      */
     @JsonUnwrapped
     @JsonProperty(access = READ_ONLY)
-    public final VJTrimming vjTrimming;
-    /**
-     * V, J genes trimming.
-     */
-    @JsonUnwrapped
-    @JsonProperty(access = READ_ONLY)
-    public final DTrimming dTrimming;
+    public final VDJTrimming vdjTrimming;
     /**
      * Insert between V and D (if present) or J (if D gene is not present) genes
      */
@@ -57,14 +51,15 @@ public final class RearrangedGene extends PartitionedSequenceCached<NucleotideSe
     private final transient ExtendedReferencePoints referencePoints;
 
     @SuppressWarnings("unchecked")
-    public RearrangedGene(GeneFeature definedIn, VDJCGenes vdjcGenes, VJTrimming vjTrimming,
-                          DTrimming dTrimming, NucleotideSequence vInsert, NucleotideSequence djInsert) {
+    public GGene(GeneFeature definedIn, VDJCGenes vdjcGenes, VDJTrimming vdjTrimming,
+                 NucleotideSequence vInsert, NucleotideSequence djInsert) {
         this.definedIn = definedIn;
         this.vdjcGenes = vdjcGenes;
-        this.vjTrimming = vjTrimming;
-        this.dTrimming = dTrimming;
+        this.vdjTrimming = vdjTrimming;
         this.vInsert = vInsert;
         this.djInsert = djInsert;
+
+        DTrimming dTrimming = vdjTrimming.dTrimming;
 
         // Composing sequence and reference points
         ExtendedReferencePointsBuilder pointsBuilder = new ExtendedReferencePointsBuilder();
@@ -79,22 +74,22 @@ public final class RearrangedGene extends PartitionedSequenceCached<NucleotideSe
             pointsBuilder.setPositionsFrom(vsprp.referencePoints);
             pointsBuilder.setPosition(ReferencePoint.V5UTRBeginTrimmed, vsprp.referencePoints.getPosition(ReferencePoint.UTR5Begin));
             int vEndPosition = vsprp.referencePoints.getPosition(ReferencePoint.VEnd);
-            currentLength += vjTrimming.vTrimming + vEndPosition;
-            if (vjTrimming.vTrimming >= 0) { // With P-segment
+            currentLength += vdjTrimming.vTrimming + vEndPosition;
+            if (vdjTrimming.vTrimming >= 0) { // With P-segment
                 // V gene
                 // Adding whole sequence to the left of V gene
                 // (e.g. whole chromosome sequence to the left of V gene also included)
                 sProviders.add(subProvider(vsprp.sequenceProvider, new Range(0, vEndPosition)));
                 // V-P-segment
-                if (vjTrimming.vTrimming != 0)
+                if (vdjTrimming.vTrimming != 0)
                     sProviders.add(fromSequence(
-                            vsprp.getFeature(new GeneFeature(ReferencePoint.VEnd, 0, -vjTrimming.vTrimming))
+                            vsprp.getFeature(new GeneFeature(ReferencePoint.VEnd, 0, -vdjTrimming.vTrimming))
                     ));
             } else { // without P-segment
                 // V gene without deleted nucleotides
                 // Adding whole sequence to the left of V gene
                 // (e.g. whole chromosome sequence to the left of V gene also included)
-                sProviders.add(subProvider(vsprp.sequenceProvider, new Range(0, vEndPosition + vjTrimming.vTrimming)));
+                sProviders.add(subProvider(vsprp.sequenceProvider, new Range(0, vEndPosition + vdjTrimming.vTrimming)));
                 // VEnd not covered, removing from builder
                 pointsBuilder.setPosition(ReferencePoint.VEnd, -1);
             }
@@ -155,28 +150,28 @@ public final class RearrangedGene extends PartitionedSequenceCached<NucleotideSe
 
         // Adding J gene reference points
         int jBeginPosition = jsprp.referencePoints.getPosition(ReferencePoint.JBegin);
-        int jBaseSequenceOffset = currentLength + vjTrimming.jTrimming - jBeginPosition;
+        int jBaseSequenceOffset = currentLength + vdjTrimming.jTrimming - jBeginPosition;
         pointsBuilder.setPositionsFrom(jsprp.referencePoints.move(jBaseSequenceOffset));
 
         // J-P-segment
-        if (vjTrimming.jTrimming > 0) {
+        if (vdjTrimming.jTrimming > 0) {
             sProviders.add(fromSequence(
                     vdjcGenes.j.getFeature(new GeneFeature(ReferencePoint.JBegin,
-                            vjTrimming.jTrimming, 0))
+                            vdjTrimming.jTrimming, 0))
             ));
         }
 
         // If J has deletions, JBegin - not covered
-        if (vjTrimming.jTrimming < 0)
+        if (vdjTrimming.jTrimming < 0)
             pointsBuilder.setPosition(ReferencePoint.JBegin, -1);
 
         // Adding whole sequence to the right of JBegin with appropriate offset
         // (e.g. whole chromosome sequence to the right of J gene)
         sProviders.add(subProvider(jsprp.sequenceProvider,
-                new Range(jBeginPosition - Math.min(vjTrimming.jTrimming, 0),
+                new Range(jBeginPosition - Math.min(vdjTrimming.jTrimming, 0),
                         jsprp.sequenceProvider.size())));
 
-        currentLength += vjTrimming.jTrimming + jsprp.sequenceProvider.size() - jBeginPosition;
+        currentLength += vdjTrimming.jTrimming + jsprp.sequenceProvider.size() - jBeginPosition;
 
         if (vdjcGenes.c != null) {
             // Non-reversed view on C gene base sequence
@@ -202,19 +197,19 @@ public final class RearrangedGene extends PartitionedSequenceCached<NucleotideSe
     }
 
     @JsonCreator
-    public RearrangedGene(@JsonProperty("definedIn") GeneFeature definedIn,
-                          @JsonProperty("v") VDJCGene v,
-                          @JsonProperty("d") VDJCGene d,
-                          @JsonProperty("j") VDJCGene j,
-                          @JsonProperty("c") VDJCGene c,
-                          @JsonProperty("vTrimming") int vTrimming,
-                          @JsonProperty("jTrimming") int jTrimming,
-                          @JsonProperty("d5Trimming") Integer d5Trimming,
-                          @JsonProperty("d3Trimming") Integer d3Trimming,
-                          @JsonProperty("vInsert") NucleotideSequence vInsert,
-                          @JsonProperty("djInsert") NucleotideSequence djInsert) {
-        this(definedIn, new VDJCGenes(v, d, j, c), new VJTrimming(vTrimming, jTrimming),
-                d3Trimming != null ? new DTrimming(d5Trimming, d3Trimming) : null, vInsert, djInsert);
+    public GGene(@JsonProperty("definedIn") GeneFeature definedIn,
+                 @JsonProperty("v") VDJCGene v,
+                 @JsonProperty("d") VDJCGene d,
+                 @JsonProperty("j") VDJCGene j,
+                 @JsonProperty("c") VDJCGene c,
+                 @JsonProperty("vTrimming") int vTrimming,
+                 @JsonProperty("jTrimming") int jTrimming,
+                 @JsonProperty("d5Trimming") Integer d5Trimming,
+                 @JsonProperty("d3Trimming") Integer d3Trimming,
+                 @JsonProperty("vInsert") NucleotideSequence vInsert,
+                 @JsonProperty("djInsert") NucleotideSequence djInsert) {
+        this(definedIn, new VDJCGenes(v, d, j, c), new VDJTrimming(vTrimming, jTrimming, d5Trimming, d3Trimming),
+                vInsert, djInsert);
     }
 
     @Override
@@ -232,22 +227,20 @@ public final class RearrangedGene extends PartitionedSequenceCached<NucleotideSe
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        RearrangedGene that = (RearrangedGene) o;
+        GGene gGene = (GGene) o;
 
-        if (definedIn != null ? !definedIn.equals(that.definedIn) : that.definedIn != null) return false;
-        if (vdjcGenes != null ? !vdjcGenes.equals(that.vdjcGenes) : that.vdjcGenes != null) return false;
-        if (vjTrimming != null ? !vjTrimming.equals(that.vjTrimming) : that.vjTrimming != null) return false;
-        if (dTrimming != null ? !dTrimming.equals(that.dTrimming) : that.dTrimming != null) return false;
-        if (vInsert != null ? !vInsert.equals(that.vInsert) : that.vInsert != null) return false;
-        return djInsert != null ? djInsert.equals(that.djInsert) : that.djInsert == null;
+        if (definedIn != null ? !definedIn.equals(gGene.definedIn) : gGene.definedIn != null) return false;
+        if (!vdjcGenes.equals(gGene.vdjcGenes)) return false;
+        if (!vdjTrimming.equals(gGene.vdjTrimming)) return false;
+        if (vInsert != null ? !vInsert.equals(gGene.vInsert) : gGene.vInsert != null) return false;
+        return djInsert != null ? djInsert.equals(gGene.djInsert) : gGene.djInsert == null;
     }
 
     @Override
     public int hashCode() {
         int result = definedIn != null ? definedIn.hashCode() : 0;
-        result = 31 * result + (vdjcGenes != null ? vdjcGenes.hashCode() : 0);
-        result = 31 * result + (vjTrimming != null ? vjTrimming.hashCode() : 0);
-        result = 31 * result + (dTrimming != null ? dTrimming.hashCode() : 0);
+        result = 31 * result + vdjcGenes.hashCode();
+        result = 31 * result + vdjTrimming.hashCode();
         result = 31 * result + (vInsert != null ? vInsert.hashCode() : 0);
         result = 31 * result + (djInsert != null ? djInsert.hashCode() : 0);
         return result;

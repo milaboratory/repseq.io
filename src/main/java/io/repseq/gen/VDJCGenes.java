@@ -29,6 +29,14 @@ public final class VDJCGenes {
         this.c = c;
     }
 
+    public boolean isDDefined() {
+        return d != null;
+    }
+
+    public boolean isCDefined() {
+        return c != null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
