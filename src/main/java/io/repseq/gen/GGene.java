@@ -213,12 +213,12 @@ public final class GGene extends PartitionedSequenceCached<NucleotideSequence> {
     }
 
     @Override
-    protected NucleotideSequence getSequence(Range range) {
+    public NucleotideSequence getSequence(Range range) {
         return baseSequence.getRegion(range);
     }
 
     @Override
-    protected SequencePartitioning getPartitioning() {
+    public SequencePartitioning getPartitioning() {
         return referencePoints;
     }
 

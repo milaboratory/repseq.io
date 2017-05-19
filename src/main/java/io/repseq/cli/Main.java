@@ -22,6 +22,7 @@ public class Main {
                 new FilterAction(),
                 new MergeAction(),
                 new CompileAction(),
+                new GenerateClonesAction(),
                 new FastaAction(),
                 new TsvAction(),
                 new InferAnchorPointsAction(),

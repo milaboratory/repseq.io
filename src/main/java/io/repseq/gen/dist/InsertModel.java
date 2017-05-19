@@ -7,7 +7,9 @@ import org.apache.commons.math3.random.RandomGenerator;
 import java.util.List;
 
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = FixedInsertModel.class, name = "fixed")
+        @JsonSubTypes.Type(value = FixedInsertModel.class, name = "fixed"),
+        @JsonSubTypes.Type(value = MarkovInsertModel.Model5.class, name = "5'markov"),
+        @JsonSubTypes.Type(value = MarkovInsertModel.Model3.class, name = "3'markov")
 })
 public interface InsertModel extends Model {
     /**

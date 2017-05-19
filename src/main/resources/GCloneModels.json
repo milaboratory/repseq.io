@@ -1,0 +1,63 @@
+{
+  "testModel1": {
+    "type": "basic",
+    "vdjcLibrary": "default:9606",
+    "abundanceModel": {
+      "type": "fixed",
+      "value": 1.0
+    },
+    "geneModels": {
+      "TRB": {
+        "type": "basic",
+        "vdjcGenesModel": {
+          "type": "v+d+j+c",
+          "v": {
+            "TRBV12-3*00": 0.0,
+            "TRBV12-2*00": 1.0
+          },
+          "d": {
+            "TRBD1*00": 1.0,
+            "TRBD2*00": 0.0
+          },
+          "j": {
+            "TRBJ1-2*00": 1.0,
+            "TRBJ1-3*00": 0.0
+          },
+          "c": {
+            "TRBC1*00": 1.0,
+            "TRBC2*00": 0.0
+          }
+        },
+        "trimmingModel": {
+          "type": "independent",
+          "v": {
+            "type": "commonCategorical",
+            "distribution": {
+              "-1": 1.0
+            }
+          },
+          "d": {
+            "type": "commonCategorical",
+            "distribution": {
+              "-2|-3": 1.0
+            }
+          },
+          "j": {
+            "type": "commonCategorical",
+            "distribution": {
+              "-4": 1.0
+            }
+          }
+        },
+        "vInsertModel": {
+          "type": "fixed",
+          "sequence": "ATTA"
+        },
+        "djInsertModel": {
+          "type": "fixed",
+          "sequence": "GACA"
+        }
+      }
+    }
+  }
+}

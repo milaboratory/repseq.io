@@ -39,4 +39,25 @@ public final class GClone {
     public GClone setAbundance(double abundance) {
         return new GClone(abundance, genes, true);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof GClone)) return false;
+
+        GClone gClone = (GClone) o;
+
+        if (Double.compare(gClone.abundance, abundance) != 0) return false;
+        return genes.equals(gClone.genes);
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        temp = Double.doubleToLongBits(abundance);
+        result = (int) (temp ^ (temp >>> 32));
+        result = 31 * result + genes.hashCode();
+        return result;
+    }
 }

@@ -57,6 +57,9 @@ public class BasicGCloneModelTest {
 
         GCloneGenerator gen = model.create(new Well19937c(123), VDJCLibraryRegistry.getDefault());
         GClone clone = gen.sample();
+
+        TestUtil.assertJson(clone);
+        
         GGene trb = clone.genes.get("TRB");
         assertEquals(trb.vdjcGenes.v.getName(), "TRBV12-2*00");
         assertEquals(trb.vdjcGenes.d.getName(), "TRBD1*00");
