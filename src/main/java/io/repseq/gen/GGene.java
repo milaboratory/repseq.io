@@ -71,7 +71,9 @@ public final class GGene extends PartitionedSequenceCached<NucleotideSequence> {
             // Case with normal rearrangement
             // Working with non-reversed V gene view (in case V gene is on antisense chromosome strand)
             SequenceProviderAndReferencePoints vsprp = vdjcGenes.v.getSPAndRPs().nonReversedView();
-            pointsBuilder.setPositionsFrom(vsprp.referencePoints);
+            pointsBuilder.setPositionsFrom(vdjTrimming.vTrimming >= 0 ?
+                    vsprp.referencePoints :
+                    vsprp.referencePoints.without(ReferencePoint.VEnd));
             pointsBuilder.setPosition(ReferencePoint.V5UTRBeginTrimmed, vsprp.referencePoints.getPosition(ReferencePoint.UTR5Begin));
             int vEndPosition = vsprp.referencePoints.getPosition(ReferencePoint.VEnd);
             currentLength += vdjTrimming.vTrimming + vEndPosition;
@@ -85,14 +87,12 @@ public final class GGene extends PartitionedSequenceCached<NucleotideSequence> {
                     sProviders.add(fromSequence(
                             vsprp.getFeature(new GeneFeature(ReferencePoint.VEnd, 0, -vdjTrimming.vTrimming))
                     ));
-            } else { // without P-segment
+            } else // without P-segment
                 // V gene without deleted nucleotides
                 // Adding whole sequence to the left of V gene
                 // (e.g. whole chromosome sequence to the left of V gene also included)
                 sProviders.add(subProvider(vsprp.sequenceProvider, new Range(0, vEndPosition + vdjTrimming.vTrimming)));
-                // VEnd not covered, removing from builder
-                pointsBuilder.setPosition(ReferencePoint.VEnd, -1);
-            }
+
             pointsBuilder.setPosition(ReferencePoint.VEndTrimmed, currentLength);
             sProviders.add(fromSequence(vInsert));
             currentLength += vInsert.size();
@@ -101,10 +101,17 @@ public final class GGene extends PartitionedSequenceCached<NucleotideSequence> {
             if (vdjcGenes.d != null) {
                 pointsBuilder.setPosition(ReferencePoint.DBeginTrimmed, currentLength);
                 // Adding reference points from D gene
-                pointsBuilder.setPositionsFrom(
-                        vdjcGenes.d.getPartitioning()
-                                .move(currentLength + dTrimming.d5Trimming
-                                        - vdjcGenes.d.getPartitioning().getPosition(ReferencePoint.DBegin)));
+                ReferencePoints pointsToAdd = vdjcGenes.d.getPartitioning()
+                        .move(currentLength + dTrimming.d5Trimming
+                                - vdjcGenes.d.getPartitioning().getPosition(ReferencePoint.DBegin));
+                // If deletions on the 5' side of D gene, DBegin not covered
+                if (dTrimming.d5Trimming < 0)
+                    pointsToAdd = pointsToAdd.without(ReferencePoint.DBegin);
+                // If deletions on the 3' side of D gene, DEnd not covered
+                if (dTrimming.d3Trimming < 0)
+                    pointsToAdd = pointsToAdd.without(ReferencePoint.DEnd);
+                pointsBuilder.setPositionsFrom(pointsToAdd);
+
                 // D-5'-P-segment
                 if (dTrimming.d5Trimming > 0) {
                     sProviders.add(fromSequence(
@@ -113,18 +120,14 @@ public final class GGene extends PartitionedSequenceCached<NucleotideSequence> {
                     ));
                     currentLength += dTrimming.d5Trimming;
                 }
-                // If deletions on the 5' side of D gene, DBegin not covered
-                if (dTrimming.d5Trimming < 0)
-                    pointsBuilder.setPosition(ReferencePoint.DBegin, -1);
+
                 // D gene body
                 NucleotideSequence dGene = vdjcGenes.d.getFeature(
                         new GeneFeature(GeneFeature.DRegion,
                                 -Math.min(dTrimming.d5Trimming, 0), Math.min(dTrimming.d3Trimming, 0)));
                 sProviders.add(fromSequence(dGene));
                 currentLength += dGene.size();
-                // If deletions on the 3' side of D gene, DEnd not covered
-                if (dTrimming.d3Trimming < 0)
-                    pointsBuilder.setPosition(ReferencePoint.DEnd, -1);
+
                 // D-5'-P-segment
                 if (dTrimming.d3Trimming > 0) {
                     sProviders.add(fromSequence(
@@ -151,7 +154,11 @@ public final class GGene extends PartitionedSequenceCached<NucleotideSequence> {
         // Adding J gene reference points
         int jBeginPosition = jsprp.referencePoints.getPosition(ReferencePoint.JBegin);
         int jBaseSequenceOffset = currentLength + vdjTrimming.jTrimming - jBeginPosition;
-        pointsBuilder.setPositionsFrom(jsprp.referencePoints.move(jBaseSequenceOffset));
+        ReferencePoints jPointToAdd = jsprp.referencePoints.move(jBaseSequenceOffset);
+        // If J has deletions, JBegin - not covered
+        if (vdjTrimming.jTrimming < 0)
+            jPointToAdd = jPointToAdd.without(ReferencePoint.JBegin);
+        pointsBuilder.setPositionsFrom(jPointToAdd);
 
         // J-P-segment
         if (vdjTrimming.jTrimming > 0) {
@@ -160,10 +167,6 @@ public final class GGene extends PartitionedSequenceCached<NucleotideSequence> {
                             vdjTrimming.jTrimming, 0))
             ));
         }
-
-        // If J has deletions, JBegin - not covered
-        if (vdjTrimming.jTrimming < 0)
-            pointsBuilder.setPosition(ReferencePoint.JBegin, -1);
 
         // Adding whole sequence to the right of JBegin with appropriate offset
         // (e.g. whole chromosome sequence to the right of J gene)

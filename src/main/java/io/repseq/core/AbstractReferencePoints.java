@@ -66,6 +66,7 @@ public abstract class AbstractReferencePoints<T extends AbstractReferencePoints<
         for (int i = 0; i < points.length; i++) {
             if (!pointsToCheck[i])
                 continue;
+
             int point = points[i];
             if (point == -1)
                 continue;
@@ -95,6 +96,12 @@ public abstract class AbstractReferencePoints<T extends AbstractReferencePoints<
             if (point >= 0)
                 ++ret;
         return ret;
+    }
+
+    public T without(ReferencePoint referencePoint){
+        int[] newPoints = points.clone();
+        newPoints[indexFromReferencePoint(referencePoint)] = -1;
+        return create(newPoints);
     }
 
     public T move(int offset) {

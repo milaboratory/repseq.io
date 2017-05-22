@@ -10,7 +10,8 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 @JsonSubTypes({
         @JsonSubTypes.Type(value = IndependentVDJCGenesModel.class, name = "v+d+j+c"),
-        @JsonSubTypes.Type(value = DJDependentVDJCGenesModel.class, name = "v+dj+c")
+        @JsonSubTypes.Type(value = DJDependentVDJCGenesModel.class, name = "v+dj+c"),
+        @JsonSubTypes.Type(value = DJCDependentVDJCGenesModel.class, name = "v+djc")
 })
 public interface VDJCGenesModel extends Model {
     VDJCGenesGenerator create(RandomGenerator random, VDJCLibrary library);

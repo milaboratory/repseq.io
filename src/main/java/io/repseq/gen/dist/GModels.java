@@ -48,7 +48,10 @@ public final class GModels {
                 return GlobalObjectMappers.ONE_LINE.readValue(new File(name), GCloneModel.class);
             if (Files.exists(Paths.get(name + ".json")))
                 return GlobalObjectMappers.ONE_LINE.readValue(new File(name + ".json"), GCloneModel.class);
-            return knownGModels.get(name);
+            GCloneModel model = knownGModels.get(name);
+            if (model == null)
+                throw new IllegalArgumentException("Can't find model with name " + name);
+            return model;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

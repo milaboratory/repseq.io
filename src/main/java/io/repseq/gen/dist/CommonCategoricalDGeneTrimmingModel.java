@@ -19,14 +19,13 @@ public final class CommonCategoricalDGeneTrimmingModel implements DTrimmingModel
         this.distribution = distribution;
     }
 
-    @Override
-    public DTrimmingGenerator create(RandomGenerator random, VDJCGene gene) {
-        ArrayList<Pair<DTrimming, Double>> points = new ArrayList<>(distribution.size());
-        for (Map.Entry<String, Double> p : distribution.entrySet()) {
+    public static EnumeratedDistribution<DTrimming> createDistribution(RandomGenerator random, Map<String, Double> probabilities) {
+        ArrayList<Pair<DTrimming, Double>> points = new ArrayList<>(probabilities.size());
+        for (Map.Entry<String, Double> p : probabilities.entrySet()) {
             String[] split = p.getKey().split("\\|");
             if (split.length != 2)
                 throw new IllegalArgumentException("Illegal key for D trimming distribution. Found: \"" + p.getKey() +
-                        "\" expected something like (\"-2|1\").");
+                        "\" expected something like (\"-2|1\" == \"5'deletions|3'deletions\").");
             try {
                 points.add(new Pair<>(new DTrimming(Integer.parseInt(split[0]), Integer.parseInt(split[1])),
                         p.getValue()));
@@ -34,7 +33,12 @@ public final class CommonCategoricalDGeneTrimmingModel implements DTrimmingModel
                 throw new IllegalArgumentException("Exception during parsing " + p.getKey(), e);
             }
         }
-        final EnumeratedDistribution<DTrimming> dist = new EnumeratedDistribution<>(random, points);
+        return new EnumeratedDistribution<>(random, points);
+    }
+
+    @Override
+    public DTrimmingGenerator create(RandomGenerator random, VDJCGene gene) {
+        final EnumeratedDistribution<DTrimming> dist = createDistribution(random, distribution);
         return new DTrimmingGenerator() {
             @Override
             public DTrimming sample() {
