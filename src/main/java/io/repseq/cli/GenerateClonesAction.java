@@ -9,6 +9,8 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.ActionParametersWithOutput;
+import com.milaboratory.core.sequence.AminoAcidSequence;
+import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
@@ -44,8 +46,22 @@ public class GenerateClonesAction implements Action {
             s.write('\n');
             ObjectWriter writer = GlobalObjectMappers.ONE_LINE.writerFor(new TypeReference<GClone>() {
             }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, library);
+            OUTER:
             for (int i = 0; i < params.numberOfClones; i++) {
                 GClone clone = generator.sample();
+                for (GGene g : clone.genes.values()) {
+                    NucleotideSequence cdr3 = g.getFeature(GeneFeature.CDR3);
+                    if (params.isInFrame())
+                        if (cdr3.size() % 3 != 0) {
+                            --i;
+                            continue OUTER;
+                        }
+                    if (params.isNoStops())
+                        if (AminoAcidSequence.translateFromCenter(cdr3).containStops()) {
+                            --i;
+                            continue OUTER;
+                        }
+                }
                 writer.writeValue(new CloseShieldOutputStream(s), clone);
                 s.write('\n');
             }
@@ -73,6 +89,14 @@ public class GenerateClonesAction implements Action {
         @Parameter(description = "Random generator seed (0 to use current time as random seed).", names = {"-s", "--seed"})
         public Long seed;
 
+        @Parameter(description = "In-frame clones only.",
+                names = {"-a", "--in-frame"})
+        public Boolean inFrame;
+
+        @Parameter(description = "Output clones without stop codons in CDR3 (valid only with -a / --in-frame).",
+                names = {"-b", "--no-stops"})
+        public Boolean noStops;
+
         public long getSeed() {
             if (seed == null)
                 return System.nanoTime();
@@ -92,10 +116,20 @@ public class GenerateClonesAction implements Action {
             return Collections.singletonList(getOutput());
         }
 
+        public boolean isInFrame() {
+            return inFrame != null && inFrame;
+        }
+
+        public boolean isNoStops() {
+            return noStops != null && noStops;
+        }
+
         @Override
         public void validate() {
             if (parameters.size() == 0 || parameters.size() > 2)
                 throw new ParameterException("Wring number of parameters.");
+            if (isNoStops() && !isInFrame())
+                throw new ParameterException("-b / --no-stops allowed only with -a / --in-frame.");
         }
     }
 

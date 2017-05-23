@@ -6,6 +6,7 @@ import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.NucleotideAlphabet;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.SequenceBuilder;
+import com.milaboratory.util.ArraysUtils;
 import io.repseq.core.ReferencePoint;
 import io.repseq.core.SequencePartitioning;
 import io.repseq.core.VDJCGene;
@@ -14,10 +15,7 @@ import org.apache.commons.math3.distribution.EnumeratedDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.Pair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class MarkovInsertModel implements InsertModel {
     public final IndependentIntModel lengthDistribution;
@@ -30,8 +28,8 @@ public abstract class MarkovInsertModel implements InsertModel {
     private final boolean fromLeft;
 
     private MarkovInsertModel(IndependentIntModel lengthDistribution,
-                      Map<String, Double> distribution,
-                      boolean fromLeft) {
+                              Map<String, Double> distribution,
+                              boolean fromLeft) {
         this.lengthDistribution = lengthDistribution;
         this.distribution = distribution;
         this.fromLeft = fromLeft;
@@ -87,19 +85,21 @@ public abstract class MarkovInsertModel implements InsertModel {
                     throw new RuntimeException("Point " + point + " is not available for gene " + gene);
                 byte letter = gene.getSequence(new Range(pointPosition, pointPosition + 1)).codeAt(0);
                 int length = lengthDist.sample();
-                SequenceBuilder<NucleotideSequence> builder = NucleotideSequence.ALPHABET
-                        .createBuilder().ensureCapacity(length);
+                byte[] array = new byte[length];
                 for (int i = 0; i < length; i++) {
                     byte cLetter = dists.get(letter).sample();
-                    builder.append(cLetter);
+                    array[i] = cLetter;
                     letter = cLetter;
                 }
-                return builder.createAndDestroy();
+                if (!fromLeft)
+                    ArraysUtils.reverse(array);
+                return NucleotideSequence.ALPHABET
+                        .createBuilder().ensureCapacity(length).append(array).createAndDestroy();
             }
         };
     }
 
-    public static final class Model5 extends MarkovInsertModel{
+    public static final class Model5 extends MarkovInsertModel {
         @JsonCreator
         public Model5(@JsonProperty("lengthDistribution") IndependentIntModel lengthDistribution,
                       @JsonProperty("distribution") Map<String, Double> distribution) {
@@ -107,7 +107,7 @@ public abstract class MarkovInsertModel implements InsertModel {
         }
     }
 
-    public static final class Model3 extends MarkovInsertModel{
+    public static final class Model3 extends MarkovInsertModel {
         @JsonCreator
         public Model3(@JsonProperty("lengthDistribution") IndependentIntModel lengthDistribution,
                       @JsonProperty("distribution") Map<String, Double> distribution) {
