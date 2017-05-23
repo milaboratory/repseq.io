@@ -6,7 +6,6 @@ import io.repseq.core.GeneType;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibrary;
 import io.repseq.gen.VDJCGenes;
-import jdk.nashorn.internal.scripts.JO;
 import org.apache.commons.math3.distribution.EnumeratedDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.Pair;

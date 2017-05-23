@@ -5,12 +5,21 @@ import com.milaboratory.util.VersionInfo;
 import io.repseq.core.VDJCLibrary;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.seqbase.SequenceResolvers;
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+        Signal.handle(new Signal("PIPE"), new SignalHandler() {
+            @Override
+            public void handle(Signal signal) {
+                System.exit(0);
+            }
+        });
+
         if (System.getProperty("localOnly") == null) {
             Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
             SequenceResolvers.initDefaultResolver(cachePath);
@@ -23,6 +32,8 @@ public class Main {
                 new MergeAction(),
                 new CompileAction(),
                 new GenerateClonesAction(),
+                new NormalizeCloneAbundancesAction(),
+                new ExportCloneSequencesAction(),
                 new FastaAction(),
                 new TsvAction(),
                 new InferAnchorPointsAction(),
