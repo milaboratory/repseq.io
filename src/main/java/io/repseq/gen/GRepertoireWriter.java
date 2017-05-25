@@ -25,6 +25,7 @@ public final class GRepertoireWriter implements AutoCloseable {
 
     public void write(GClone clone) throws IOException {
         writer.writeValue(new CloseShieldOutputStream(os), clone);
+        os.write('\n');
     }
 
     @Override
