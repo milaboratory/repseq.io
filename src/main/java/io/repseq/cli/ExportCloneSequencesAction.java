@@ -48,9 +48,9 @@ public class ExportCloneSequencesAction implements Action {
                 for (int j = 0; j < f; j++)
                     for (Map.Entry<String, GGene> e : clone.genes.entrySet())
                         if (chains.contains(e.getKey())) {
-                            StringBuilder descriptionLine = new StringBuilder(e.getKey());
+                            StringBuilder descriptionLine = new StringBuilder("GClone");
                             for (DescriptionExtractor extractor : extractors)
-                                descriptionLine.append("|").append(extractor.extract(clone, e.getValue()));
+                                descriptionLine.append("|").append(extractor.extract(clone, e.getValue(), e.getKey()));
                             output.write(new FastaRecord<>(i++, descriptionLine.toString(), e.getValue().getFeature(geneFeature)));
                         }
             }
@@ -85,8 +85,11 @@ public class ExportCloneSequencesAction implements Action {
                 names = {"-g", "--gene-feature"}, required = true)
         public String feature;
 
-        @Parameter(description = "Add description fields to fasta header (available values NFeature[gene_feature], AAFeature[gene_feature] - for current gene," +
-                "NFeature[chain,gene_feature], AAFeature[chain,gene_feature] - for multi-gene clones, JSONClone, JSONGene, JSONClone.field_name, JSONGene.field_name). Example: NFeature[CDR3], AAFeature[FR3]", names = {"-d", "--add-description"})
+        @Parameter(description = "Add description fields to fasta header (available values NFeature[gene_feature], " +
+                "AAFeature[gene_feature] - for current gene," +
+                "NFeature[chain,gene_feature], AAFeature[chain,gene_feature] - for multi-gene clones, JSONClone, " +
+                "JSONGene, JSONClone.field_name, JSONGene.field_name, Chain). Example: NFeature[CDR3], AAFeature[FR3]",
+                names = {"-d", "--add-description"})
         public List<String> descriptionFields = new ArrayList<>();
 
         public GeneFeature getGeneFeature() {
@@ -143,7 +146,7 @@ public class ExportCloneSequencesAction implements Action {
                 }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, library);
 
                 @Override
-                public String extract(GClone clone, GGene gene) {
+                public String extract(GClone clone, GGene gene, String chain) {
                     try {
                         return writer.writeValueAsString(clone);
                     } catch (JsonProcessingException e) {
@@ -158,12 +161,20 @@ public class ExportCloneSequencesAction implements Action {
                 }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, library);
 
                 @Override
-                public String extract(GClone clone, GGene gene) {
+                public String extract(GClone clone, GGene gene, String chain) {
                     try {
                         return writer.writeValueAsString(gene);
                     } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                     }
+                }
+            };
+
+        if (str.equalsIgnoreCase("chain"))
+            return new DescriptionExtractor() {
+                @Override
+                public String extract(GClone clone, GGene gene, String chain) {
+                    return chain;
                 }
             };
 
@@ -175,11 +186,11 @@ public class ExportCloneSequencesAction implements Action {
                 final ObjectWriter writer = isGene ?
                         GlobalObjectMappers.ONE_LINE.writerFor(new TypeReference<GGene>() {
                         }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, library) :
-                        GlobalObjectMappers.ONE_LINE.writerFor(new TypeReference<GGene>() {
+                        GlobalObjectMappers.ONE_LINE.writerFor(new TypeReference<GClone>() {
                         }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, library);
 
                 @Override
-                public String extract(GClone clone, GGene gene) {
+                public String extract(GClone clone, GGene gene, String chain) {
                     try {
                         String str = writer.writeValueAsString(isGene ? gene : clone);
                         JsonNode tree = GlobalObjectMappers.ONE_LINE.readTree(str);
@@ -196,7 +207,7 @@ public class ExportCloneSequencesAction implements Action {
     }
 
     private interface DescriptionExtractor {
-        String extract(GClone clone, GGene gene);
+        String extract(GClone clone, GGene gene, String chain);
     }
 
     private static final class DescriptionExtractorSeq implements DescriptionExtractor {
@@ -211,7 +222,7 @@ public class ExportCloneSequencesAction implements Action {
         }
 
         @Override
-        public String extract(GClone clone, GGene gene) {
+        public String extract(GClone clone, GGene gene, String chain) {
             if (chain != null)
                 gene = clone.genes.get(chain);
             if (aa)
