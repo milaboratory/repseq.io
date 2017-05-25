@@ -1,11 +1,14 @@
 package io.repseq.cli;
 
 import cc.redberry.pipe.CUtils;
-import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.json.JsonGeneratorImpl;
+import com.fasterxml.jackson.core.json.WriterBasedJsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
@@ -19,6 +22,7 @@ import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
+import io.repseq.core.VDJCLibrary;
 import io.repseq.gen.*;
 
 import java.util.*;
@@ -35,18 +39,16 @@ public class ExportCloneSequencesAction implements Action {
     public void go(ActionHelper helper) throws Exception {
         Chains chains = params.getChains();
         GeneFeature geneFeature = params.getGeneFeature();
-        List<DescriptionExtractor> extractors = params.getExtractors();
         try (GRepertoireReader input = new GRepertoireReader(createBufferedReader(params.getInput()));
              FastaWriter<NucleotideSequence> output = createSingleFastaWriter(params.getOutput())) {
-            ObjectWriter writer = GlobalObjectMappers.ONE_LINE.writerFor(new TypeReference<GClone>() {
-            }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, input.getLibrary());
+            List<DescriptionExtractor> extractors = params.getExtractors(input.getLibrary());
             long i = 0;
             for (GClone clone : CUtils.it(input)) {
                 int f = params.factor == null ? 1 : (int) Math.round(clone.abundance * params.factor);
                 for (int j = 0; j < f; j++)
                     for (Map.Entry<String, GGene> e : clone.genes.entrySet())
                         if (chains.contains(e.getKey())) {
-                            StringBuilder descriptionLine = new StringBuilder(e.getKey() + "|" + writer.writeValueAsString(clone));
+                            StringBuilder descriptionLine = new StringBuilder(e.getKey());
                             for (DescriptionExtractor extractor : extractors)
                                 descriptionLine.append("|").append(extractor.extract(clone, e.getValue()));
                             output.write(new FastaRecord<>(i++, descriptionLine.toString(), e.getValue().getFeature(geneFeature)));
@@ -84,7 +86,7 @@ public class ExportCloneSequencesAction implements Action {
         public String feature;
 
         @Parameter(description = "Add description fields to fasta header (available values NFeature[gene_feature], AAFeature[gene_feature] - for current gene," +
-                "NFeature[chain,gene_feature], AAFeature[chain,gene_feature] - for multi-gene clones). Example: NFeature[CDR3], AAFeature[FR3]", names = {"-d", "--add-description"})
+                "NFeature[chain,gene_feature], AAFeature[chain,gene_feature] - for multi-gene clones, JSONClone, JSONGene, JSONClone.field_name, JSONGene.field_name). Example: NFeature[CDR3], AAFeature[FR3]", names = {"-d", "--add-description"})
         public List<String> descriptionFields = new ArrayList<>();
 
         public GeneFeature getGeneFeature() {
@@ -103,10 +105,10 @@ public class ExportCloneSequencesAction implements Action {
             return parameters.size() <= 1 ? "." : parameters.get(1);
         }
 
-        public List<DescriptionExtractor> getExtractors() {
+        public List<DescriptionExtractor> getExtractors(VDJCLibrary library) {
             List<DescriptionExtractor> extractors = new ArrayList<>(descriptionFields.size());
             for (String descriptorStr : descriptionFields)
-                extractors.add(parseExtractor(descriptorStr));
+                extractors.add(parseExtractor(descriptorStr, library));
             return extractors;
         }
 
@@ -122,16 +124,74 @@ public class ExportCloneSequencesAction implements Action {
         }
     }
 
-    private static Pattern featureGene = Pattern.compile("^(N|AA)Feature\\[(.*)\\]$");
-    private static Pattern featureClone = Pattern.compile("^(N|AA)Feature\\[(.*),(.*)\\]$");
+    private static Pattern extractorPatternFeatureGene = Pattern.compile("^(N|AA)Feature\\[(.*)\\]$", Pattern.CASE_INSENSITIVE);
+    private static Pattern extractorPatternFeatureClone = Pattern.compile("^(N|AA)Feature\\[(.*),(.*)\\]$", Pattern.CASE_INSENSITIVE);
+    private static Pattern extractorPatternField = Pattern.compile("^JSON(Gene|Clone)\\.(.*)", Pattern.CASE_INSENSITIVE);
 
-    public static DescriptionExtractor parseExtractor(String str) {
-        Matcher matcher = featureGene.matcher(str);
+    public static DescriptionExtractor parseExtractor(String str, final VDJCLibrary library) {
+        Matcher matcher = extractorPatternFeatureGene.matcher(str);
         if (matcher.matches())
-            return new DescriptionExtractorImpl(GeneFeature.parse(matcher.group(2)), null, matcher.group(1).equals("AA"));
-        matcher = featureClone.matcher(str);
+            return new DescriptionExtractorSeq(GeneFeature.parse(matcher.group(2)), null, matcher.group(1).equals("AA"));
+
+        matcher = extractorPatternFeatureClone.matcher(str);
         if (matcher.matches())
-            return new DescriptionExtractorImpl(GeneFeature.parse(matcher.group(3)), matcher.group(2), matcher.group(1).equals("AA"));
+            return new DescriptionExtractorSeq(GeneFeature.parse(matcher.group(3)), matcher.group(2), matcher.group(1).equals("AA"));
+
+        if (str.equalsIgnoreCase("JSONClone"))
+            return new DescriptionExtractor() {
+                final ObjectWriter writer = GlobalObjectMappers.ONE_LINE.writerFor(new TypeReference<GClone>() {
+                }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, library);
+
+                @Override
+                public String extract(GClone clone, GGene gene) {
+                    try {
+                        return writer.writeValueAsString(clone);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+
+        if (str.equalsIgnoreCase("JSONGene"))
+            return new DescriptionExtractor() {
+                final ObjectWriter writer = GlobalObjectMappers.ONE_LINE.writerFor(new TypeReference<GGene>() {
+                }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, library);
+
+                @Override
+                public String extract(GClone clone, GGene gene) {
+                    try {
+                        return writer.writeValueAsString(gene);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+
+        matcher = extractorPatternField.matcher(str);
+        if (matcher.matches()) {
+            final boolean isGene = matcher.group(1).equalsIgnoreCase("Gene");
+            final String fieldName = matcher.group(2);
+            return new DescriptionExtractor() {
+                final ObjectWriter writer = isGene ?
+                        GlobalObjectMappers.ONE_LINE.writerFor(new TypeReference<GGene>() {
+                        }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, library) :
+                        GlobalObjectMappers.ONE_LINE.writerFor(new TypeReference<GGene>() {
+                        }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, library);
+
+                @Override
+                public String extract(GClone clone, GGene gene) {
+                    try {
+                        String str = writer.writeValueAsString(isGene ? gene : clone);
+                        JsonNode tree = GlobalObjectMappers.ONE_LINE.readTree(str);
+                        JsonNode targetNode = tree.get(fieldName);
+                        return targetNode == null ? "" : targetNode.asText();
+                    } catch (java.io.IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+        }
+
         throw new IllegalArgumentException("Can't parse description extractor: " + str);
     }
 
@@ -139,12 +199,12 @@ public class ExportCloneSequencesAction implements Action {
         String extract(GClone clone, GGene gene);
     }
 
-    private static final class DescriptionExtractorImpl implements DescriptionExtractor {
+    private static final class DescriptionExtractorSeq implements DescriptionExtractor {
         final GeneFeature geneFeature;
         final String chain;
         final boolean aa;
 
-        public DescriptionExtractorImpl(GeneFeature geneFeature, String chain, boolean aa) {
+        public DescriptionExtractorSeq(GeneFeature geneFeature, String chain, boolean aa) {
             this.geneFeature = geneFeature;
             this.chain = chain;
             this.aa = aa;
