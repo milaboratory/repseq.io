@@ -24,6 +24,8 @@ import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibrary;
 import io.repseq.gen.*;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.Well19937c;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -39,12 +41,13 @@ public class ExportCloneSequencesAction implements Action {
     public void go(ActionHelper helper) throws Exception {
         Chains chains = params.getChains();
         GeneFeature geneFeature = params.getGeneFeature();
+        RandomGenerator random = new Well19937c(1232434);
         try (GRepertoireReader input = new GRepertoireReader(createBufferedReader(params.getInput()));
              FastaWriter<NucleotideSequence> output = createSingleFastaWriter(params.getOutput())) {
             List<DescriptionExtractor> extractors = params.getExtractors(input.getLibrary());
             long i = 0;
             for (GClone clone : CUtils.it(input)) {
-                int f = params.factor == null ? 1 : (int) Math.round(clone.abundance * params.factor);
+                int f = params.factor == null ? 1 : randomizedRound(clone.abundance * params.factor, random);
                 for (int j = 0; j < f; j++)
                     for (Map.Entry<String, GGene> e : clone.genes.entrySet())
                         if (chains.contains(e.getKey())) {
@@ -55,6 +58,15 @@ public class ExportCloneSequencesAction implements Action {
                         }
             }
         }
+    }
+
+    public static int randomizedRound(double value, RandomGenerator random) {
+        if (value < 0)
+            throw new IllegalArgumentException("Only positive values are supported.");
+        int floor = (int) Math.floor(value);
+        if (random.nextDouble() < (value - floor))
+            ++floor;
+        return floor;
     }
 
     @Override
