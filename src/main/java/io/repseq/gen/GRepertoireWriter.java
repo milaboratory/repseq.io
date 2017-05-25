@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.milaboratory.util.GlobalObjectMappers;
 import io.repseq.core.VDJCGene;
 import io.repseq.core.VDJCLibrary;
+import org.apache.commons.io.output.CloseShieldOutputStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -23,7 +24,7 @@ public final class GRepertoireWriter implements AutoCloseable {
     }
 
     public void write(GClone clone) throws IOException {
-        writer.writeValue(os, clone);
+        writer.writeValue(new CloseShieldOutputStream(os), clone);
     }
 
     @Override
