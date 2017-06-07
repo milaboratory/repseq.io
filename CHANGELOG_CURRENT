@@ -1,8 +1,0 @@
-Artificial repertoire generator (user defined model, built-in model for TRB rearengements from *Murugan et al., 2012*; use model name `murugan`)
-Infrastructure for artificial repretoire generation + possible format for description of V(D)J rearengements (`*.jclns`)
-Fixed method `VDJGene#getFamilyName`
-Added Chains#parse method
-Two implementations for `ReferencePoints` (normal and extended - used in artificial `GClone`s)
-`isComplete()` method for `VDJGene`
-Two convenient `getGenes` method variants for `VDJCLibrary`
-Information about build host now is added to output binary jar file
