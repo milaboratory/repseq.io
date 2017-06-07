@@ -58,6 +58,8 @@ public class Main {
                         .append(repseqio.getRevision())
                         .append("; branch=")
                         .append(repseqio.getBranch())
+                        .append("; host=")
+                        .append(repseqio.getHost())
                         .append(")")
                         .append("\n");
 
