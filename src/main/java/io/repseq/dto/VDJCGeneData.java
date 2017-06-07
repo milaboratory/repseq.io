@@ -82,10 +82,11 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
      * @return gene family name (e.g. TRBV12 for TRBV12-3*01)
      */
     public String getFamilyName() {
+        String name = getGeneName();
         int i = name.indexOf('-');
-        if (i < 0)
-            return name;
-        return name.substring(0, i);
+        if (i > 0)
+            name = name.substring(0, i);
+        return name;
     }
 
     public GeneType getGeneType() {

@@ -22,4 +22,9 @@ public class ChainsTest {
         Assert.assertFalse(Chains.ALL.intersects(Chains.EMPTY));
         Assert.assertFalse(Chains.EMPTY.intersects(Chains.ALL));
     }
+
+    @Test
+    public void testParse() throws Exception {
+        Assert.assertEquals(Chains.parse("IG, TRB"), Chains.IG.merge(Chains.TRB));
+    }
 }

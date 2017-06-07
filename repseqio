@@ -151,4 +151,4 @@ then
     exit 1
 fi
 
-$java -Dapp.path=$dir -Dapp.command=mixcr -XX:+AggressiveOpts "${javaArgs[@]}" -jar $jar "${appArgs[@]}"
+$java -Dapp.path=$dir -Dapp.command=repseqio -XX:+AggressiveOpts "${javaArgs[@]}" -jar $jar "${appArgs[@]}"

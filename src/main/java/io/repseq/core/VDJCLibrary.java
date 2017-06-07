@@ -137,6 +137,32 @@ public class VDJCLibrary implements Comparable<VDJCLibrary> {
     }
 
     /**
+     * Returns collection of all genes in this library with specific geneType
+     *
+     * @return collection of all genes in this library with specific geneType
+     */
+    public Collection<VDJCGene> getGenes(GeneType geneType) {
+        List<VDJCGene> result = new ArrayList<>();
+        for (VDJCGene gene : genes.values())
+            if (gene.getGeneType() == geneType)
+                result.add(gene);
+        return result;
+    }
+
+    /**
+     * Returns collection of all genes in this library with specific geneType and chains
+     *
+     * @return collection of all genes in this library with specific geneType and chains
+     */
+    public Collection<VDJCGene> getGenes(Chains chains, GeneType geneType) {
+        List<VDJCGene> result = new ArrayList<>();
+        for (VDJCGene gene : genes.values())
+            if (gene.getChains().intersects(chains) && gene.getGeneType() == geneType)
+                result.add(gene);
+        return result;
+    }
+
+    /**
      * Get gene by name. Returns VDJCGene or null if gene with provided name is not found
      *
      * @return VDJCGene or null if gene with provided name is not found

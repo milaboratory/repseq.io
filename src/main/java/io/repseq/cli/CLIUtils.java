@@ -9,12 +9,26 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.util.ParseUtil;
 import io.repseq.core.GeneFeature;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 
 public final class CLIUtils {
     private CLIUtils() {
+    }
+
+    public static BufferedReader createBufferedReader(String fileName) throws IOException {
+        return new BufferedReader(new InputStreamReader(
+                fileName.equals(".") ?
+                        System.in :
+                        new FileInputStream(fileName)), 128 * 1024);
+    }
+
+    public static BufferedOutputStream createBufferedOutputStream(String fileName) throws IOException {
+        return new BufferedOutputStream(
+                fileName.equals(".") ?
+                        System.out :
+                        new FileOutputStream(fileName), 128 * 1024);
     }
 
     public static FastaWriter<NucleotideSequence> createSingleFastaWriter(String fileName) throws IOException {

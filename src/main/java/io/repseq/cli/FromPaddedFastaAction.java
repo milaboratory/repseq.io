@@ -198,7 +198,8 @@ public class FromPaddedFastaAction implements Action {
         public Long taxonId;
 
         @DynamicParameter(names = "-P", description = "Positions of anchor points in padded file. To define position " +
-                "relative to еру end of sequence use negative values: -1 = sequence end, -2 = last but one letter. " +
+                "relative to the end of sequence " +
+                "use negative values: -1 = sequence end, -2 = last but one letter. " +
                 "Example: -PFR1Begin=0 -PVEnd=-1")
         public Map<String, String> points = new HashMap<>();
 
