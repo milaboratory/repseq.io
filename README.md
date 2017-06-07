@@ -44,8 +44,10 @@ Usage: repseqio [options] [command] [command options]
   Options:
     -h, --help
        Displays this help message.
-    -v, --version
-       Output version information.
+    --version
+       Output full version information.
+    -v
+       Output short version information.
   Commands:
     list      Format JSON in library; sort libraries in multi-library files, sort genes inside libraries.
       Usage: list [options] library.json[.gz]
@@ -97,6 +99,59 @@ Usage: repseqio [options] [command] [command options]
              output file will be greater.
              Default: 30
 
+    generateClones      Generate synthetic clonotypes, and write in in jclns format.
+      Usage: generateClones [options] model_name|model_file_name [output.jclns]
+        Options:
+          -f, --force
+             Force overwrite of output file(s).
+          -h, --help
+             Displays help for this command.
+             Default: false
+          -a, --in-frame
+             In-frame clones only.
+          -b, --no-stops
+             Output clones without stop codons in CDR3 (valid only with -a /
+             --in-frame).
+        * -c, --number-of-clones
+             Number of clones to generate.
+             Default: 0
+          -s, --seed
+             Random generator seed (0 to use current time as random seed).
+
+    normalizeClones      Normalize clone abundances in jclns file.
+      Usage: normalizeClones [options] [input.jclns [output.jclns]]
+        Options:
+          -f, --force
+             Force overwrite of output file(s).
+          -h, --help
+             Displays help for this command.
+             Default: false
+
+    exportCloneSequence      Normalize clone abundances in jclns file.
+      Usage: exportCloneSequence [options] [input.jclns [output.jclns]]
+        Options:
+          -q, --abundance-factor
+             Repeat each clonal sequence round(f*clone.abundance) times, where
+             round means mathematical rounding of non-integer numbers.
+          -d, --add-description
+             Add description fields to fasta header (available values
+             NFeature[gene_feature], AAFeature[gene_feature] - for current
+             gene,NFeature[chain,gene_feature], AAFeature[chain,gene_feature] - for multi-gene clones, JSONClone,
+             JSONGene, JSONClone.field_name, JSONGene.field_name, Chain). Example:
+             NFeature[CDR3], AAFeature[FR3]
+             Default: []
+          -c, --chain
+             Which chains to export
+             Default: ALL
+          -f, --force
+             Force overwrite of output file(s).
+        * -g, --gene-feature
+             Gene feature to export (e.g. CDR3, VDJRegion, VDJTranscript,
+             VDJTranscript+CExon1 etc...)
+          -h, --help
+             Displays help for this command.
+             Default: false
+
     fasta      Export sequences of genes to fasta file.
       Usage: fasta [options] input_library.json|default [output.fasta]
         Options:
@@ -113,6 +168,34 @@ Usage: repseqio [options] [command] [command options]
           -n, --name
              Gene name pattern, regexp string, all genes with matching gene name
              will be exported.
+          -s, --species
+             Species name, used in the same way as --taxon-id.
+          -t, --taxon-id
+             Taxon id (filter multi-library file to leave single library for
+             specified taxon id)
+
+    tsv      Export genes region coordinates to TSV file. To output 1-based coordinates add `-1` / `--one-based` option.
+      Usage: tsv [options] input_library.json|default [output.txt]
+        Options:
+          -c, --chain
+             Chain pattern, regexp string, all genes with matching chain record
+             will be exported.
+          -f, --force
+             Force overwrite of output file(s).
+        * -g, --gene-feature
+             Gene feature(s) to export (e.g. VRegion, JRegion, VTranscript,
+             etc...). To specify several features use this option several times or
+             separate multiple regions with commas.
+          -h, --help
+             Displays help for this command.
+             Default: false
+          -n, --name
+             Gene name pattern, regexp string, all genes with matching gene name
+             will be exported.
+          -1, --one-based
+             Use one-based coordinates instead of zero-based and output
+             inclusive end position.
+             Default: false
           -s, --species
              Species name, used in the same way as --taxon-id.
           -t, --taxon-id
@@ -210,7 +293,7 @@ Usage: repseqio [options] [command] [command options]
              Default: {}
           -P
              Positions of anchor points in padded file. To define position
-             relative to еру end of sequence use negative values: -1 = sequence end, -2 =
+             relative to the end of sequence use negative values: -1 = sequence end, -2 =
              last but one letter. Example: -PFR1Begin=0 -PVEnd=-1
              Syntax: -Pkey=value
              Default: {}
