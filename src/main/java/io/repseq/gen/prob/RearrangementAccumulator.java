@@ -3,6 +3,8 @@ package io.repseq.gen.prob;
 import io.repseq.gen.GClone;
 import io.repseq.gen.dist.GCloneGenerator;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -29,6 +31,10 @@ public class RearrangementAccumulator<T extends CloneKey> {
 
     public RearrangementCounter getCounter(T cloneKey) {
         return accumulatorMap.getOrDefault(cloneKey, new RearrangementCounter());
+    }
+
+    public Map<T, RearrangementCounter> getRearrangements() {
+        return Collections.unmodifiableMap(accumulatorMap);
     }
 
     public RearrangementCounter getTotalCounter() {

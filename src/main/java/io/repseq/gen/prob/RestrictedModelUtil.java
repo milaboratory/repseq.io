@@ -11,11 +11,11 @@ import java.util.Set;
  * Created by mikesh on 6/29/17.
  */
 public class RestrictedModelUtil {
-    public RestrictedModel<GCloneModel> restrictIndependent(GCloneModel original,
-                                                            Set<String> vNames,
-                                                            Set<String> dNames,
-                                                            Set<String> jNames,
-                                                            Set<String> cNames) {
+    public static RestrictedModel<GCloneModel> restrictIndependent(GCloneModel original,
+                                                                   Set<String> vNames,
+                                                                   Set<String> dNames,
+                                                                   Set<String> jNames,
+                                                                   Set<String> cNames) {
         if (original instanceof BasicGCloneModel) {
             BasicGCloneModel mdl = (BasicGCloneModel) original;
 
@@ -43,11 +43,11 @@ public class RestrictedModelUtil {
         }
     }
 
-    public RestrictedModel<GGeneModel> restrictIndependent(GGeneModel original,
-                                                           Set<String> vNames,
-                                                           Set<String> dNames,
-                                                           Set<String> jNames,
-                                                           Set<String> cNames) {
+    public static RestrictedModel<GGeneModel> restrictIndependent(GGeneModel original,
+                                                                  Set<String> vNames,
+                                                                  Set<String> dNames,
+                                                                  Set<String> jNames,
+                                                                  Set<String> cNames) {
         if (original instanceof BasicGGeneModel) {
             BasicGGeneModel mdl = (BasicGGeneModel) original;
 
@@ -66,11 +66,11 @@ public class RestrictedModelUtil {
         }
     }
 
-    public RestrictedModel<VDJCGenesModel> restrictIndependent(VDJCGenesModel original,
-                                                               Set<String> vNames,
-                                                               Set<String> dNames,
-                                                               Set<String> jNames,
-                                                               Set<String> cNames) {
+    public static RestrictedModel<VDJCGenesModel> restrictIndependent(VDJCGenesModel original,
+                                                                      Set<String> vNames,
+                                                                      Set<String> dNames,
+                                                                      Set<String> jNames,
+                                                                      Set<String> cNames) {
         if (original instanceof IndependentVDJCGenesModel) {
             IndependentVDJCGenesModel mdl = (IndependentVDJCGenesModel) original;
 
