@@ -1,9 +1,6 @@
 package io.repseq.gen.prob;
 
-import io.repseq.gen.dist.DJCDependentVDJCGenesModel;
-import io.repseq.gen.dist.DJDependentVDJCGenesModel;
-import io.repseq.gen.dist.IndependentVDJCGenesModel;
-import io.repseq.gen.dist.VDJCGenesModel;
+import io.repseq.gen.dist.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,13 +10,67 @@ import java.util.Set;
 /**
  * Created by mikesh on 6/29/17.
  */
-public class RestrictedVDJCGenesModelFactory {
+public class RestrictedModelUtil {
+    public RestrictedModel<GCloneModel> restrictIndependent(GCloneModel original,
+                                                            Set<String> vNames,
+                                                            Set<String> dNames,
+                                                            Set<String> jNames,
+                                                            Set<String> cNames) {
+        if (original instanceof BasicGCloneModel) {
+            BasicGCloneModel mdl = (BasicGCloneModel) original;
 
-    public RestrictedVDJCGenesModel restrictIndependent(VDJCGenesModel original,
-                                                        Set<String> vNames,
-                                                        Set<String> dNames,
-                                                        Set<String> jNames,
-                                                        Set<String> cNames) {
+            Map<String, GGeneModel> geneModels = new HashMap<>();
+
+            double sum = 1.0;
+
+            for (Map.Entry<String, GGeneModel> entry : mdl.geneModels.entrySet()) {
+                RestrictedModel<GGeneModel> restrictedGeneModel = restrictIndependent(entry.getValue(),
+                        vNames,
+                        dNames,
+                        jNames,
+                        cNames);
+
+                geneModels.put(entry.getKey(), restrictedGeneModel.getModel());
+                sum *= restrictedGeneModel.getWeight();
+            }
+
+            return new RestrictedModel<>(new BasicGCloneModel(mdl.vdjcLibrary,
+                    mdl.abundanceModel, geneModels),
+                    sum);
+        } else {
+            throw new IllegalArgumentException("Can't restrict a generic clone model. " +
+                    "The method is only applicable to 'basic' models.");
+        }
+    }
+
+    public RestrictedModel<GGeneModel> restrictIndependent(GGeneModel original,
+                                                           Set<String> vNames,
+                                                           Set<String> dNames,
+                                                           Set<String> jNames,
+                                                           Set<String> cNames) {
+        if (original instanceof BasicGGeneModel) {
+            BasicGGeneModel mdl = (BasicGGeneModel) original;
+
+            RestrictedModel<VDJCGenesModel> restrictedModel = restrictIndependent(mdl.vdjcGenesModel,
+                    vNames,
+                    dNames,
+                    jNames,
+                    cNames);
+
+            return new RestrictedModel<>(new BasicGGeneModel(restrictedModel.getModel(),
+                    mdl.trimmingModel, mdl.vInsertModel, mdl.djInsertModel),
+                    restrictedModel.getWeight());
+        } else {
+            throw new IllegalArgumentException("Can't restrict a generic gene model. " +
+                    "The method is only applicable to 'basic' models.");
+        }
+    }
+
+    public RestrictedModel<VDJCGenesModel> restrictIndependent(VDJCGenesModel original,
+                                                               Set<String> vNames,
+                                                               Set<String> dNames,
+                                                               Set<String> jNames,
+                                                               Set<String> cNames) {
         if (original instanceof IndependentVDJCGenesModel) {
             IndependentVDJCGenesModel mdl = (IndependentVDJCGenesModel) original;
 
@@ -33,7 +84,7 @@ public class RestrictedVDJCGenesModelFactory {
                     jSum = renormalize(j, jNames),
                     cSum = renormalize(c, cNames);
 
-            return new RestrictedVDJCGenesModel(new IndependentVDJCGenesModel(v, d, j, c),
+            return new RestrictedModel<>(new IndependentVDJCGenesModel(v, d, j, c),
                     vSum * dSum * jSum * cSum);
         } else if (original instanceof DJDependentVDJCGenesModel) {
             DJDependentVDJCGenesModel mdl = (DJDependentVDJCGenesModel) original;
@@ -46,7 +97,7 @@ public class RestrictedVDJCGenesModelFactory {
                     djSum = renormalize2(dj, dNames, jNames),
                     cSum = renormalize(c, cNames);
 
-            return new RestrictedVDJCGenesModel(new DJDependentVDJCGenesModel(v, dj, c),
+            return new RestrictedModel<>(new DJDependentVDJCGenesModel(v, dj, c),
                     vSum * djSum * cSum);
         } else if (original instanceof DJCDependentVDJCGenesModel) {
             DJCDependentVDJCGenesModel mdl = (DJCDependentVDJCGenesModel) original;
@@ -57,11 +108,11 @@ public class RestrictedVDJCGenesModelFactory {
             double vSum = renormalize(v, vNames),
                     djcSum = renormalize3(djc, dNames, jNames, cNames);
 
-            return new RestrictedVDJCGenesModel(new DJCDependentVDJCGenesModel(v, djc),
+            return new RestrictedModel<>(new DJCDependentVDJCGenesModel(v, djc),
                     vSum * djcSum);
         } else {
-            throw new IllegalArgumentException("Can't restrict a generic gene model. " +
-                    "The method is only applicable to v+d+j+c, v+dj+c and v+djc models.");
+            throw new IllegalArgumentException("Can't restrict a generic VDJC recombination model. " +
+                    "The method is only applicable to 'v+d+j+c', 'v+dj+c' and 'v+djc' models.");
         }
     }
 

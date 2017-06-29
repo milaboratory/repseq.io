@@ -11,7 +11,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = BasicGCloneModel.class, name = "basic"),
 })
-public interface GCloneModel {
+public interface GCloneModel extends Model {
     VDJCLibraryId libraryId();
 
     GCloneGenerator create(RandomGenerator random, VDJCLibraryRegistry registry);
