@@ -25,7 +25,6 @@ import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.commons.math3.random.Well19937c;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.util.Collections;
 import java.util.List;
@@ -48,7 +47,7 @@ public class GenerateClonesAction implements Action {
             }).withAttribute(VDJCGene.JSON_CURRENT_LIBRARY_ATTRIBUTE_KEY, library);
             OUTER:
             for (int i = 0; i < params.numberOfClones; i++) {
-                GClone clone = generator.sample();
+                GClone clone = generator.get();
                 for (GGene g : clone.genes.values()) {
                     NucleotideSequence cdr3 = g.getFeature(GeneFeature.CDR3);
                     if (params.isInFrame())

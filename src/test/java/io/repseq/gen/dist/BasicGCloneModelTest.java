@@ -2,7 +2,6 @@ package io.repseq.gen.dist;
 
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.test.TestUtil;
-import io.repseq.core.GeneFeature;
 import io.repseq.core.VDJCLibraryId;
 import io.repseq.core.VDJCLibraryRegistry;
 import io.repseq.gen.GClone;
@@ -13,7 +12,6 @@ import org.junit.Test;
 
 import java.util.HashMap;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 public class BasicGCloneModelTest {
@@ -56,7 +54,7 @@ public class BasicGCloneModelTest {
         TestUtil.assertJson(model);
 
         GCloneGenerator gen = model.create(new Well19937c(123), VDJCLibraryRegistry.getDefault());
-        GClone clone = gen.sample();
+        GClone clone = gen.get();
 
         TestUtil.assertJson(clone);
         

@@ -2,6 +2,8 @@ package io.repseq.gen.dist;
 
 import io.repseq.gen.GClone;
 
-public interface GCloneGenerator {
-    GClone sample();
+import java.util.function.Supplier;
+
+public interface GCloneGenerator extends Supplier<GClone> {
+    GClone get();
 }

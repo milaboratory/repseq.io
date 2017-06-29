@@ -40,7 +40,7 @@ public final class BasicGCloneModel implements GCloneModel {
             geneGenerators.put(e.getKey(), e.getValue().create(random, library));
         return new GCloneGenerator() {
             @Override
-            public GClone sample() {
+            public GClone get() {
                 double abundance = abundanceGenerator.generate();
                 Map<String, GGene> genes = new HashMap<>();
                 for (Map.Entry<String, GGeneGenerator> e : geneGenerators.entrySet())
