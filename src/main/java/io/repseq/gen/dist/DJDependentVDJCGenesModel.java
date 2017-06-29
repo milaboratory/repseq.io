@@ -16,7 +16,7 @@ import static io.repseq.gen.dist.IndependentVDJCGenesModel.geneOrNull;
 import static io.repseq.gen.dist.IndependentVDJCGenesModel.toDistribution;
 
 public final class DJDependentVDJCGenesModel implements VDJCGenesModel {
-    final Map<String, Double> v, dj, c;
+    public final Map<String, Double> v, dj, c;
 
     @JsonCreator
     public DJDependentVDJCGenesModel(@JsonProperty("v") Map<String, Double> v,
