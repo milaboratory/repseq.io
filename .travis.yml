@@ -11,7 +11,7 @@ before_install:
   - cd milib && mvn clean install -DskipTests -B && cd ..
 
 jdk:
-  - openjdk8
+  - oraclejdk8
 
 cache:
   directories:
