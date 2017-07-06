@@ -43,21 +43,22 @@ public class VJTransitionGenerator {
                 jFactors = EmissionProbabilityUtil.getLogVFactors(germlineMatchParameters,
                         jRef, query);
 
-        double[][] alpha = new double[3][query.size() + 1],
-                beta = new double[3][query.size() + 1];
+        double[][] alpha = new double[2][query.size() + 1],
+                beta = new double[2][query.size() + 1];
 
-        // fill in T1 (alpha) and T-1 (beta)
+        // Fill in T1 (alpha) and T-1 (beta)
+
         alpha[0][0] = vTrimmingParams.getTrimmingProb(0, vRef.size());
 
         for (int i = 1; i < query.size(); i++) {
-            if (i > vFactors.length)
+            if (i > vFactors.length) // do not consider extra bases that do not fit in V
                 break;
 
             alpha[0][i] = vTrimmingParams.getTrimmingProb(0, vRef.size() - i) *
                     Math.exp(vFactors[i - 1]);
         }
 
-        beta[2][query.size() - 1] = jTrimmingParams.getTrimmingProb(jRef.size(), 0);
+        beta[1][query.size() - 1] = jTrimmingParams.getTrimmingProb(jRef.size(), 0);
 
         for (int i = 2; i < query.size(); i++) {
             int jFactorIndex = jFactors.length - i + 1;
@@ -65,29 +66,54 @@ public class VJTransitionGenerator {
             if (jFactorIndex < 0)
                 break;
 
-            beta[2][query.size() - i] = jTrimmingParams.getTrimmingProb(jRef.size() - i + 1, 0) *
+            beta[1][query.size() - i] = jTrimmingParams.getTrimmingProb(jRef.size() - i + 1, 0) *
                     Math.exp(jFactors[jFactorIndex]);
         }
+
 
         // Fill in T2 (alpha) and T-2 (beta)
 
         double[][] insertionFactors = EmissionProbabilityUtil.getLogInsertFactors(vjInsertionParameters,
                 query);
 
-        double sum = 0;
-        for (int i = 0; i < query.size(); i++) { // where arrived from
-            sum += alpha[0][i];
-            for (int j = i; j < query.size(); j++) { // where we've got to
-                alpha[1][j] = sum * insertionFactors[i][j];
+        double[] i0prob = new double[query.size()], i1prob = new double[query.size()];
+
+        for (int i = 0; i < query.size(); i++) { // where we've got to
+            i0prob[i] = alpha[0][i] * beta[1][i] *
+                    vjInsertionParameters.getInsertSizeProb(0);
+            i1prob[i] = alpha[0][i] * beta[1][i + 1] *
+                    vjInsertionParameters.getInsertSizeProb(0) *
+                    Math.exp(insertionFactors[i + 1][i]);
+
+            for (int j = 0; j <= i; j++) { // where arrived from
+                double input = alpha[0][j], insertSizeProb = vjInsertionParameters.getInsertSizeProb(i - j);
+                if (input != 0 & insertSizeProb != 0) { // speed up
+                    alpha[1][i] += input * // incoming probability
+                            Math.exp(insertionFactors[j][i]) * // probability of inserted sequence
+                            insertSizeProb; // probability of insert size
+                }
             }
         }
 
-        sum = 0;
-        for (int i = query.size() - 1; i >= 0; i--) { // where arrived from
-            sum += beta[0][i];
-            for (int j = i; j < query.size(); j++) { // where we've got to
-                alpha[1][j] = sum * insertionFactors[i][j];
+        for (int i = 0; i < query.size(); i++) {
+            for (int j = i; j < query.size(); j++) {
+                double input = beta[1][j], insertSizeProb = vjInsertionParameters.getInsertSizeProb(j - i);
+                if (input != 0 & insertSizeProb != 0) {
+                    beta[0][i] += input *
+                            Math.exp(insertionFactors[i][j]) *
+                            insertSizeProb;
+                }
             }
         }
+
+        // Final probabilities:
+        // Overall - P = sum_i alpha[1][i] * beta[1][i]
+        // At level 0 (v mapping) P(V_trim & V_match) = alpha[0][i] * beta[0][i]
+        // At level 1 (j mapping) P(J_trim & J_match) = alpha[1][i] * beta[1][i]
+        // At level 0.5 (insert) P(insert from i to j) = P / alpha[0][i] / beta[1][j]
+        // Probability of 0 insert - i0prob, single-base insert - i1prob
+        // Probability of i, i+1 bases in insert - alpha[0][i] * beta[0][i] - i0prob[i] - i1prob[i]
+
+        return new HmmTransitions(query, vRef, jRef, alpha, beta, i0prob, i1prob);
     }
 }
