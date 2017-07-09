@@ -1,5 +1,6 @@
 package io.repseq.learn.param;
 
+import io.repseq.learn.SegmentTuple;
 import io.repseq.learn.SegmentType;
 
 import java.util.EnumMap;
@@ -16,5 +17,5 @@ public interface UsageParameters {
      * @param segments a map of segment_type:segment_name entries
      * @return probability of V(D)J rearrangement
      */
-    double getProbability(EnumMap<SegmentType, String> segments);
+    double getProbability(SegmentTuple segments);
 }

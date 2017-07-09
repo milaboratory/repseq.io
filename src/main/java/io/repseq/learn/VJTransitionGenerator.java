@@ -5,8 +5,6 @@ import io.repseq.learn.param.GermlineMatchParameters;
 import io.repseq.learn.param.InsertionParameters;
 import io.repseq.learn.param.SegmentTrimmingParameters;
 
-import java.util.EnumMap;
-
 /**
  * Created by mikesh on 7/5/17.
  */
@@ -26,17 +24,13 @@ public class VJTransitionGenerator {
         this.segmentTrimmingParameterProvider = segmentTrimmingParameterProvider;
     }
 
-    public HmmTransitions generate(EnumMap<SegmentType, String> segments,
-                                   NucleotideSequence query) {
-        NucleotideSequence vRef = germlineSequenceProvider.getFullSequenceWithP(SegmentType.V,
-                segments.get(SegmentType.V)),
-                jRef = germlineSequenceProvider.getFullSequenceWithP(SegmentType.J,
-                        segments.get(SegmentType.J));
+    public VJHmmTransitions generate(SegmentTuple segments,
+                                     NucleotideSequence query) {
+        NucleotideSequence vRef = germlineSequenceProvider.getFullSequenceWithP(segments.getvId()),
+                jRef = germlineSequenceProvider.getFullSequenceWithP(segments.getjId());
 
-        SegmentTrimmingParameters vTrimmingParams = segmentTrimmingParameterProvider.get(SegmentType.V,
-                segments.get(SegmentType.V)),
-                jTrimmingParams = segmentTrimmingParameterProvider.get(SegmentType.J,
-                        segments.get(SegmentType.J));
+        SegmentTrimmingParameters vTrimmingParams = segmentTrimmingParameterProvider.get(segments.getvId()),
+                jTrimmingParams = segmentTrimmingParameterProvider.get(segments.getjId());
 
         double[] vFactors = EmissionProbabilityUtil.getLogVFactors(germlineMatchParameters,
                 vRef, query),
@@ -114,6 +108,9 @@ public class VJTransitionGenerator {
         // Probability of 0 insert - i0prob, single-base insert - i1prob
         // Probability of i, i+1 bases in insert - alpha[0][i] * beta[0][i] - i0prob[i] - i1prob[i]
 
-        return new HmmTransitions(query, vRef, jRef, alpha, beta, i0prob, i1prob);
+        // TODO: maybe we have an error with overlapping segments, ie. when i == j overlap alpha i beta j
+
+        return new VJHmmTransitions(segments,
+                query, vRef, jRef, alpha, beta, i0prob, i1prob);
     }
 }

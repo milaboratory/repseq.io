@@ -5,15 +5,20 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 /**
  * Created by mikesh on 7/5/17.
  */
-public class HmmTransitions {
+public class VJHmmTransitions {
     private final NucleotideSequence query, vRef, jRef;
     private final double[][] alpha, // V->J transitions
             beta; // J -> V transitions
     private final double[] i0prob, i1prob;
+    private final SegmentTuple segments;
 
-    public HmmTransitions(NucleotideSequence query, NucleotideSequence vRef, NucleotideSequence jRef,
-                          double[][] alpha, double[][] beta,
-                          double[] i0prob, double[] i1prob) {
+    public VJHmmTransitions(SegmentTuple segments,
+                            NucleotideSequence query,
+                            NucleotideSequence vRef,
+                            NucleotideSequence jRef,
+                            double[][] alpha, double[][] beta,
+                            double[] i0prob, double[] i1prob) {
+        this.segments = segments;
         this.query = query;
         this.vRef = vRef;
         this.jRef = jRef;
@@ -35,6 +40,9 @@ public class HmmTransitions {
         return jRef;
     }
 
+    public SegmentTuple getSegments() {
+        return segments;
+    }
 
     public double[][] getAlpha() {
         return alpha;
