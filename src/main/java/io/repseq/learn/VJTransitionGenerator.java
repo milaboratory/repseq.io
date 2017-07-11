@@ -34,7 +34,7 @@ public class VJTransitionGenerator {
 
         double[] vFactors = EmissionProbabilityUtil.getLogVFactors(germlineMatchParameters,
                 vRef, query),
-                jFactors = EmissionProbabilityUtil.getLogVFactors(germlineMatchParameters,
+                jFactors = EmissionProbabilityUtil.getLogJFactors(germlineMatchParameters,
                         jRef, query);
 
         double[][] alpha = new double[2][query.size() + 1],

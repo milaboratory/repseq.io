@@ -1,9 +1,6 @@
 package io.repseq.learn.param;
 
 import io.repseq.learn.SegmentTuple;
-import io.repseq.learn.SegmentType;
-
-import java.util.EnumMap;
 
 /**
  * Created by mikesh on 04/07/17.
