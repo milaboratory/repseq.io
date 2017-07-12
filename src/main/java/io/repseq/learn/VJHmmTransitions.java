@@ -7,10 +7,9 @@ import com.milaboratory.core.sequence.NucleotideSequence;
  */
 public class VJHmmTransitions {
     private final NucleotideSequence query, vRef, jRef;
-    private final double[][] alpha, // V->J transitions
+    public final double[][] alpha, // V->J transitions
             beta; // J -> V transitions
     private final SegmentTuple segments;
-    private final double Pfull;
 
     public VJHmmTransitions(SegmentTuple segments,
                             NucleotideSequence query,
@@ -23,14 +22,6 @@ public class VJHmmTransitions {
         this.jRef = jRef;
         this.alpha = alpha;
         this.beta = beta;
-
-        double p = 0;
-
-        for (int i = 0; i < query.size(); i++) {
-            p += alpha[1][i] * beta[1][i];
-        }
-
-        this.Pfull = p;
     }
 
     public NucleotideSequence getQuery() {
@@ -57,11 +48,17 @@ public class VJHmmTransitions {
         return beta;
     }
 
-    public double getPfull() {
-        return Pfull;
+    public double computePartialProbability() {
+        double p = 0;
+
+        for (int i = 0; i < query.size(); i++) {
+            p += alpha[1][i] * beta[1][i];
+        }
+
+        return p;
     }
 
-    public VDJPartitioning getBestPartitioning() {
+    public VDJPartitioning computeBestPartitioning() {
         int vEnd = 0, jStart = 0;
         double maxVprob = 0, maxJprob = 0;
 
@@ -81,7 +78,7 @@ public class VJHmmTransitions {
         return new VDJPartitioning(vEnd, jStart);
     }
 
-    public VDJPartitioning getBestPartitioning1() {
+    public VDJPartitioning computeBestPartitioning1() {
         int vEnd = 0, jStart = 0;
         double maxProb = 0;
 

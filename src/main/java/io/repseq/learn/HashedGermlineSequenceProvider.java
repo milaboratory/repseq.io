@@ -1,8 +1,11 @@
 package io.repseq.learn;
 
 import com.milaboratory.core.sequence.NucleotideSequence;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by mikesh on 7/11/17.
@@ -17,5 +20,10 @@ public class HashedGermlineSequenceProvider implements GermlineSequenceProvider 
     @Override
     public NucleotideSequence getFullSequenceWithP(String id) {
         return segmentMap.get(id);
+    }
+
+    @Override
+    public Map<String, NucleotideSequence> asMap() {
+        return Collections.unmodifiableMap(segmentMap);
     }
 }

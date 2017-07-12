@@ -37,7 +37,7 @@ public class DummyVJParameters {
             HashedGermlineSequenceProvider(refs);
     public static final SegmentTrimmingParameterProvider segmentiTrimmingProvider = new
             HashedSegmentTrimmingParameterProvider(trimming);
-    public static SegmentUsage segmentUsage = new JointSegmentSegmentUsage(segmentUsageMap);
+    public static SegmentUsage segmentUsage = new JointSegmentUsage(segmentUsageMap);
     public static InsertionParameters vjInsertionParameters = new SimpleInsertionParameters(new double[]{0.5, 0.2, 0.1,
             0.1, 0.05, 0.05});
     public static GermlineMatchParameters germlineMatchParameters = new SimpleGermlineMatchParameters();

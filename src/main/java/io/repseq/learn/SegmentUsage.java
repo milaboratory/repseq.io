@@ -2,6 +2,8 @@ package io.repseq.learn;
 
 import io.repseq.learn.SegmentTuple;
 
+import java.util.Set;
+
 /**
  * Created by mikesh on 04/07/17.
  */
@@ -15,4 +17,6 @@ public interface SegmentUsage {
      * @return probability of V(D)J rearrangement
      */
     double getProbability(SegmentTuple segments);
+
+    Set<SegmentTuple> getUniqueSegmentTuples();
 }

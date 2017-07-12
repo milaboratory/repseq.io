@@ -91,13 +91,9 @@ public class VJTransitionGenerator {
 
         // Final probabilities:
         // Overall - P = sum_i alpha[1][i] * beta[1][i]
-        // At level 0 (v mapping) P(V_trim & V_match) = alpha[0][i] * beta[0][i]
-        // At level 1 (j mapping) P(J_trim & J_match) = alpha[1][i] * beta[1][i]
+        // At level 0 (v mapping) P(V_trim & V_match) = alpha[0][i] * beta[0][i] INCLUSIVE
+        // At level 1 (j mapping) P(J_trim & J_match) = alpha[1][i] * beta[1][i] INCLUSIVE
         // At level 0.5 (insert) P(insert from i to j) = P / alpha[0][i] / beta[1][j]
-        // Probability of 0 insert - i0prob, single-base insert - i1prob
-        // Probability of i, i+1 bases in insert - alpha[0][i] * beta[0][i] - i0prob[i] - i1prob[i]
-
-        // TODO: maybe we have an error with overlapping segments, ie. when i == j overlap alpha i beta j
 
         return new VJHmmTransitions(segments,
                 query, vRef, jRef, alpha, beta);
