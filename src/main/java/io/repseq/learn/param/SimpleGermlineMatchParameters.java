@@ -6,11 +6,11 @@ package io.repseq.learn.param;
 public class SimpleGermlineMatchParameters implements GermlineMatchParameters {
     @Override
     public double getSubstitutionProb(byte from, byte to) {
-        return from == to ? 1 : 0;
+        return from == to ? 1 : ProbabilityUtil.MIN_PROB;
     }
 
     @Override
     public double getLogSubstitutionProb(byte from, byte to) {
-        return from == to ? 0 : -100;
+        return from == to ? 0 : ProbabilityUtil.LOG_MIN_PROB;
     }
 }

@@ -7,7 +7,7 @@ public class SpecificGermlineMatchParameters implements GermlineMatchParameters 
     private final double[][] substitutionProbs, logSubstitutionProbs = new double[4][4];
 
     public SpecificGermlineMatchParameters(double[][] substitutionProbs) {
-        this.substitutionProbs = substitutionProbs;
+        this.substitutionProbs = ProbabilityUtil.ensureNonSingularNormalized(substitutionProbs);
 
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {

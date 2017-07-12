@@ -9,8 +9,8 @@ public class MarkovInsertionParameters implements InsertionParameters {
     private final double[] baseProbsMarginal = new double[4], logBaseProbsMarginal = new double[4];
 
     public MarkovInsertionParameters(double[] insertSizeDistr, double[][] baseProbs) {
-        this.insertSizeDistr = insertSizeDistr;
-        this.baseProbs = baseProbs;
+        this.insertSizeDistr = ProbabilityUtil.ensureNormalized(insertSizeDistr);
+        this.baseProbs = ProbabilityUtil.ensureNonSingularNormalized(baseProbs);
 
         for (int j = 0; j < 4; j++) {
             double margin = 0;

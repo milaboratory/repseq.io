@@ -7,6 +7,8 @@ public class UniformGermlineMatchParameters implements GermlineMatchParameters {
     private final double errorProb;
 
     public UniformGermlineMatchParameters(double errorProb) {
+        if(errorProb <= 0 || errorProb >= 1)
+            throw new IllegalArgumentException("Mismatch probability should be in (0,1).");
         this.errorProb = errorProb;
     }
 

@@ -1,4 +1,4 @@
-package io.repseq.learn;
+package io.repseq.learn.param;
 
 import io.repseq.learn.param.SegmentTrimmingParameters;
 

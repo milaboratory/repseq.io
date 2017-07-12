@@ -4,12 +4,12 @@ package io.repseq.learn.param;
  * Created by mikesh on 7/9/17.
  */
 public class SimpleInsertionParameters implements InsertionParameters {
-    private static final double PROB = 0.25, LOG_PROB = Math.log(PROB);
+    public static final double PROB = 0.25, LOG_PROB = Math.log(PROB);
 
     private final double[] insertSizeDistr;
 
     public SimpleInsertionParameters(double[] insertSizeDistr) {
-        this.insertSizeDistr = insertSizeDistr;
+        this.insertSizeDistr = ProbabilityUtil.ensureNormalized(insertSizeDistr);
     }
 
     @Override

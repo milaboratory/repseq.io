@@ -3,6 +3,7 @@ package io.repseq.learn;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.learn.param.GermlineMatchParameters;
 import io.repseq.learn.param.InsertionParameters;
+import io.repseq.learn.param.SegmentTrimmingParameterProvider;
 import io.repseq.learn.param.SegmentTrimmingParameters;
 
 /**
@@ -42,26 +43,20 @@ public class VJTransitionGenerator {
 
         // Fill in T1 (alpha) and T-1 (beta)
 
-        alpha[0][0] = vTrimmingParams.getTrimmingProb(0, vRef.size());
-
-        for (int i = 1; i < query.size(); i++) {
-            if (i > vFactors.length) // do not consider extra bases that do not fit in V
+        for (int i = 0; i < query.size(); i++) {
+            if (i >= vFactors.length) // do not consider extra bases that do not fit in V
                 break;
 
-            alpha[0][i] = vTrimmingParams.getTrimmingProb(0, vRef.size() - i) *
-                    Math.exp(vFactors[i - 1]);
+            alpha[0][i] = vTrimmingParams.getTrimmingProb(0, i) *
+                    Math.exp(vFactors[i]);
         }
 
-        beta[1][query.size() - 1] = jTrimmingParams.getTrimmingProb(jRef.size(), 0);
-
-        for (int i = 2; i < query.size(); i++) {
-            int jFactorIndex = jFactors.length - i + 1;
-
-            if (jFactorIndex < 0)
+        for (int i = 0; i < query.size(); i++) {
+            if (i >= jFactors.length)
                 break;
 
-            beta[1][query.size() - i] = jTrimmingParams.getTrimmingProb(jRef.size() - i + 1, 0) *
-                    Math.exp(jFactors[jFactorIndex]);
+            beta[1][query.size() - i - 1] = jTrimmingParams.getTrimmingProb(jRef.size() - i - 1, 0) *
+                    Math.exp(jFactors[jFactors.length - i - 1]);
         }
 
 
@@ -70,17 +65,10 @@ public class VJTransitionGenerator {
         double[][] insertionFactors = EmissionProbabilityUtil.getLogInsertFactors(vjInsertionParameters,
                 query);
 
-        double[] i0prob = new double[query.size()], i1prob = new double[query.size()];
-
         for (int i = 0; i < query.size(); i++) { // where we've got to
-            i0prob[i] = alpha[0][i] * beta[1][i] *
-                    vjInsertionParameters.getInsertSizeProb(0);
-            i1prob[i] = alpha[0][i] * beta[1][i + 1] *
-                    vjInsertionParameters.getInsertSizeProb(0) *
-                    Math.exp(insertionFactors[i + 1][i]);
-
-            for (int j = 0; j <= i; j++) { // where arrived from
-                double input = alpha[0][j], insertSizeProb = vjInsertionParameters.getInsertSizeProb(i - j);
+            for (int j = 0; j < i; j++) { // where arrived from; j < i as both V and J are inclusive
+                double input = alpha[0][j],
+                        insertSizeProb = vjInsertionParameters.getInsertSizeProb(i - j - 1);
                 if (input != 0 & insertSizeProb != 0) { // speed up
                     alpha[1][i] += input * // incoming probability
                             Math.exp(insertionFactors[j][i]) * // probability of inserted sequence
@@ -90,8 +78,9 @@ public class VJTransitionGenerator {
         }
 
         for (int i = 0; i < query.size(); i++) {
-            for (int j = i; j < query.size(); j++) {
-                double input = beta[1][j], insertSizeProb = vjInsertionParameters.getInsertSizeProb(j - i);
+            for (int j = i + 1; j < query.size(); j++) {
+                double input = beta[1][j],
+                        insertSizeProb = vjInsertionParameters.getInsertSizeProb(j - i - 1);
                 if (input != 0 & insertSizeProb != 0) {
                     beta[0][i] += input *
                             Math.exp(insertionFactors[i][j]) *
@@ -111,6 +100,6 @@ public class VJTransitionGenerator {
         // TODO: maybe we have an error with overlapping segments, ie. when i == j overlap alpha i beta j
 
         return new VJHmmTransitions(segments,
-                query, vRef, jRef, alpha, beta, i0prob, i1prob);
+                query, vRef, jRef, alpha, beta);
     }
 }

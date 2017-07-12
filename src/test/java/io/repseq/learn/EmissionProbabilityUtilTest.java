@@ -12,7 +12,35 @@ import java.util.Arrays;
  */
 public class EmissionProbabilityUtilTest {
     @Test
-    public void gemlineFactorTest() {
+    public void gemlineFactorTest1() {
+        GermlineMatchParameters matchParams = new SimpleGermlineMatchParameters();
+
+        NucleotideSequence query = new NucleotideSequence("ATCAGCCATGCA" + "CGGCGAATTATGC"),
+                vRef = new NucleotideSequence("ATCAGCCATGCA"),
+                jRef = new NucleotideSequence("CGGCGAATTATGC"),
+                jRef2 = new NucleotideSequence("AGGCGAATTATGC");
+
+        double[] resV = EmissionProbabilityUtil.getLogVFactors(matchParams, vRef, query),
+                resJ = EmissionProbabilityUtil.getLogJFactors(matchParams, jRef, query),
+                resJ2 = EmissionProbabilityUtil.getLogJFactors(matchParams, jRef2, query);
+
+        for (int i = 0; i < resV.length; i++) {
+            Assert.assertTrue(resV[i] == 0);
+        }
+
+        for (int i = 0; i < resJ.length; i++) {
+            Assert.assertTrue(resJ[i] == 0);
+        }
+
+        for (int i = 1; i < resJ2.length; i++) {
+            Assert.assertTrue(resJ2[i] == 0);
+        }
+
+        Assert.assertTrue(resJ2[0] == ProbabilityUtil.LOG_MIN_PROB);
+    }
+
+    @Test
+    public void gemlineFactorTest2() {
         double errorProb = 1e-3;
 
         GermlineMatchParameters matchParams = new UniformGermlineMatchParameters(errorProb);
@@ -32,11 +60,11 @@ public class EmissionProbabilityUtilTest {
         System.out.println(Arrays.toString(res2));
 
         for (int i = 0; i < vRef.size(); i++) {
-            Assert.assertEquals((i + 1) * Math.log(1 - errorProb), res1[i] ,1e-10);
+            Assert.assertEquals((i + 1) * Math.log(1 - errorProb), res1[i], 1e-10);
         }
 
         for (int i = 0; i < jRef.size(); i++) {
-            Assert.assertEquals((i + 1) * Math.log(1 - errorProb), res3[jRef.size() - i - 1] ,1e-10);
+            Assert.assertEquals((i + 1) * Math.log(1 - errorProb), res3[jRef.size() - i - 1], 1e-10);
         }
 
         Assert.assertEquals(vRef.size(), res1.length);
@@ -71,7 +99,7 @@ public class EmissionProbabilityUtilTest {
 
     @Test
     public void insertFactorTest1() {
-        InsertionParameters params = new SimpleInsertionParameters(null);
+        InsertionParameters params = new SimpleInsertionParameters(new double[0]);
 
         NucleotideSequence query = new NucleotideSequence("ATGCTACGCATGACTACGACTACGAC");
 
@@ -79,27 +107,18 @@ public class EmissionProbabilityUtilTest {
                 query);
 
         for (int i = 0; i < query.size(); i++) {
-            for (int j = 0; j < query.size(); j++) {
-                Assert.assertEquals(Math.log(Math.pow(4, -Math.abs(i-j))), insertFactors[i][j], 1e-10);
+            for (int j = i + 2; j < query.size(); j++) {
+                Assert.assertEquals(Math.log(Math.pow(4, -Math.abs(j - i - 1))), insertFactors[i][j], 1e-10);
             }
         }
-    }
 
-    @Test
-    public void insertFactorTest2() {
-        InsertionParameters params = new SimpleInsertionParameters(null);
-
-        NucleotideSequence query = new NucleotideSequence("ATGCTACGCATGACTACGACTACGAC");
-
-        double[][] insertFactors = EmissionProbabilityUtil.getLogInsertFactorsRev(params,
+        insertFactors = EmissionProbabilityUtil.getLogInsertFactorsRev(params,
                 query);
 
         for (int i = 0; i < query.size(); i++) {
-            // TODO: fixme
-           // System.out.println(Arrays.toString(insertFactors[i]));
-            //for (int j = 0; j < query.size(); j++) {
-            //    Assert.assertEquals(Math.log(Math.pow(4, -Math.abs(i-j))), insertFactors[i][j], 1e-10);
-            //}
+            for (int j = i + 2; j < query.size(); j++) {
+                Assert.assertEquals(Math.log(Math.pow(4, -Math.abs(j - i - 1))), insertFactors[i][j], 1e-10);
+            }
         }
     }
 }

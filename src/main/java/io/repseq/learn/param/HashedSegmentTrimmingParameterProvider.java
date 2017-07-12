@@ -1,6 +1,4 @@
-package io.repseq.learn;
-
-import io.repseq.learn.param.SegmentTrimmingParameters;
+package io.repseq.learn.param;
 
 import java.util.Map;
 

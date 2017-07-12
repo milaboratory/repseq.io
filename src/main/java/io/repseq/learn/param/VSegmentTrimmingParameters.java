@@ -7,11 +7,11 @@ public class VSegmentTrimmingParameters implements SegmentTrimmingParameters {
     private final double[] trimmingProbs;
 
     public VSegmentTrimmingParameters(double[] trimmingProbs) {
-        this.trimmingProbs = trimmingProbs;
+        this.trimmingProbs = ProbabilityUtil.ensureNormalized(trimmingProbs);
     }
 
     @Override
-    public double getTrimmingProb(int trim5, int trim3) {
-        return trimmingProbs[trim3];
+    public double getTrimmingProb(int pos5, int pos3) {
+        return trimmingProbs[pos3];
     }
 }

@@ -1,11 +1,11 @@
-package io.repseq.learn.param;
+package io.repseq.learn;
 
 import io.repseq.learn.SegmentTuple;
 
 /**
  * Created by mikesh on 04/07/17.
  */
-public interface UsageParameters {
+public interface SegmentUsage {
     /**
      * Gets the probability of observing a certain sequence of segments in a V(D)J rearrangement.
      * In most general case V(D)J probabilities are stored as P(VDJ) for TRB/IGH and P(VJ) for TRA/IGL/IGK.

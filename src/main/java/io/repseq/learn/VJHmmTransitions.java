@@ -9,23 +9,28 @@ public class VJHmmTransitions {
     private final NucleotideSequence query, vRef, jRef;
     private final double[][] alpha, // V->J transitions
             beta; // J -> V transitions
-    private final double[] i0prob, i1prob;
     private final SegmentTuple segments;
+    private final double Pfull;
 
     public VJHmmTransitions(SegmentTuple segments,
                             NucleotideSequence query,
                             NucleotideSequence vRef,
                             NucleotideSequence jRef,
-                            double[][] alpha, double[][] beta,
-                            double[] i0prob, double[] i1prob) {
+                            double[][] alpha, double[][] beta) {
         this.segments = segments;
         this.query = query;
         this.vRef = vRef;
         this.jRef = jRef;
         this.alpha = alpha;
         this.beta = beta;
-        this.i0prob = i0prob;
-        this.i1prob = i1prob;
+
+        double p = 0;
+
+        for (int i = 0; i < query.size(); i++) {
+            p += alpha[1][i] * beta[1][i];
+        }
+
+        this.Pfull = p;
     }
 
     public NucleotideSequence getQuery() {
@@ -52,11 +57,47 @@ public class VJHmmTransitions {
         return beta;
     }
 
-    public double[] getI0prob() {
-        return i0prob;
+    public double getPfull() {
+        return Pfull;
     }
 
-    public double[] getI1prob() {
-        return i1prob;
+    public VDJPartitioning getBestPartitioning() {
+        int vEnd = 0, jStart = 0;
+        double maxVprob = 0, maxJprob = 0;
+
+        for (int i = 0; i < query.size(); i++) {
+            double vProb = beta[0][i] * alpha[0][i],
+                    jProb = alpha[1][i] * beta[1][i];
+            if (vProb > maxVprob) {
+                maxVprob = vProb;
+                vEnd = i + 1;
+            }
+            if (jProb > maxJprob) {
+                maxJprob = jProb;
+                jStart = i;
+            }
+        }
+
+        return new VDJPartitioning(vEnd, jStart);
+    }
+
+    public VDJPartitioning getBestPartitioning1() {
+        int vEnd = 0, jStart = 0;
+        double maxProb = 0;
+
+        for (int i = 0; i < query.size(); i++) {
+            double vProb = beta[0][i] * alpha[0][i];
+            for (int j = i + 1; j < query.size(); j++) {
+                double prob = alpha[1][j] * beta[1][j] * vProb;
+
+                if (prob > maxProb) {
+                    maxProb = prob;
+                    vEnd = i + 1;
+                    jStart = j;
+                }
+            }
+        }
+
+        return new VDJPartitioning(vEnd, jStart);
     }
 }

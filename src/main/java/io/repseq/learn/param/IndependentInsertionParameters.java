@@ -8,8 +8,8 @@ public class IndependentInsertionParameters implements InsertionParameters {
     private final double[] baseProbs, logBaseProbs = new double[4];
 
     public IndependentInsertionParameters(double[] insertSizeDistr, double[] baseProbs) {
-        this.insertSizeDistr = insertSizeDistr;
-        this.baseProbs = baseProbs;
+        this.insertSizeDistr = ProbabilityUtil.ensureNormalized(insertSizeDistr);
+        this.baseProbs = ProbabilityUtil.ensureNonSingularNormalized(baseProbs);
 
         for (int i = 0; i < 4; i++) {
             logBaseProbs[i] = Math.log(baseProbs[i]);

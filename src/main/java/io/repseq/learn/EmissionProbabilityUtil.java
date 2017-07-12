@@ -13,10 +13,10 @@ public class EmissionProbabilityUtil {
         double[][] iFactors = new double[query.size()][query.size()];
 
         for (int i = 0; i < query.size(); i++) { // position on previous slice
-            for (int j = i + 1; j < query.size(); j++) { // position in current slice
-                double logP = (j == i + 1) ? insertionParameters.getLogInsertionProb(query.codeAt(j)) :
-                        insertionParameters.getLogInsertionProb(query.codeAt(j - 1), query.codeAt(j));
-                iFactors[i][j] = iFactors[i][j - 1] + logP;
+            for (int j = i + 2; j < query.size(); j++) { // position in current slice
+                iFactors[i][j] = iFactors[i][j - 1] + insertionParameters.getLogInsertionProb(
+                        query.codeAt(j - 2),
+                        query.codeAt(j - 1));
                 iFactors[j][i] = iFactors[i][j];
             }
         }
@@ -28,13 +28,11 @@ public class EmissionProbabilityUtil {
                                                     NucleotideSequence query) {
         double[][] iFactors = new double[query.size()][query.size()];
 
-        for (int i = 0; i < query.size(); i++) {
-            iFactors[i][i + 1] = insertionParameters.getLogInsertionProb(query.codeAt(i + 1));
-            iFactors[i + 1][i] = iFactors[i][i + 1];
-            double logPsum = 0;
-            for (int j = i + 2; j < query.size(); j++) {
-                logPsum += insertionParameters.getLogInsertionProb(query.codeAt(j), query.codeAt(j - 1));
-                iFactors[i][j] = logPsum + insertionParameters.getLogInsertionProb(query.codeAt(j));
+        for (int i = 0; i < query.size(); i++) { // position on previous slice
+            for (int j = i + 2; j < query.size(); j++) { // position in current slice
+                iFactors[i][j] = iFactors[i][j - 1] + insertionParameters.getLogInsertionProb(
+                        query.codeAt(j),
+                        query.codeAt(j - 1));
                 iFactors[j][i] = iFactors[i][j];
             }
         }
