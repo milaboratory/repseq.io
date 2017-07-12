@@ -13,13 +13,12 @@ public class VJTransitionGeneratorTest {
             DummyVJParameters.vjInsertionParameters,
             DummyVJParameters.germlineMatchParameters,
             DummyVJParameters.germlineSequenceProvider,
-            DummyVJParameters.segmentiTrimmingProvider
+            DummyVJParameters.segmentTrimmingProvider
     );
 
     private final SegmentTuple fixedTrimSegments = new SegmentTuple("V0", "J0"),
             flexTrimSegments = new SegmentTuple("V0", "J1"),
-            flexTrimSegments2 = new SegmentTuple("V0", "J2"),
-            flexTrimSegments3 = new SegmentTuple("V2", "J1");
+            flexTrimSegments2 = new SegmentTuple("V0", "J2");
 
     @Test
     public void testFixed() {
@@ -73,7 +72,7 @@ public class VJTransitionGeneratorTest {
 
         Assert.assertTrue(vjHmmTransitions.computePartialProbability() > 0);
         Assert.assertEquals(12, vdjPartitioning.getvEnd());
-        Assert.assertEquals(12, vdjPartitioning.getjStart());
+        Assert.assertEquals(13, vdjPartitioning.getjStart());
 
         vjHmmTransitions = transitionGenerator.generate(flexTrimSegments2,
                 new NucleotideSequence("ATCAGCCATGCA" + "CGGCGAATTATGC"));
@@ -81,7 +80,7 @@ public class VJTransitionGeneratorTest {
 
         Assert.assertTrue(vjHmmTransitions.computePartialProbability() > 0);
         Assert.assertEquals(12, vdjPartitioning.getvEnd());
-        Assert.assertEquals(12, vdjPartitioning.getjStart());
+        Assert.assertEquals(13, vdjPartitioning.getjStart());
 
         vjHmmTransitions = transitionGenerator.generate(flexTrimSegments2,
                 new NucleotideSequence("ATCAGCCATGCA" + "GGCGAATTATGC"));
