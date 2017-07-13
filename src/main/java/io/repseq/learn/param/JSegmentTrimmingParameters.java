@@ -14,4 +14,9 @@ public class JSegmentTrimmingParameters implements SegmentTrimmingParameters {
     public double getTrimmingProb(int pos5, int pos3) {
         return trimmingProbs[pos5];
     }
+
+    @Override
+    public double getZeroLengthProb() {
+        return 0;
+    }
 }

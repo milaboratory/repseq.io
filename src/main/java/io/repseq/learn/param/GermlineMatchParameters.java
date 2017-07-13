@@ -6,11 +6,16 @@ package io.repseq.learn.param;
 public interface GermlineMatchParameters {
     /**
      * Gets the probability of an erroneous substitution.
+     *
      * @param from original (reference) base.
-     * @param to base in observed sequence.
+     * @param to   base in observed sequence.
      * @return substitution probability, or the probability of observing a correct base when from == to.
      */
     double getSubstitutionProb(byte from, byte to);
 
     double getLogSubstitutionProb(byte from, byte to);
+
+    double getMatchProb();
+
+    double getMismatchProb();
 }

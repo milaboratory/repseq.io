@@ -4,8 +4,6 @@ package io.repseq.learn;
  * Created by mikesh on 7/12/17.
  */
 public class DTrimming {
-    public static final DTrimming NOT_FOUND = new DTrimming(-1, -1);
-
     private final int pos5, pos3;
 
     public DTrimming(int pos5, int pos3) {

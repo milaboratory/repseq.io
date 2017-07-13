@@ -77,4 +77,30 @@ public class EmissionProbabilityUtil {
 
         return jFactors;
     }
+
+    public static DFactor[][] getDFactors(GermlineMatchParameters germlineMatchParameters,
+                                          DTrimmingSTM dTrimmingSTM,
+                                          NucleotideSequence query) {
+        assert dTrimmingSTM.isInitialized();
+
+        DFactor[][] dFactors = new DFactor[query.size()][query.size()];
+
+        for (int i = 0; i < query.size(); i++) {
+            for (int j = i + 1; j < query.size() - 1; j++) {
+                NucleotideSequence subSeq = query.getRange(i, j + 1);
+                DTrimmingMatch dTrimmingMatch = dTrimmingSTM.getTrimmings(subSeq);
+
+                int matches = dTrimmingMatch.getMatchSize() - dTrimmingMatch.getMmCount(),
+                        mismatches = dTrimmingMatch.getMmCount();
+
+                double prob = dTrimmingMatch.getdTrimmingSet().getTrimmingProbSum() *
+                        Math.pow(germlineMatchParameters.getMatchProb(), matches) *
+                        Math.pow(germlineMatchParameters.getMismatchProb(), mismatches);
+
+                dFactors[i][j] = new DFactor(prob, dTrimmingMatch.getdTrimmingSet().getdTrimmings());
+            }
+        }
+
+        return dFactors;
+    }
 }

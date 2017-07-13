@@ -5,7 +5,6 @@ import com.milaboratory.core.tree.NeighborhoodIterator;
 import com.milaboratory.core.tree.SequenceTreeMap;
 
 import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Created by mikesh on 7/12/17.
@@ -13,7 +12,9 @@ import java.util.Set;
 public class DTrimmingSTM {
     public static double MAX_ERROR_RATE = 0.1;
 
-    private final SequenceTreeMap<NucleotideSequence, Set<DTrimming>> stm = new SequenceTreeMap<>(NucleotideSequence.ALPHABET);
+    private boolean initialized = false;
+
+    private final SequenceTreeMap<NucleotideSequence, DTrimmingSet> stm = new SequenceTreeMap<>(NucleotideSequence.ALPHABET);
 
     public DTrimmingSTM(NucleotideSequence ref) {
         for (int i = 0; i < ref.size(); i++) {
@@ -21,26 +22,42 @@ public class DTrimmingSTM {
                 DTrimming dTrimming = new DTrimming(i, j);
                 NucleotideSequence seq = ref.getRange(i, j + 1);
 
-                Set<DTrimming> trimmings = stm.get(seq);
+                DTrimmingSet dTrimmingSet = stm.get(seq);
 
-                if (trimmings == null) {
-                    trimmings = new HashSet<>();
+                if (dTrimmingSet == null) {
+                    dTrimmingSet = new DTrimmingSet(new HashSet<>());
                 }
 
-                trimmings.add(dTrimming);
+                dTrimmingSet.getdTrimmings().add(dTrimming);
 
-                stm.put(seq, trimmings);
+                stm.put(seq, dTrimmingSet);
             }
         }
     }
 
+    public Iterable<DTrimmingSet> getDTrimmingSets() {
+        return stm.values();
+    }
+
     public DTrimmingMatch getTrimmings(NucleotideSequence seq) {
+        if (seq.size() < 2) {
+            new DTrimmingMatch(DTrimmingSet.EMPTY, 0, seq.size());
+        }
+
         int maxErrors = (int) (seq.size() * MAX_ERROR_RATE);
-        NeighborhoodIterator<NucleotideSequence, Set<DTrimming>> ni = stm.getNeighborhoodIterator(seq,
+        NeighborhoodIterator<NucleotideSequence, DTrimmingSet> ni = stm.getNeighborhoodIterator(seq,
                 maxErrors, 0, 0, maxErrors);
 
-        Set<DTrimming> dTrimmings = ni.next();
+        DTrimmingSet dTrimmingSet = ni.next();
 
-        return new DTrimmingMatch(dTrimmings, ni.getMismatches(), seq.size());
+        return new DTrimmingMatch(dTrimmingSet, ni.getMismatches(), seq.size());
+    }
+
+    public boolean isInitialized() {
+        return initialized;
+    }
+
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
     }
 }

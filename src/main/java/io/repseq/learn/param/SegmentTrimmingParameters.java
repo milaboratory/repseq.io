@@ -5,4 +5,6 @@ package io.repseq.learn.param;
  */
 public interface SegmentTrimmingParameters {
     double getTrimmingProb(int pos5, int pos3);
+
+    double getZeroLengthProb();
 }

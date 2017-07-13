@@ -6,17 +6,17 @@ import java.util.Set;
  * Created by mikesh on 7/12/17.
  */
 public class DTrimmingMatch {
-    private final Set<DTrimming> dTrimmings;
+    private final DTrimmingSet dTrimmingSet;
     private final int mmCount, matchSize;
 
-    public DTrimmingMatch(Set<DTrimming> dTrimmings, int mmCount, int matchSize) {
-        this.dTrimmings = dTrimmings;
+    public DTrimmingMatch(DTrimmingSet dTrimmingSet, int mmCount, int matchSize) {
+        this.dTrimmingSet = dTrimmingSet;
         this.mmCount = mmCount;
         this.matchSize = matchSize;
     }
 
-    public Set<DTrimming> getdTrimmings() {
-        return dTrimmings;
+    public DTrimmingSet getdTrimmingSet() {
+        return dTrimmingSet;
     }
 
     public int getMmCount() {
