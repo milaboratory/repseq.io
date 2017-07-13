@@ -4,60 +4,34 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 import io.repseq.learn.param.GermlineMatchParameters;
 import io.repseq.learn.param.InsertionParameters;
 import io.repseq.learn.param.SegmentTrimmingParameterProvider;
-import io.repseq.learn.param.SegmentTrimmingParameters;
 
 /**
  * Created by mikesh on 7/5/17.
  */
-public class VJTransitionGenerator {
+public class VJTransitionGenerator extends TransitionGeneratorBase<VJHmmTransitions> {
     private final InsertionParameters vjInsertionParameters;
-    private final GermlineMatchParameters germlineMatchParameters;
-    private final GermlineSequenceProvider germlineSequenceProvider;
-    private final SegmentTrimmingParameterProvider segmentTrimmingParameterProvider;
 
     public VJTransitionGenerator(InsertionParameters vjInsertionParameters,
                                  GermlineMatchParameters germlineMatchParameters,
                                  GermlineSequenceProvider germlineSequenceProvider,
                                  SegmentTrimmingParameterProvider segmentTrimmingParameterProvider) {
+        super(germlineMatchParameters, segmentTrimmingParameterProvider, germlineSequenceProvider);
         this.vjInsertionParameters = vjInsertionParameters;
-        this.germlineMatchParameters = germlineMatchParameters;
-        this.germlineSequenceProvider = germlineSequenceProvider;
-        this.segmentTrimmingParameterProvider = segmentTrimmingParameterProvider;
     }
 
+    @Override
     public VJHmmTransitions generate(SegmentTuple segments,
                                      NucleotideSequence query) {
         NucleotideSequence vRef = germlineSequenceProvider.getFullSequenceWithP(segments.getvId()),
                 jRef = germlineSequenceProvider.getFullSequenceWithP(segments.getjId());
 
-        SegmentTrimmingParameters vTrimmingParams = segmentTrimmingParameterProvider.get(segments.getvId()),
-                jTrimmingParams = segmentTrimmingParameterProvider.get(segments.getjId());
-
-        double[] vFactors = EmissionProbabilityUtil.getLogVFactors(germlineMatchParameters,
-                vRef, query),
-                jFactors = EmissionProbabilityUtil.getLogJFactors(germlineMatchParameters,
-                        jRef, query);
-
-        double[][] alpha = new double[2][query.size() + 1],
-                beta = new double[2][query.size() + 1];
+        double[][] alpha = new double[2][query.size()],
+                beta = new double[2][query.size()];
 
         // Fill in T1 (alpha) and T-1 (beta)
 
-        for (int i = 0; i < query.size(); i++) {
-            if (i >= vFactors.length) // do not consider extra bases that do not fit in V
-                break;
-
-            alpha[0][i] = vTrimmingParams.getTrimmingProb(0, i) *
-                    Math.exp(vFactors[i]);
-        }
-
-        for (int i = 0; i < query.size(); i++) {
-            if (i >= jFactors.length)
-                break;
-
-            beta[1][query.size() - i - 1] = jTrimmingParams.getTrimmingProb(jRef.size() - i - 1, 0) *
-                    Math.exp(jFactors[jFactors.length - i - 1]);
-        }
+        fillAlpha0(segments, vRef, query, alpha);
+        fillBeta1(segments, jRef, query, beta);
 
 
         // Fill in T2 (alpha) and T-2 (beta)
@@ -93,9 +67,10 @@ public class VJTransitionGenerator {
         // Overall - P = sum_i alpha[1][i] * beta[1][i]
         // At level 0 (v mapping) P(V_trim & V_match) = alpha[0][i] * beta[0][i] INCLUSIVE
         // At level 1 (j mapping) P(J_trim & J_match) = alpha[1][i] * beta[1][i] INCLUSIVE
-        // At level 0.5 (insert) P(insert from i to j) = P / alpha[0][i] / beta[1][j]
 
         return new VJHmmTransitions(segments,
                 query, vRef, jRef, alpha, beta);
     }
+
+
 }

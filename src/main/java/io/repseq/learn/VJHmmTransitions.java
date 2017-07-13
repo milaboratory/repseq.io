@@ -5,9 +5,9 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 /**
  * Created by mikesh on 7/5/17.
  */
-public class VJHmmTransitions {
+public class VJHmmTransitions implements HmmTransitions {
     private final NucleotideSequence query, vRef, jRef;
-    public final double[][] alpha, // V->J transitions
+    final double[][] alpha, // V->J transitions
             beta; // J -> V transitions
     private final SegmentTuple segments;
 
@@ -24,6 +24,7 @@ public class VJHmmTransitions {
         this.beta = beta;
     }
 
+    @Override
     public NucleotideSequence getQuery() {
         return query;
     }
@@ -36,18 +37,12 @@ public class VJHmmTransitions {
         return jRef;
     }
 
+    @Override
     public SegmentTuple getSegments() {
         return segments;
     }
 
-    public double[][] getAlpha() {
-        return alpha;
-    }
-
-    public double[][] getBeta() {
-        return beta;
-    }
-
+    @Override
     public double computePartialProbability() {
         double p = 0;
 
@@ -58,6 +53,7 @@ public class VJHmmTransitions {
         return p;
     }
 
+    @Override
     public VDJPartitioning computeBestPartitioning() {
         int vEnd = 0, jStart = 0;
         double maxVprob = 0, maxJprob = 0;
