@@ -42,7 +42,7 @@ public class CompileLibraryMavenStage {
                 .replace("\n", "").replace("\r", "");
         gitTagProcess.waitFor();
 
-        String[] targetTags = {"v1.0", "v1.1", currentTag};
+        String[] targetTags = {"v1.0", "v1.1", "v1.2", currentTag};
 
         for (String tag : targetTags) {
             new ProcessBuilder("git", "checkout", tag)
