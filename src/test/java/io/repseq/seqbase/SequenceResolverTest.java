@@ -48,7 +48,7 @@ public class SequenceResolverTest {
     }
 
     @Test
-    public void ttt1() throws Exception {
+    public void rawHttpTest1() throws Exception {
         Path dir = TempFileManager.getTempDir().toPath().toAbsolutePath();
 
         Path work = dir.resolve("work");
@@ -61,8 +61,27 @@ public class SequenceResolverTest {
         SequenceResolver defaultResolver = SequenceResolvers.getDefault();
 
         NucleotideSequence seq = defaultResolver.resolve(new SequenceAddress(
-                "http://ftp-mouse.sanger.ac.uk/other/jl17/scaffolds.2001.fa#unplaced-7%2019335"))
+                "http://files.milaboratory.com/test-data/test.fa#testRecord"))
                 .getRegion(new Range(10, 30).inverse());
-        Assert.assertEquals(new NucleotideSequence("GGGCTTCATTCTCACTCGCC"), seq);
+        Assert.assertEquals(new NucleotideSequence("GCTCCACCACAAGACACTCT"), seq);
+    }
+
+    @Test
+    public void rawHttpTest2() throws Exception {
+        Path dir = TempFileManager.getTempDir().toPath().toAbsolutePath();
+
+        Path work = dir.resolve("work");
+        Files.createDirectories(work);
+
+        Path cache = dir.resolve("cache");
+        Files.createDirectories(cache);
+
+        SequenceResolvers.initDefaultResolver(cache);
+        SequenceResolver defaultResolver = SequenceResolvers.getDefault();
+
+        NucleotideSequence seq = defaultResolver.resolve(new SequenceAddress(
+                "http://files.milaboratory.com/test-data/test.fa.gz#testRecord"))
+                .getRegion(new Range(10, 30).inverse());
+        Assert.assertEquals(new NucleotideSequence("GCTCCACCACAAGACACTCT"), seq);
     }
 }
