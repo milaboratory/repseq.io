@@ -1,9 +1,43 @@
 package io.repseq.seqbase;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 public final class HTTPSequenceResolvers {
     private HTTPSequenceResolvers() {
+    }
+
+    private static URI withoutFragment(URI uri) {
+        try {
+            return new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(),
+                    uri.getPort(), uri.getRawPath(), uri.getQuery(), null);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * http://ftp-mouse.sanger.ac.uk/other/jl17/scaffolds.2001.fa#unplaced-7%20233
+     */
+    public static class RAWHTTPResolver extends HTTPFastaSequenceResolver {
+        public RAWHTTPResolver(HTTPResolversContext context) {
+            super(context);
+        }
+
+        @Override
+        protected URI resolveHTTPAddress(URI address) {
+            return withoutFragment(address);
+        }
+
+        @Override
+        protected String resolveRecordId(URI address) {
+            return address.getFragment();
+        }
+
+        @Override
+        public boolean canResolve(SequenceAddress address) {
+            return "http".equalsIgnoreCase(address.uri.getScheme());
+        }
     }
 
     /**

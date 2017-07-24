@@ -100,7 +100,7 @@ public abstract class HTTPFastaSequenceResolver extends AbstractRAFastaResolver
 
         // Downloading file
         HttpGet request = new HttpGet(httpURI);
-        log.debug("Downloading " + httpURI);
+        log.debug("Downloading " + httpURI + " into " + file);
         try {
             HttpResponse resp = context.getHttpClient().execute(request);
             HttpEntity entity = resp.getEntity();
