@@ -10,10 +10,16 @@ public class StringWithMapping {
     }
 
     public int convertPosition(int originalPosition) {
+        // Sequence end case
+        if (originalPosition == originalToModifiedMapping.length)
+            return originalToModifiedMapping[originalPosition - 1] + 1;
+        // Out of range
         if (originalPosition >= originalToModifiedMapping.length)
             return -1;
+        // Negative value counts from the end of the sequence
         if (originalPosition < 0)
-            return convertPosition(originalToModifiedMapping.length + originalPosition);
+            return convertPosition(originalToModifiedMapping.length + originalPosition + 1);
+        // Normal conversion
         return originalToModifiedMapping[originalPosition];
     }
 
