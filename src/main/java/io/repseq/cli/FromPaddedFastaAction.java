@@ -136,7 +136,7 @@ public class FromPaddedFastaAction implements Action {
             }
         }
 
-        VDJCLibraryData library = new VDJCLibraryData(params.taxonId, Collections.EMPTY_LIST, new ArrayList<>(genes.values()),
+        VDJCLibraryData library = new VDJCLibraryData(params.taxonId, params.speciesNames, new ArrayList<>(genes.values()),
                 Arrays.asList(new VDJCLibraryNote(VDJCLibraryNoteType.Comment, "Imported from: " +
                         fastaPath.getFileName().toString())),
                 Collections.EMPTY_LIST);
@@ -173,6 +173,10 @@ public class FromPaddedFastaAction implements Action {
         @Parameter(description = "Ignore duplicate genes",
                 names = {"-i", "--ignore-duplicates"})
         public Boolean ignoreDuplicates;
+
+        @Parameter(description = "Species names (can be used multiple times)",
+                names = {"-s", "--species-name"})
+        public List<String> speciesNames = new ArrayList<>();
 
         @Parameter(description = "Gene name index (0-based) in FASTA description line (e.g. 1 for IMGT files).",
                 names = {"-n", "--name-index"},
