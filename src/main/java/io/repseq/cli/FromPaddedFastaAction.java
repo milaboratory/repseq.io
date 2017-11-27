@@ -10,11 +10,13 @@ import com.milaboratory.cli.Action;
 import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.ActionParametersWithOutput;
+import com.milaboratory.core.Range;
 import com.milaboratory.core.io.sequence.fasta.FastaReader;
 import com.milaboratory.core.io.sequence.fasta.FastaWriter;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
+import com.milaboratory.util.RandomUtil;
 import io.repseq.core.BaseSequence;
 import io.repseq.core.Chains;
 import io.repseq.core.GeneType;
@@ -22,8 +24,11 @@ import io.repseq.core.ReferencePoint;
 import io.repseq.dto.*;
 import io.repseq.util.StringWithMapping;
 
+import java.io.FileNotFoundException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,12 +45,13 @@ public class FromPaddedFastaAction implements Action {
 
         int importedGenes = 0;
 
-        Path jsonPath = Paths.get(params.getOutputJSON()).toAbsolutePath();
-        Path fastaPath = Paths.get(params.getOutputFasta()).toAbsolutePath();
-        String relativeFastaPath = jsonPath.getParent().relativize(fastaPath).toString();
+        Path libraryPath = Paths.get(params.getOutputJSON()).toAbsolutePath();
 
         try (FastaReader reader = new FastaReader<>(params.getInput(), null);
-             FastaWriter<NucleotideSequence> seqWriter = new FastaWriter<>(params.getOutputFasta())) {
+             SequenceStorage storage = params.getOutputFasta() == null ?
+                     new EmbeddedWriter() :
+                     new FastaSequenceStorage(libraryPath, Paths.get(params.getOutputFasta()).toAbsolutePath())
+        ) {
             for (FastaReader.RawFastaRecord record : CUtils.it((OutputPortCloseable<FastaReader.RawFastaRecord>) reader.asRawRecordsPort())) {
                 StringWithMapping swm = StringWithMapping.removeSymbol(record.sequence, params.paddingCharacter);
 
@@ -74,6 +80,9 @@ public class FromPaddedFastaAction implements Action {
 
                     if (anchorPoint == null)
                         throw new IllegalArgumentException("Unknown anchor point: " + p.getKey());
+
+                    if (anchorPoint.getGeneType() != null && anchorPoint.getGeneType() != geneType)
+                        throw new IllegalArgumentException("Incompatible anchor point and gene type: " + anchorPoint + " / " + geneType);
 
                     Pattern pattern = Pattern.compile(p.getValue());
 
@@ -107,6 +116,9 @@ public class FromPaddedFastaAction implements Action {
                     if (anchorPoint == null)
                         throw new IllegalArgumentException("Unknown anchor point: " + p.getKey());
 
+                    if (anchorPoint.getGeneType() != null && anchorPoint.getGeneType() != geneType)
+                        throw new IllegalArgumentException("Incompatible anchor point and gene type: " + anchorPoint + " / " + geneType);
+
                     if (anchorPoints.containsKey(anchorPoint))
                         continue;
 
@@ -118,10 +130,6 @@ public class FromPaddedFastaAction implements Action {
                     anchorPoints.put(anchorPoint, (long) position);
                 }
 
-                VDJCGeneData gene = new VDJCGeneData(new BaseSequence("file://" + relativeFastaPath + "#" + geneName),
-                        geneName, geneType, functionality, new Chains(params.chain), record.description,
-                        tags, anchorPoints);
-
                 if (genes.containsKey(geneName)) {
                     if (params.getIgnoreDuplicates()) {
                         System.out.println("Ignored: Duplicate records for " + geneName);
@@ -130,18 +138,74 @@ public class FromPaddedFastaAction implements Action {
                         throw new IllegalArgumentException("Duplicate records for " + geneName);
                 }
 
-                seqWriter.write(record.description, seq);
+                BaseSequence baseSequence = storage.storeSequence(seq, geneName, record.description);
+
+                VDJCGeneData gene = new VDJCGeneData(baseSequence,
+                        geneName, geneType, functionality, new Chains(params.chain), record.description,
+                        tags, anchorPoints);
 
                 genes.put(geneName, gene);
             }
+
+            VDJCLibraryData library = new VDJCLibraryData(params.taxonId, params.speciesNames, new ArrayList<>(genes.values()),
+                    Arrays.asList(new VDJCLibraryNote(VDJCLibraryNoteType.Comment, "Imported from: " + params.getInput())),
+                    storage.getBase());
+
+            VDJCDataUtils.writeToFile(new VDJCLibraryData[]{library}, params.getOutputJSON(), false);
+        }
+    }
+
+    interface SequenceStorage extends AutoCloseable {
+        BaseSequence storeSequence(NucleotideSequence sequence, String geneId, String fullDescription);
+
+        List<KnownSequenceFragmentData> getBase();
+    }
+
+    public final class FastaSequenceStorage implements SequenceStorage {
+        final FastaWriter<NucleotideSequence> writer;
+        final String addressPrefix;
+
+        public FastaSequenceStorage(Path libraryPath, Path fastaPath) throws FileNotFoundException {
+            String relativeFastaPath = libraryPath.toAbsolutePath().getParent().relativize(fastaPath.toAbsolutePath()).toString();
+            this.writer = new FastaWriter<>(fastaPath.toFile());
+            this.addressPrefix = "file://" + relativeFastaPath + "#";
         }
 
-        VDJCLibraryData library = new VDJCLibraryData(params.taxonId, Collections.EMPTY_LIST, new ArrayList<>(genes.values()),
-                Arrays.asList(new VDJCLibraryNote(VDJCLibraryNoteType.Comment, "Imported from: " +
-                        fastaPath.getFileName().toString())),
-                Collections.EMPTY_LIST);
+        @Override
+        public List<KnownSequenceFragmentData> getBase() {
+            return Collections.EMPTY_LIST;
+        }
 
-        VDJCDataUtils.writeToFile(new VDJCLibraryData[]{library}, params.getOutputJSON(), false);
+        @Override
+        public BaseSequence storeSequence(NucleotideSequence sequence, String geneId, String fullDescription) {
+            writer.write(fullDescription, sequence);
+            return new BaseSequence(addressPrefix + geneId);
+        }
+
+        @Override
+        public void close() throws Exception {
+            writer.close();
+        }
+    }
+
+    public final class EmbeddedWriter implements SequenceStorage {
+        final String addressPrefix = "embedded://" + UUID.randomUUID().toString().replace("-", "") + "/";
+        final List<KnownSequenceFragmentData> base = new ArrayList<>();
+
+        public List<KnownSequenceFragmentData> getBase() {
+            return base;
+        }
+
+        @Override
+        public BaseSequence storeSequence(NucleotideSequence sequence, String geneId, String fullDescription) {
+            String recordId = addressPrefix + geneId;
+            base.add(new KnownSequenceFragmentData(URI.create(recordId), new Range(0, sequence.size()), sequence));
+            return new BaseSequence(recordId);
+        }
+
+        @Override
+        public void close() throws Exception {
+        }
     }
 
     @Override
@@ -154,11 +218,13 @@ public class FromPaddedFastaAction implements Action {
         return params;
     }
 
-    @Parameters(commandDescription = "Converts library from padded fasta file (IMGT-like) to non-padded fasta and " +
-            "json library files. Json library contain links to non-padded fasta file, so to use library one need both " +
-            "output file, or library can be compiled using 'repseqio compile'.")
+    @Parameters(commandDescription = "Converts library from padded fasta file (IMGT-like) to " +
+            "json library. This command can operate in two modes (1) if 3 file-parameters are specified, it will create " +
+            "separate non-padded fasta and put links inside newly created library pointing to it, (2) if 2 file-parameters " +
+            "are specified, create only library file, and embed sequences directly into it. " +
+            "To use library generated using mode (1) one need both output files, (see also 'repseqio compile').")
     public static final class Params extends ActionParametersWithOutput {
-        @Parameter(description = "input_padded.fasta output.fasta output.json[.gz]", arity = 2)
+        @Parameter(description = "input_padded.fasta [output.fasta] output.json[.gz]", arity = 2)
         public List<String> parameters;
 
         @Parameter(description = "Padding character",
@@ -173,6 +239,10 @@ public class FromPaddedFastaAction implements Action {
         @Parameter(description = "Ignore duplicate genes",
                 names = {"-i", "--ignore-duplicates"})
         public Boolean ignoreDuplicates;
+
+        @Parameter(description = "Species names (can be used multiple times)",
+                names = {"-s", "--species-name"})
+        public List<String> speciesNames = new ArrayList<>();
 
         @Parameter(description = "Gene name index (0-based) in FASTA description line (e.g. 1 for IMGT files).",
                 names = {"-n", "--name-index"},
@@ -216,11 +286,17 @@ public class FromPaddedFastaAction implements Action {
         }
 
         public String getOutputFasta() {
-            return parameters.get(1);
+            if (parameters.size() == 2)
+                return null;
+            else
+                return parameters.get(1);
         }
 
         public String getOutputJSON() {
-            return parameters.get(2);
+            if (parameters.size() == 2)
+                return parameters.get(1);
+            else
+                return parameters.get(2);
         }
 
         public GeneType getGeneType() {
@@ -238,7 +314,7 @@ public class FromPaddedFastaAction implements Action {
 
         @Override
         public void validate() {
-            if (parameters.size() != 3)
+            if (parameters.size() < 2 || parameters.size() > 3)
                 throw new ParameterException("Wrong number of arguments.");
         }
     }
