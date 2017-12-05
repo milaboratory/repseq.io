@@ -40,7 +40,7 @@ public class Main {
                 new DebugAction(),
                 new FormatAction(),
                 new StatAction(),
-                new FromPaddedFastaAction());
+                new FromFastaAction());
 
         main.setVersionInfoCallback(new Runnable() {
             @Override

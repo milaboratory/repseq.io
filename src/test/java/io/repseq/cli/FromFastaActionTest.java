@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import java.util.regex.Pattern;
 
-public class FromPaddedFastaActionTest {
+public class FromFastaActionTest {
     @Test
     public void regexpTest() throws Exception {
         Pattern p = Pattern.compile("[\\(\\[]?[Ff].?");

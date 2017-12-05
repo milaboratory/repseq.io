@@ -16,11 +16,7 @@ import com.milaboratory.core.io.sequence.fasta.FastaWriter;
 import com.milaboratory.core.sequence.AminoAcidSequence;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.TranslationParameters;
-import com.milaboratory.util.RandomUtil;
-import io.repseq.core.BaseSequence;
-import io.repseq.core.Chains;
-import io.repseq.core.GeneType;
-import io.repseq.core.ReferencePoint;
+import io.repseq.core.*;
 import io.repseq.dto.*;
 import io.repseq.util.StringWithMapping;
 
@@ -28,12 +24,11 @@ import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class FromPaddedFastaAction implements Action {
+public class FromFastaAction implements Action {
     final Params params = new Params();
 
     @Override
@@ -43,9 +38,24 @@ public class FromPaddedFastaAction implements Action {
 
         Map<String, VDJCGeneData> genes = new HashMap<>();
 
-        int importedGenes = 0;
-
         Path libraryPath = Paths.get(params.getOutputJSON()).toAbsolutePath();
+
+        // Parsing -P or --gene-feature parameters
+        Map<ReferencePoint, Integer> points = new HashMap<>();
+        if (params.geneFeature != null) {
+            GeneFeature gf = params.getGeneFeature();
+            points.put(gf.getFirstPoint(), 0);
+            points.put(gf.getLastPoint(), -1);
+        } else
+            for (Map.Entry<String, String> p : params.points.entrySet()) {
+                ReferencePoint anchorPoint = ReferencePoint.getPointByName(p.getKey());
+                if (anchorPoint == null)
+                    throw new IllegalArgumentException("Unknown anchor point: " + p.getKey());
+                if (anchorPoint.getGeneType() != null && anchorPoint.getGeneType() != geneType)
+                    throw new IllegalArgumentException("Incompatible anchor point and gene type: " + anchorPoint + " / " + geneType);
+                int position = Integer.decode(p.getValue());
+                points.put(anchorPoint, position);
+            }
 
         try (FastaReader reader = new FastaReader<>(params.getInput(), null);
              SequenceStorage storage = params.getOutputFasta() == null ?
@@ -110,24 +120,20 @@ public class FromPaddedFastaAction implements Action {
                     anchorPoints.put(anchorPoint, (long) position);
                 }
 
-                for (Map.Entry<String, String> p : params.points.entrySet()) {
-                    ReferencePoint anchorPoint = ReferencePoint.getPointByName(p.getKey());
-
-                    if (anchorPoint == null)
-                        throw new IllegalArgumentException("Unknown anchor point: " + p.getKey());
-
-                    if (anchorPoint.getGeneType() != null && anchorPoint.getGeneType() != geneType)
-                        throw new IllegalArgumentException("Incompatible anchor point and gene type: " + anchorPoint + " / " + geneType);
-
-                    if (anchorPoints.containsKey(anchorPoint))
+                for (Map.Entry<ReferencePoint, Integer> p : points.entrySet()) {
+                    // If point was already found using amino acid pattern, leave it as is
+                    // AA patterns have priority over positional anchor points
+                    if (anchorPoints.containsKey(p.getKey()))
                         continue;
 
-                    int position = swm.convertPosition(Integer.decode(p.getValue()));
+                    // Converting position using
+                    int position = swm.convertPosition(p.getValue());
 
+                    // Can't be converted (e.g. position of padding symbol) skipping
                     if (position == -1)
                         continue;
 
-                    anchorPoints.put(anchorPoint, (long) position);
+                    anchorPoints.put(p.getKey(), (long) position);
                 }
 
                 if (genes.containsKey(geneName)) {
@@ -210,7 +216,7 @@ public class FromPaddedFastaAction implements Action {
 
     @Override
     public String command() {
-        return "fromPaddedFasta";
+        return "fromFasta";
     }
 
     @Override
@@ -267,6 +273,10 @@ public class FromPaddedFastaAction implements Action {
                 required = true)
         public Long taxonId;
 
+        @Parameter(description = "Defines sequences for which gene feature are contained in the file.",
+                names = {"--gene-feature"})
+        public String geneFeature;
+
         @DynamicParameter(names = "-P", description = "Positions of anchor points in padded file. To define position " +
                 "relative to the end of sequence " +
                 "use negative values: -1 = sequence end, -2 = last but one letter. " +
@@ -299,6 +309,10 @@ public class FromPaddedFastaAction implements Action {
                 return parameters.get(2);
         }
 
+        public GeneFeature getGeneFeature() {
+            return GeneFeature.parse(geneFeature);
+        }
+
         public GeneType getGeneType() {
             return GeneType.fromChar(geneType.charAt(0));
         }
@@ -316,6 +330,8 @@ public class FromPaddedFastaAction implements Action {
         public void validate() {
             if (parameters.size() < 2 || parameters.size() > 3)
                 throw new ParameterException("Wrong number of arguments.");
+            if (geneFeature != null && !points.isEmpty())
+                throw new ParameterException("-P... and --gene-feature are mutually exclusive.");
         }
     }
 }
