@@ -14,16 +14,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public abstract class FromFastaParametersAbstract extends ActionParametersWithOutput {
-    public List<String> parameters = new ArrayList<>();
-
-    @Parameter(description = "input_padded.fasta [output.fasta] output.json[.gz]")
-    public List<String> getParameters() {
-        return parameters;
-    }
-
-    @Parameter(description = "Padding character",
-            names = {"-p", "--padding-character"})
-    public char paddingCharacter = '.';
+    public abstract List<String> getParameters();
 
     @Parameter(description = "Gene type (V/D/J/C)",
             names = {"-g", "--gene-type"},
@@ -68,8 +59,8 @@ public abstract class FromFastaParametersAbstract extends ActionParametersWithOu
             names = {"--gene-feature"})
     public String geneFeature;
 
-    @DynamicParameter(names = "-P", description = "Positions of anchor points in padded file. To define position " +
-            "relative to the end of sequence " +
+    @DynamicParameter(names = "-P", description = "Positions of anchor points in padded / non-padded file. " +
+            "To define position relative to the end of sequence " +
             "use negative values: -1 = sequence end, -2 = last but one letter. " +
             "Example: -PFR1Begin=0 -PVEnd=-1 , equivalent of --gene-feature VRegion")
     public Map<String, String> points = new HashMap<>();
@@ -83,24 +74,33 @@ public abstract class FromFastaParametersAbstract extends ActionParametersWithOu
     }
 
     public String getInput() {
-        return parameters.get(0);
+        return getParameters().get(0);
     }
 
     public String getOutputFasta() {
-        if (parameters.size() == 2)
+        if (getParameters().size() == 2)
             return null;
         else
-            return parameters.get(1);
+            return getParameters().get(1);
     }
 
     public String getOutputJSON() {
-        if (parameters.size() == 2)
-            return parameters.get(1);
+        if (getParameters().size() == 2)
+            return getParameters().get(1);
         else
-            return parameters.get(2);
+            return getParameters().get(2);
     }
 
+    /**
+     * Whether to embed sequence information into JSON output library file.
+     *
+     * If this parameter is false: (1) if {@link #getOutputFasta()} is null, input files will be directly linked inside
+     * json library, (2) if {@link #getOutputFasta()} is defined, separate file will be created, and linked inside
+     * newly created JSON library.
+     */
     public abstract boolean doEmbedSequences();
+
+    public abstract char getPaddingCharacter();
 
     public GeneFeature getGeneFeature() {
         return GeneFeature.parse(geneFeature);
@@ -116,12 +116,12 @@ public abstract class FromFastaParametersAbstract extends ActionParametersWithOu
 
     @Override
     protected List<String> getOutputFiles() {
-        return parameters.subList(1, 3);
+        return getParameters().subList(1, 3);
     }
 
     @Override
     public void validate() {
-        if (parameters.size() < 2 || parameters.size() > 3)
+        if (getParameters().size() < 2 || getParameters().size() > 3)
             throw new ParameterException("Wrong number of arguments.");
         if (geneFeature != null && !points.isEmpty())
             throw new ParameterException("-P... and --gene-feature are mutually exclusive.");
