@@ -230,7 +230,7 @@ public class FromFastaAction implements Action {
             "are specified, create only library file, and embed sequences directly into it. " +
             "To use library generated using mode (1) one need both output files, (see also 'repseqio compile').")
     public static final class Params extends ActionParametersWithOutput {
-        @Parameter(description = "input_padded.fasta [output.fasta] output.json[.gz]", arity = 2)
+        @Parameter(description = "input_padded.fasta [output.fasta] output.json[.gz]")
         public List<String> parameters;
 
         @Parameter(description = "Padding character",
