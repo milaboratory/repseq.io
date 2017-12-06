@@ -34,7 +34,7 @@ Here is the example pipeline starting from plain fasta files:
 
 ```shell
 # Importing fasta file for each gene type
-# (redundant meta information specified for each gene type is required because
+# (redundant meta information (species, chain, etc.) specified for each gene type is required because
 # library produced on each step is self-contained and requires all meta fields to be defined)
 
 repseqio fromFasta --taxon-id 9606 \
