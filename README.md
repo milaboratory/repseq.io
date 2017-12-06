@@ -26,14 +26,48 @@ Unpack zip file with latest release version to a folder and add it to your `PATH
 
 See this [repository](https://github.com/repseqio/library) for actual references.
 
+# Creating library
+
+See this [wiki page](https://github.com/repseqio/repseqio/wiki/Creating-repseqio-formatted-JSON-library).
+
+Here is the example pipeline starting from plain fasta files:
+
+```shell
+# Importing fasta file for each gene type
+# (redundant meta information (species, chain, etc.) specified for each gene type is required because
+# library produced on each step is self-contained and requires all meta fields to be defined)
+
+repseqio fromFasta --taxon-id 9606 \
+    --species-name hs --species-name homsap \
+    --chain TRB --name-index 0 \
+    --gene-type V --gene-feature VRegion \
+    my_genes.v.fasta my_library.v.json
+
+repseqio fromFasta --taxon-id 9606 \
+    --species-name hs --species-name homsap \
+    --chain TRB --name-index 0 \
+    --gene-type D --gene-feature DRegion \
+    my_genes.d.fasta my_library.d.json
+
+repseqio fromFasta --taxon-id 9606 \
+    --species-name hs --species-name homsap \
+    --chain TRB --name-index 0 \
+    --gene-type J --gene-feature JRegion \
+    my_genes.j.fasta my_library.j.json
+
+# Merging several libraries into single file
+
+repseqio merge my_library.v.json my_library.d.json my_library.j.json my_library.json
+
+# Inferring intermediate anchor points (like CDR3Begin) using automated homology-driven procedure;
+# built-in repseqio library will be used as reference
+
+repseqio inferPoints -g VRegion -g JRegion -f my_library.json my_library.json
+```
+
 # Format
 
-RepSeq.IO formatted reference is a JSON file that contain positions of V/D/J/C genes in some well known sequence (like NG_001332.2) or in file delivered with the reference. Each type of gene has predefined set of Anchor Points (see [here](http://mixcr.readthedocs.io/en/latest/geneFeatures.html)) which are used to encode gene position.
-
-See this file for example of RepSeq.IO formatted VDJCLibrary:
-https://github.com/repseqio/library/blob/master/human/TRB.json
-
-Detailed format documentation and JSON Schemas coming soon.
+See this [wiki page](https://github.com/repseqio/repseqio/wiki/repseqio-JSON-library-format).
 
 # Documentation
 
@@ -205,14 +239,14 @@ Usage: repseqio [options] [command] [command options]
     inferPoints      Try to infer anchor point positions from gene sequences of other libraries. If no reference libraries are specified, built-in library will be used.
       Usage: inferPoints [options] input_library.json [reference_library1.json [reference_library2.json [....]]] output.json
         Options:
-          -a, --copy-all
-             Copy not modified records..
           -f, --force
              Force overwrite of output file(s).
         * -g, --gene-feature
              Reference gene feature to use (e.g. VRegion, JRegion, VTranscript,
              etc...). This feature will be used to align target genes with reference
-             genes. Target genes must have this gene feature.
+             genes. Target genes must have this gene feature. This option can be used
+             several times, to specify several target gene features. Inference will be
+             performed in order options are specified.
           -h, --help
              Displays help for this command.
              Default: false
@@ -257,19 +291,24 @@ Usage: repseqio [options] [command] [command options]
              Displays help for this command.
              Default: false
 
-    fromPaddedFasta      Converts library from padded fasta file (IMGT-like) to non-padded fasta and json library files. Json library contain links to non-padded fasta file, so to use library one need both output file, or library can be compiled using 'repseqio compile'.
-      Usage: fromPaddedFasta [options] input_padded.fasta output.fasta output.json[.gz]
+    fromFasta      Creates boilerplate JSON library from existing fasta file.
+      Usage: fromFasta [options] input.fasta output.json
         Options:
         * -c, --chain
              Chain.
           -f, --force
              Force overwrite of output file(s).
           -j, --functionality-index
-             Functionality mark index (0-based) in FASTA description line (e.g.
-             3 for IMGT files).
+             Functionality mark index (0-based) in `|`-separated FASTA
+             description line (e.g. 3 for IMGT files). If this option is omitted, all genes
+             are considered functional.
           --functionality-regexp
-             Functionality regexp.
+             Functionality regexp, gene is considered functional if field
+             defined by -j / --functionality-index parameter matches this expression.
              Default: [\(\[]?[Ff].?
+          --gene-feature
+             Defines gene feature which sequecnes are contained in the file
+             (e.g. VRegion, VGene, JRegion etc..).
         * -g, --gene-type
              Gene type (V/D/J/C)
           -h, --help
@@ -278,12 +317,12 @@ Usage: repseqio [options] [command] [command options]
           -i, --ignore-duplicates
              Ignore duplicate genes
         * -n, --name-index
-             Gene name index (0-based) in FASTA description line (e.g. 1 for
-             IMGT files).
+             Gene name index (0-based) in `|`-separated FASTA description line
+             (e.g. 1 for IMGT files).
              Default: 0
-          -p, --padding-character
-             Padding character
-             Default: .
+          -s, --species-name
+             Species names (can be used multiple times)
+             Default: []
         * -t, --taxon-id
              Taxon id
           -L
@@ -292,9 +331,64 @@ Usage: repseqio [options] [command] [command options]
              Syntax: -Lkey=value
              Default: {}
           -P
-             Positions of anchor points in padded file. To define position
-             relative to the end of sequence use negative values: -1 = sequence end, -2 =
-             last but one letter. Example: -PFR1Begin=0 -PVEnd=-1
+             Positions of anchor points in padded / non-padded file. To define
+             position relative to the end of sequence use negative values: -1 = sequence
+             end, -2 = last but one letter. Example: -PFR1Begin=0 -PVEnd=-1 ,
+             equivalent of --gene-feature VRegion
+             Syntax: -Pkey=value
+             Default: {}
+
+    fromPaddedFasta      Converts library from padded fasta file (IMGT-like) to json library. This command can operate in two modes
+             (1) if 3 file-parameters are specified, it will create separate non-padded fasta and put links inside newly created library pointing to it,
+             (2) if 2 file-parameters are specified, create only library file, and embed sequences directly into it.
+             To use library generated using mode (1) one need both output files, (see also 'repseqio compile').
+             If library is intended for further editing and/or submission to version control system option (1) is recommended.
+      Usage: fromPaddedFasta [options] input_padded.fasta [output.fasta] output.json[.gz]
+        Options:
+        * -c, --chain
+             Chain.
+          -f, --force
+             Force overwrite of output file(s).
+          -j, --functionality-index
+             Functionality mark index (0-based) in `|`-separated FASTA
+             description line (e.g. 3 for IMGT files). If this option is omitted, all genes
+             are considered functional.
+          --functionality-regexp
+             Functionality regexp, gene is considered functional if field
+             defined by -j / --functionality-index parameter matches this expression.
+             Default: [\(\[]?[Ff].?
+          --gene-feature
+             Defines gene feature which sequecnes are contained in the file
+             (e.g. VRegion, VGene, JRegion etc..).
+        * -g, --gene-type
+             Gene type (V/D/J/C)
+          -h, --help
+             Displays help for this command.
+             Default: false
+          -i, --ignore-duplicates
+             Ignore duplicate genes
+        * -n, --name-index
+             Gene name index (0-based) in `|`-separated FASTA description line
+             (e.g. 1 for IMGT files).
+             Default: 0
+          -p, --padding-character
+             Padding character
+             Default: .
+          -s, --species-name
+             Species names (can be used multiple times)
+             Default: []
+        * -t, --taxon-id
+             Taxon id
+          -L
+             Amino-acid pattern of anchor point. Have higher priority than -P
+             for the same anchor point.
+             Syntax: -Lkey=value
+             Default: {}
+          -P
+             Positions of anchor points in padded / non-padded file. To define
+             position relative to the end of sequence use negative values: -1 = sequence
+             end, -2 = last but one letter. Example: -PFR1Begin=0 -PVEnd=-1 ,
+             equivalent of --gene-feature VRegion
              Syntax: -Pkey=value
              Default: {}
 ```

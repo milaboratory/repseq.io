@@ -1,1 +1,2 @@
-Fix for incorrect negative value interpretation in `fromPaddedFasta` action
+Major refactoring of `fromPaddedFasta` action, separate action for plain fasta (see `fromFasta`). Convenient pipeline for importing fasta files (see README).
+minor: Fix for incorrect negative value interpretation in `fromPaddedFasta` action
