@@ -55,7 +55,6 @@ public final class VDJCDataUtils {
     public static void sort(VDJCLibraryData library) {
         Collections.sort(library.getGenes());
         Collections.sort(library.getSpeciesNames());
-        Collections.sort(library.getNotes());
         Collections.sort(library.getSequenceFragments());
     }
 
@@ -69,7 +68,7 @@ public final class VDJCDataUtils {
         Map<Long, VDJCLibraryData> resultMap = new HashMap<>();
         for (VDJCLibraryData library1 : libraries) {
             if (!resultMap.containsKey(library1.getTaxonId()))
-                resultMap.put(library1.getTaxonId(), library1);
+                resultMap.put(library1.getTaxonId(), library1.clone());
             else {
                 // Merging two libraries with the same taxon ID
                 VDJCLibraryData[] libsToMerge = new VDJCLibraryData[]{library1, resultMap.get(library1.getTaxonId())};
@@ -101,13 +100,24 @@ public final class VDJCDataUtils {
 
                 List<KnownSequenceFragmentData> fragments = fragmentsBuilder.getFragments();
 
-                Set<VDJCLibraryNote> comments = new HashSet<>();
-                for (VDJCLibraryData lib : libsToMerge)
-                    comments.addAll(lib.getNotes());
+                // Merging meta information
+
+                SortedMap<String, SortedSet<String>> metaSet = new TreeMap<>();
+                for (VDJCLibraryData lib : libsToMerge) {
+                    for (Map.Entry<String, List<String>> entry : lib.getMeta().entrySet()) {
+                        SortedSet<String> values = metaSet.get(entry.getKey());
+                        if (values == null)
+                            metaSet.put(entry.getKey(), values = new TreeSet<>());
+                        values.addAll(entry.getValue());
+                    }
+                }
+                SortedMap<String, List<String>> meta = new TreeMap<>();
+                for (Map.Entry<String, SortedSet<String>> entry : metaSet.entrySet())
+                    meta.put(entry.getKey(), new ArrayList<>(entry.getValue()));
 
                 // Putting back merged result
                 resultMap.put(library1.getTaxonId(), new VDJCLibraryData(library1.getTaxonId(), speciesNames, genes,
-                        new ArrayList<>(comments), fragments));
+                        meta, fragments));
             }
         }
 

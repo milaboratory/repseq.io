@@ -78,8 +78,6 @@ public abstract class FromFastaActionAbstract<P extends FromFastaParametersAbstr
 
                 String[] fields = record.description.split("\\|");
 
-                EnumSet<GeneTag> tags = EnumSet.noneOf(GeneTag.class);
-
                 String geneName = fields[params.nameIndex];
 
                 boolean functionality = true;
@@ -151,15 +149,16 @@ public abstract class FromFastaActionAbstract<P extends FromFastaParametersAbstr
                 BaseSequence baseSequence = storage.storeSequence(seq, geneName, record.description);
 
                 VDJCGeneData gene = new VDJCGeneData(baseSequence,
-                        geneName, geneType, functionality, new Chains(params.chain), record.description,
-                        tags, anchorPoints);
+                        geneName, geneType, functionality, new Chains(params.chain),
+                        new TreeMap<String, List<String>>(), anchorPoints)
+                        .addMetaValue(KnownVDJCGeneMetaFields.COMMENTS, record.description);
 
                 genes.put(geneName, gene);
             }
 
             VDJCLibraryData library = new VDJCLibraryData(params.taxonId, params.speciesNames, new ArrayList<>(genes.values()),
-                    Arrays.asList(new VDJCLibraryNote(VDJCLibraryNoteType.Comment, "Imported from: " + params.getInput())),
-                    storage.getBase());
+                    new TreeMap<String, List<String>>(), storage.getBase())
+                    .addMetaValue(KnownVDJCLibraryMetaFields.COMMENTS, "Imported from: " + params.getInput());
 
             VDJCDataUtils.writeToFile(new VDJCLibraryData[]{library}, params.getOutputJSON(), false);
         }
