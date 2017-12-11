@@ -297,8 +297,22 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return gt;
     }
 
+    /**
+     * Return true if this gene feature contains more then one disjoint region
+     */
     public boolean isComposite() {
         return regions.length != 1;
+    }
+
+    /**
+     * Return true if contains at least one alignment attached point
+     */
+    public boolean isAlignmentAttached() {
+        for (ReferenceRange region : regions)
+            if (region.begin.isAttachedToAlignmentBound() ||
+                    region.end.isAttachedToAlignmentBound())
+                return true;
+        return false;
     }
 
     @Override

@@ -1,5 +1,8 @@
 package io.repseq.core;
 
+/**
+ * All reference points, including alignment-attached reference points (e.g. VEndTrimmed).
+ */
 public final class ExtendedReferencePoints extends AbstractReferencePoints<ExtendedReferencePoints> {
     public ExtendedReferencePoints(int[] points) {
         super(points, EXTENDED_REFERENCE_POINTS_TO_CHECK);

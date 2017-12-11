@@ -29,16 +29,16 @@
 package io.repseq.core;
 
 
-import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.milaboratory.core.Range;
-import com.milaboratory.core.mutations.Mutations;
-import com.milaboratory.core.sequence.NucleotideSequence;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -46,6 +46,8 @@ import java.util.Arrays;
 import static io.repseq.core.BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS;
 
 /**
+ * Basic reference points, excluding extended points (alignment-attached points like VEndTrimmed).
+ *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
