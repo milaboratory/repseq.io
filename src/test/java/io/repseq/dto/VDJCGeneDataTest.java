@@ -8,7 +8,7 @@ import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 import org.junit.Test;
 
-import java.util.List;
+import java.util.SortedSet;
 import java.util.TreeMap;
 
 import static org.junit.Assert.*;
@@ -18,7 +18,7 @@ public class VDJCGeneDataTest {
     public void testSerialization1() throws Exception {
         VDJCGeneData gene = new VDJCGeneData(new BaseSequence("embedded://testseq"),
                 "TRBV1", GeneType.Variable,
-                true, Chains.TRB, new TreeMap<String, List<String>>(), new TreeMap<ReferencePoint, Long>());
+                true, Chains.TRB, new TreeMap<String, SortedSet<String>>(), new TreeMap<ReferencePoint, Long>());
         gene.addMetaValue("key", "val");
 
         String s1 = GlobalObjectMappers.toOneLine(gene);

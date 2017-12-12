@@ -17,21 +17,21 @@ public final class MetaUtils {
     private MetaUtils() {
     }
 
-    public static SortedMap<String, List<String>> deepCopy(SortedMap<String, List<String>> meta) {
-        SortedMap<String, List<String>> ret = new TreeMap<>();
-        for (Map.Entry<String, List<String>> entry : meta.entrySet())
-            ret.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+    public static SortedMap<String, SortedSet<String>> deepCopy(SortedMap<String, SortedSet<String>> meta) {
+        SortedMap<String, SortedSet<String>> ret = new TreeMap<>();
+        for (Map.Entry<String, SortedSet<String>> entry : meta.entrySet())
+            ret.put(entry.getKey(), new TreeSet<>(entry.getValue()));
         return ret;
     }
 
     /**
      * Unwraps single-element arrays
      */
-    public static final class MetaValueSerializer extends JsonSerializer<List<String>> {
+    public static final class MetaValueSerializer extends JsonSerializer<SortedSet<String>> {
         @Override
-        public void serialize(List<String> value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+        public void serialize(SortedSet<String> value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
             if (value.size() == 1)
-                gen.writeString(value.get(0));
+                gen.writeString(value.first());
             else
                 gen.writeObject(value);
         }
@@ -40,14 +40,14 @@ public final class MetaUtils {
     /**
      * Wraps single-element arrays back on deserialization
      */
-    public static final class MetaValueDeserializer extends JsonDeserializer<List<String>> {
+    public static final class MetaValueDeserializer extends JsonDeserializer<SortedSet<String>> {
         @Override
-        public List<String> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+        public SortedSet<String> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
             if (p.getCurrentToken() == START_ARRAY)
-                return p.readValueAs(new TypeReference<List<String>>() {
+                return p.readValueAs(new TypeReference<SortedSet<String>>() {
                 });
             else {
-                ArrayList<String> values = new ArrayList<>();
+                SortedSet<String> values = new TreeSet<>();
                 values.add(p.readValueAs(String.class));
                 return values;
             }

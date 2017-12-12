@@ -16,7 +16,7 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(contentUsing = MetaUtils.MetaValueSerializer.class)
     @JsonDeserialize(contentUsing = MetaUtils.MetaValueDeserializer.class)
-    private final SortedMap<String, List<String>> meta;
+    private final SortedMap<String, SortedSet<String>> meta;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private final List<KnownSequenceFragmentData> sequenceFragments;
 
@@ -38,13 +38,13 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
     public VDJCLibraryData(@JsonProperty("taxonId") long taxonId,
                            @JsonProperty("speciesNames") List<String> speciesNames,
                            @JsonProperty("genes") List<VDJCGeneData> genes,
-                           @JsonProperty("meta") SortedMap<String, List<String>> meta,
+                           @JsonProperty("meta") SortedMap<String, SortedSet<String>> meta,
                            @JsonProperty("sequenceFragments") List<KnownSequenceFragmentData> sequenceFragments) {
         this.taxonId = taxonId;
         this.speciesNames = speciesNames == null ? Collections.EMPTY_LIST : speciesNames;
         this.genes = genes;
         this.sequenceFragments = sequenceFragments == null ? Collections.EMPTY_LIST : sequenceFragments;
-        this.meta = meta == null ? new TreeMap<String, List<String>>() : meta;
+        this.meta = meta == null ? new TreeMap<String, SortedSet<String>>() : meta;
     }
 
     public long getTaxonId() {
@@ -66,7 +66,7 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
     /**
      * Free form meta information for the library, raw meta map
      */
-    public SortedMap<String, List<String>> getMeta() {
+    public SortedMap<String, SortedSet<String>> getMeta() {
         return meta;
     }
 
@@ -75,9 +75,9 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
      *
      * @param key key
      */
-    public List<String> getMetaList(String key) {
-        List<String> vals = meta.get(key);
-        return vals == null ? Collections.EMPTY_LIST : vals;
+    public SortedSet<String> getMetaSet(String key) {
+        SortedSet<String> values = meta.get(key);
+        return values == null ? new TreeSet<String>() : values;
     }
 
     /**
@@ -86,13 +86,13 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
      * @param key key
      */
     public String getMetaValue(String key) {
-        List<String> values = meta.get(key);
-        if (values == null)
+        SortedSet<String> values = meta.get(key);
+        if (values == null || values.isEmpty())
             return null;
         else if (values.size() > 1)
             throw new RuntimeException("More then one value associated with the key \"" + key + "\"");
         else
-            return values.get(0);
+            return values.first();
     }
 
     /**
@@ -103,7 +103,7 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
      * @param newValue new value
      */
     public VDJCLibraryData setMetaValue(String key, String newValue) {
-        List<String> values = new ArrayList<>();
+        SortedSet<String> values = new TreeSet<>();
         values.add(newValue);
         meta.put(key, values);
         return this;
@@ -116,9 +116,9 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
      * @param value value
      */
     public VDJCLibraryData addMetaValue(String key, String value) {
-        List<String> values = meta.get(key);
+        SortedSet<String> values = meta.get(key);
         if (values == null)
-            meta.put(key, values = new ArrayList<>());
+            meta.put(key, values = new TreeSet<>());
         values.add(value);
         return this;
     }

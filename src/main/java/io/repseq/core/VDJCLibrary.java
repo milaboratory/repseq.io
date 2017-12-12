@@ -224,8 +224,8 @@ public class VDJCLibrary implements Comparable<VDJCLibrary> {
      *
      * @return all comment blocks associated with the library
      */
-    public List<String> getComments() {
-        return libraryData.getMetaList(KnownVDJCLibraryMetaFields.COMMENTS);
+    public SortedSet<String> getComments() {
+        return libraryData.getMetaSet(KnownVDJCLibraryMetaFields.COMMENTS);
     }
 
     /**

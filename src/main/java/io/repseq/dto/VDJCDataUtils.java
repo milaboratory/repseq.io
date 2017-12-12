@@ -102,18 +102,15 @@ public final class VDJCDataUtils {
 
                 // Merging meta information
 
-                SortedMap<String, SortedSet<String>> metaSet = new TreeMap<>();
+                SortedMap<String, SortedSet<String>> meta = new TreeMap<>();
                 for (VDJCLibraryData lib : libsToMerge) {
-                    for (Map.Entry<String, List<String>> entry : lib.getMeta().entrySet()) {
-                        SortedSet<String> values = metaSet.get(entry.getKey());
+                    for (Map.Entry<String, SortedSet<String>> entry : lib.getMeta().entrySet()) {
+                        SortedSet<String> values = meta.get(entry.getKey());
                         if (values == null)
-                            metaSet.put(entry.getKey(), values = new TreeSet<>());
+                            meta.put(entry.getKey(), values = new TreeSet<>());
                         values.addAll(entry.getValue());
                     }
                 }
-                SortedMap<String, List<String>> meta = new TreeMap<>();
-                for (Map.Entry<String, SortedSet<String>> entry : metaSet.entrySet())
-                    meta.put(entry.getKey(), new ArrayList<>(entry.getValue()));
 
                 // Putting back merged result
                 resultMap.put(library1.getTaxonId(), new VDJCLibraryData(library1.getTaxonId(), speciesNames, genes,

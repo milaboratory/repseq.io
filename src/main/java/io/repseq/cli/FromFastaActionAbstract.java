@@ -150,14 +150,14 @@ public abstract class FromFastaActionAbstract<P extends FromFastaParametersAbstr
 
                 VDJCGeneData gene = new VDJCGeneData(baseSequence,
                         geneName, geneType, functionality, new Chains(params.chain),
-                        new TreeMap<String, List<String>>(), anchorPoints)
+                        new TreeMap<String, SortedSet<String>>(), anchorPoints)
                         .addMetaValue(KnownVDJCGeneMetaFields.COMMENTS, record.description);
 
                 genes.put(geneName, gene);
             }
 
             VDJCLibraryData library = new VDJCLibraryData(params.taxonId, params.speciesNames, new ArrayList<>(genes.values()),
-                    new TreeMap<String, List<String>>(), storage.getBase())
+                    new TreeMap<String, SortedSet<String>>(), storage.getBase())
                     .addMetaValue(KnownVDJCLibraryMetaFields.COMMENTS, "Imported from: " + params.getInput());
 
             VDJCDataUtils.writeToFile(new VDJCLibraryData[]{library}, params.getOutputJSON(), false);

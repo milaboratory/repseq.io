@@ -29,7 +29,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(contentUsing = MetaUtils.MetaValueSerializer.class)
     @JsonDeserialize(contentUsing = MetaUtils.MetaValueDeserializer.class)
-    final SortedMap<String, List<String>> meta;
+    final SortedMap<String, SortedSet<String>> meta;
     @JsonDeserialize(keyUsing = ReferencePoint.JsonKeyDeserializer.class)
     @JsonSerialize(keyUsing = ReferencePoint.JsonKeySerializer.class)
     final SortedMap<ReferencePoint, Long> anchorPoints;
@@ -40,14 +40,14 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
                         @JsonProperty("geneType") GeneType geneType,
                         @JsonProperty("isFunctional") boolean isFunctional,
                         @JsonProperty("chains") Chains chains,
-                        @JsonProperty("meta") SortedMap<String, List<String>> meta,
+                        @JsonProperty("meta") SortedMap<String, SortedSet<String>> meta,
                         @JsonProperty("anchorPoints") SortedMap<ReferencePoint, Long> anchorPoints) {
         this.baseSequence = baseSequence;
         this.name = name;
         this.geneType = geneType;
         this.isFunctional = isFunctional;
         this.chains = chains;
-        this.meta = meta == null ? new TreeMap<String, List<String>>() : meta;
+        this.meta = meta == null ? new TreeMap<String, SortedSet<String>>() : meta;
         this.anchorPoints = anchorPoints == null ? new TreeMap<ReferencePoint, Long>() : anchorPoints;
     }
 
@@ -130,7 +130,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
     /**
      * Free form meta information for the gene, raw meta map
      */
-    public SortedMap<String, List<String>> getMeta() {
+    public SortedMap<String, SortedSet<String>> getMeta() {
         return meta;
     }
 
@@ -139,9 +139,9 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
      *
      * @param key key
      */
-    public List<String> getMetaList(String key) {
-        List<String> vals = meta.get(key);
-        return vals == null ? Collections.EMPTY_LIST : vals;
+    public SortedSet<String> getMetaList(String key) {
+        SortedSet<String> values = meta.get(key);
+        return values == null ? new TreeSet<String>() : values;
     }
 
     /**
@@ -150,13 +150,13 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
      * @param key key
      */
     public String getMetaValue(String key) {
-        List<String> values = meta.get(key);
-        if (values == null)
+        SortedSet<String> values = meta.get(key);
+        if (values == null || values.isEmpty())
             return null;
         else if (values.size() > 1)
             throw new RuntimeException("More then one value associated with the key \"" + key + "\"");
         else
-            return values.get(0);
+            return values.first();
     }
 
     /**
@@ -167,7 +167,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
      * @param newValue new value
      */
     public VDJCGeneData setMetaValue(String key, String newValue) {
-        List<String> values = new ArrayList<>();
+        SortedSet<String> values = new TreeSet<>();
         values.add(newValue);
         meta.put(key, values);
         return this;
@@ -180,9 +180,9 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
      * @param value value
      */
     public VDJCGeneData addMetaValue(String key, String value) {
-        List<String> values = meta.get(key);
+        SortedSet<String> values = meta.get(key);
         if (values == null)
-            meta.put(key, values = new ArrayList<>());
+            meta.put(key, values = new TreeSet<>());
         values.add(value);
         return this;
     }
