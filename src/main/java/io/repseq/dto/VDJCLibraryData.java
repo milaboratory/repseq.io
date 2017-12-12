@@ -64,6 +64,28 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
     }
 
     /**
+     * Set of citations specified for this library. E.g. can be used to remind academic users to cite specific paper,
+     * that this library was published with.
+     */
+    public SortedSet<String> getCitations() {
+        return getMetaValueSet(KnownVDJCLibraryMetaFields.CITATIONS);
+    }
+
+    /**
+     * Warnings, associated with the library. E.g. it is not finished yet (beta release).
+     */
+    public SortedSet<String> getWarnings() {
+        return getMetaValueSet(KnownVDJCLibraryMetaFields.WARNINGS);
+    }
+
+    /**
+     * All comment blocks associated with the library
+     */
+    public SortedSet<String> getComments() {
+        return getMetaValueSet(KnownVDJCLibraryMetaFields.COMMENTS);
+    }
+
+    /**
      * Free form meta information for the library, raw meta map
      */
     public SortedMap<String, SortedSet<String>> getMeta() {
@@ -75,7 +97,7 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
      *
      * @param key key
      */
-    public SortedSet<String> getMetaSet(String key) {
+    public SortedSet<String> getMetaValueSet(String key) {
         SortedSet<String> values = meta.get(key);
         return values == null ? new TreeSet<String>() : values;
     }

@@ -1,6 +1,5 @@
 package io.repseq.core;
 
-import io.repseq.dto.KnownVDJCLibraryMetaFields;
 import io.repseq.dto.VDJCGeneData;
 import io.repseq.dto.VDJCLibraryData;
 
@@ -220,12 +219,25 @@ public class VDJCLibrary implements Comparable<VDJCLibrary> {
     }
 
     /**
+     * Set of citations specified for this library. E.g. can be used to remind academic users to cite specific paper,
+     * that this library was published with.
+     */
+    public SortedSet<String> getCitations() {
+        return libraryData.getCitations();
+    }
+
+    /**
+     * Warnings, associated with the library. E.g. it is not finished yet (beta release).
+     */
+    public SortedSet<String> getWarnings() {
+        return libraryData.getWarnings();
+    }
+
+    /**
      * All comment blocks associated with the library
-     *
-     * @return all comment blocks associated with the library
      */
     public SortedSet<String> getComments() {
-        return libraryData.getMetaSet(KnownVDJCLibraryMetaFields.COMMENTS);
+        return libraryData.getComments();
     }
 
     /**

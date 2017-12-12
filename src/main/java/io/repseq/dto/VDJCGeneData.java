@@ -139,7 +139,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
      *
      * @param key key
      */
-    public SortedSet<String> getMetaList(String key) {
+    public SortedSet<String> getMetaValueSet(String key) {
         SortedSet<String> values = meta.get(key);
         return values == null ? new TreeSet<String>() : values;
     }
