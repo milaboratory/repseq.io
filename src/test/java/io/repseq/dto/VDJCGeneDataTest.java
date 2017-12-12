@@ -11,9 +11,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.TreeMap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class VDJCGeneDataTest {
     @Test
@@ -33,5 +31,12 @@ public class VDJCGeneDataTest {
         JsonNode n2 = GlobalObjectMappers.ONE_LINE.readTree(s2);
         assertFalse(n2.get("meta").get("key").isValueNode());
         assertEquals(gene, GlobalObjectMappers.ONE_LINE.readValue(s2, VDJCGeneData.class));
+    }
+
+    @Test
+    public void testFamily1() throws Exception {
+        assertEquals("TRAJ2", VDJCGeneData.extractFamily("TRAJ2*01"));
+        assertEquals("TRAV15", VDJCGeneData.extractFamily("TRAV15D-1/DV6D-1"));
+        assertEquals("TRAV14", VDJCGeneData.extractFamily("TRAV14D-1"));
     }
 }

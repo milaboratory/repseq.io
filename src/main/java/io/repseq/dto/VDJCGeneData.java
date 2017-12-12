@@ -12,6 +12,8 @@ import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * DTO for VDJC Gene
@@ -74,21 +76,31 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
         return name.substring(0, i);
     }
 
+    private static final Pattern familyPattern = Pattern.compile("[A-Za-z]+[0-9]+");
+
+    static String extractFamily(String geneName) {
+        Matcher matcher = familyPattern.matcher(geneName);
+        if (matcher.find())
+            return matcher.group();
+        else
+            return geneName;
+    }
+
     /**
      * Gene family name (e.g. TRBV12 for TRBV12-3*01).
      *
      * @return gene family name (e.g. TRBV12 for TRBV12-3*01)
      */
     public String getFamilyName() {
-        String name = getGeneName();
-        int i = name.indexOf('-');
-        if (i > 0)
-            name = name.substring(0, i);
-        return name;
+        String familyFromMeta = getMetaValue(KnownVDJCGeneMetaFields.GENE_FAMILY);
+        if (familyFromMeta != null)
+            return familyFromMeta;
+        else
+            return extractFamily(name);
     }
 
     /**
-     * Gene type (V / D/ J / C)
+     * Gene type (V / D / J / C)
      */
     public GeneType getGeneType() {
         return geneType;
@@ -138,13 +150,13 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
      * @param key key
      */
     public String getMetaValue(String key) {
-        List<String> vals = meta.get(key);
-        if (vals == null)
+        List<String> values = meta.get(key);
+        if (values == null)
             return null;
-        else if (vals.size() > 1)
+        else if (values.size() > 1)
             throw new RuntimeException("More then one value associated with the key \"" + key + "\"");
         else
-            return vals.get(0);
+            return values.get(0);
     }
 
     /**

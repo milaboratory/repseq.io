@@ -86,13 +86,13 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
      * @param key key
      */
     public String getMetaValue(String key) {
-        List<String> vals = meta.get(key);
-        if (vals == null)
+        List<String> values = meta.get(key);
+        if (values == null)
             return null;
-        else if (vals.size() > 1)
+        else if (values.size() > 1)
             throw new RuntimeException("More then one value associated with the key \"" + key + "\"");
         else
-            return vals.get(0);
+            return values.get(0);
     }
 
     /**
