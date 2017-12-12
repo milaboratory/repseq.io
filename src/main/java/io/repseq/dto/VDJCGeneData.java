@@ -46,7 +46,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
         this.isFunctional = isFunctional;
         this.chains = chains;
         this.meta = meta == null ? new TreeMap<String, List<String>>() : meta;
-        this.anchorPoints = anchorPoints;
+        this.anchorPoints = anchorPoints == null ? new TreeMap<ReferencePoint, Long>() : anchorPoints;
     }
 
     public BaseSequence getBaseSequence() {
@@ -169,7 +169,7 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
      */
     public VDJCGeneData addMetaValue(String key, String value) {
         List<String> values = meta.get(key);
-        if (value == null)
+        if (values == null)
             meta.put(key, values = new ArrayList<>());
         values.add(value);
         return this;

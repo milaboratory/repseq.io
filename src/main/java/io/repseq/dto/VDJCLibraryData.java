@@ -117,7 +117,7 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
      */
     public VDJCLibraryData addMetaValue(String key, String value) {
         List<String> values = meta.get(key);
-        if (value == null)
+        if (values == null)
             meta.put(key, values = new ArrayList<>());
         values.add(value);
         return this;

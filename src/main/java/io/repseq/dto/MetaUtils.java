@@ -43,7 +43,7 @@ public final class MetaUtils {
     public static final class MetaValueDeserializer extends JsonDeserializer<List<String>> {
         @Override
         public List<String> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-            if (p.nextToken() == START_ARRAY)
+            if (p.getCurrentToken() == START_ARRAY)
                 return p.readValueAs(new TypeReference<List<String>>() {
                 });
             else {
