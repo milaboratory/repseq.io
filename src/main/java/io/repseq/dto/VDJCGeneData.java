@@ -12,6 +12,8 @@ import io.repseq.core.GeneType;
 import io.repseq.core.ReferencePoint;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * DTO for VDJC Gene
@@ -25,9 +27,9 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
     final boolean isFunctional;
     final Chains chains;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    final String note;
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    final EnumSet<GeneTag> tags;
+    @JsonSerialize(contentUsing = MetaUtils.MetaValueSerializer.class)
+    @JsonDeserialize(contentUsing = MetaUtils.MetaValueDeserializer.class)
+    final SortedMap<String, SortedSet<String>> meta;
     @JsonDeserialize(keyUsing = ReferencePoint.JsonKeyDeserializer.class)
     @JsonSerialize(keyUsing = ReferencePoint.JsonKeySerializer.class)
     final SortedMap<ReferencePoint, Long> anchorPoints;
@@ -38,17 +40,15 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
                         @JsonProperty("geneType") GeneType geneType,
                         @JsonProperty("isFunctional") boolean isFunctional,
                         @JsonProperty("chains") Chains chains,
-                        @JsonProperty("note") String note,
-                        @JsonProperty("tags") Set<GeneTag> tags,
+                        @JsonProperty("meta") SortedMap<String, SortedSet<String>> meta,
                         @JsonProperty("anchorPoints") SortedMap<ReferencePoint, Long> anchorPoints) {
         this.baseSequence = baseSequence;
         this.name = name;
         this.geneType = geneType;
         this.isFunctional = isFunctional;
         this.chains = chains;
-        this.note = note == null ? "" : note;
-        this.tags = tags == null ? EnumSet.noneOf(GeneTag.class) : EnumSet.copyOf(tags);
-        this.anchorPoints = anchorPoints;
+        this.meta = meta == null ? new TreeMap<String, SortedSet<String>>() : meta;
+        this.anchorPoints = anchorPoints == null ? new TreeMap<ReferencePoint, Long>() : anchorPoints;
     }
 
     public BaseSequence getBaseSequence() {
@@ -76,42 +76,123 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
         return name.substring(0, i);
     }
 
+    private static final Pattern familyPattern = Pattern.compile("[A-Za-z]+[0-9]+");
+
+    static String extractFamily(String geneName) {
+        Matcher matcher = familyPattern.matcher(geneName);
+        if (matcher.find())
+            return matcher.group();
+        else
+            return geneName;
+    }
+
     /**
      * Gene family name (e.g. TRBV12 for TRBV12-3*01).
      *
      * @return gene family name (e.g. TRBV12 for TRBV12-3*01)
      */
     public String getFamilyName() {
-        String name = getGeneName();
-        int i = name.indexOf('-');
-        if (i > 0)
-            name = name.substring(0, i);
-        return name;
+        String familyFromMeta = getMetaValue(KnownVDJCGeneMetaFields.GENE_FAMILY);
+        if (familyFromMeta != null)
+            return familyFromMeta;
+        else
+            return extractFamily(name);
     }
 
+    /**
+     * Gene type (V / D / J / C)
+     */
     public GeneType getGeneType() {
         return geneType;
     }
 
+    /**
+     * Returns true if this gene is marked as functional in the library file
+     */
     public boolean isFunctional() {
         return isFunctional;
     }
 
+    /**
+     * Chains of immunological receptors that this segment can be a part of
+     */
     public Chains getChains() {
         return chains;
     }
 
-    public EnumSet<GeneTag> getTags() {
-        return tags;
-    }
-
+    /**
+     * Map of anchor points
+     */
     public Map<ReferencePoint, Long> getAnchorPoints() {
         return anchorPoints;
     }
 
+    /**
+     * Free form meta information for the gene, raw meta map
+     */
+    public SortedMap<String, SortedSet<String>> getMeta() {
+        return meta;
+    }
+
+    /**
+     * Returns list of values associated with the key from meta section of the gene record
+     *
+     * @param key key
+     */
+    public SortedSet<String> getMetaValueSet(String key) {
+        SortedSet<String> values = meta.get(key);
+        return values == null ? new TreeSet<String>() : values;
+    }
+
+    /**
+     * Returns single value associated with the key from meta section of the gene record
+     *
+     * @param key key
+     */
+    public String getMetaValue(String key) {
+        SortedSet<String> values = meta.get(key);
+        if (values == null || values.isEmpty())
+            return null;
+        else if (values.size() > 1)
+            throw new RuntimeException("More then one value associated with the key \"" + key + "\"");
+        else
+            return values.first();
+    }
+
+    /**
+     * Overrides value of field with the specified key. All previous values (even if several were associated with the
+     * field) will be dropped.
+     *
+     * @param key      key
+     * @param newValue new value
+     */
+    public VDJCGeneData setMetaValue(String key, String newValue) {
+        SortedSet<String> values = new TreeSet<>();
+        values.add(newValue);
+        meta.put(key, values);
+        return this;
+    }
+
+    /**
+     * Add value to the list of values associated with the key.
+     *
+     * @param key   key
+     * @param value value
+     */
+    public VDJCGeneData addMetaValue(String key, String value) {
+        SortedSet<String> values = meta.get(key);
+        if (values == null)
+            meta.put(key, values = new TreeSet<>());
+        values.add(value);
+        return this;
+    }
+
+    /**
+     * Clone this object
+     */
     public VDJCGeneData clone() {
         return new VDJCGeneData(baseSequence, name, geneType, isFunctional,
-                chains, note, EnumSet.copyOf(tags), new TreeMap<>(anchorPoints));
+                chains, MetaUtils.deepCopy(meta), new TreeMap<>(anchorPoints));
     }
 
     /**
@@ -146,23 +227,23 @@ public class VDJCGeneData implements Comparable<VDJCGeneData> {
         VDJCGeneData that = (VDJCGeneData) o;
 
         if (isFunctional != that.isFunctional) return false;
-        if (baseSequence != null ? !baseSequence.equals(that.baseSequence) : that.baseSequence != null) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (!baseSequence.equals(that.baseSequence)) return false;
+        if (!name.equals(that.name)) return false;
         if (geneType != that.geneType) return false;
-        if (chains != null ? !chains.equals(that.chains) : that.chains != null) return false;
-        if (tags != null ? !tags.equals(that.tags) : that.tags != null) return false;
-        return anchorPoints != null ? anchorPoints.equals(that.anchorPoints) : that.anchorPoints == null;
+        if (!chains.equals(that.chains)) return false;
+        if (!meta.equals(that.meta)) return false;
+        return anchorPoints.equals(that.anchorPoints);
     }
 
     @Override
     public int hashCode() {
-        int result = baseSequence != null ? baseSequence.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (geneType != null ? geneType.hashCode() : 0);
+        int result = baseSequence.hashCode();
+        result = 31 * result + name.hashCode();
+        result = 31 * result + geneType.hashCode();
         result = 31 * result + (isFunctional ? 1 : 0);
-        result = 31 * result + (chains != null ? chains.hashCode() : 0);
-        result = 31 * result + (tags != null ? tags.hashCode() : 0);
-        result = 31 * result + (anchorPoints != null ? anchorPoints.hashCode() : 0);
+        result = 31 * result + chains.hashCode();
+        result = 31 * result + meta.hashCode();
+        result = 31 * result + anchorPoints.hashCode();
         return result;
     }
 }

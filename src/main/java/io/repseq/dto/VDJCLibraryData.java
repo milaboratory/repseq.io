@@ -1,27 +1,27 @@
 package io.repseq.dto;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonIgnoreProperties(value = {"notes"})
 public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
     private final long taxonId;
     private final List<String> speciesNames;
     private final List<VDJCGeneData> genes;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private final List<VDJCLibraryNote> notes;
+    @JsonSerialize(contentUsing = MetaUtils.MetaValueSerializer.class)
+    @JsonDeserialize(contentUsing = MetaUtils.MetaValueDeserializer.class)
+    private final SortedMap<String, SortedSet<String>> meta;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private final List<KnownSequenceFragmentData> sequenceFragments;
 
     /**
-     * Creates VDJCLibraryData object from other VDJCLibraryData given new sed of genes
+     * Creates VDJCLibraryData object from other VDJCLibraryData given new set of genes
      *
      * @param other VDJCLibraryData to clone properties from
      * @param genes new gene list
@@ -30,21 +30,21 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
         this.taxonId = other.taxonId;
         this.speciesNames = new ArrayList<>(other.speciesNames); // clone just in case
         this.genes = genes;
+        this.meta = new TreeMap<>(other.meta); // clone just in case
         this.sequenceFragments = new ArrayList<>(other.sequenceFragments); // clone just in case
-        this.notes = new ArrayList<>(other.notes); // clone just in case
     }
 
     @JsonCreator
     public VDJCLibraryData(@JsonProperty("taxonId") long taxonId,
                            @JsonProperty("speciesNames") List<String> speciesNames,
                            @JsonProperty("genes") List<VDJCGeneData> genes,
-                           @JsonProperty("notes") List<VDJCLibraryNote> notes,
+                           @JsonProperty("meta") SortedMap<String, SortedSet<String>> meta,
                            @JsonProperty("sequenceFragments") List<KnownSequenceFragmentData> sequenceFragments) {
         this.taxonId = taxonId;
         this.speciesNames = speciesNames == null ? Collections.EMPTY_LIST : speciesNames;
         this.genes = genes;
-        this.notes = notes == null ? Collections.EMPTY_LIST : notes;
         this.sequenceFragments = sequenceFragments == null ? Collections.EMPTY_LIST : sequenceFragments;
+        this.meta = meta == null ? new TreeMap<String, SortedSet<String>>() : meta;
     }
 
     public long getTaxonId() {
@@ -59,26 +59,98 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
         return genes;
     }
 
-    public List<VDJCLibraryNote> getNotes() {
-        return notes;
+    public List<KnownSequenceFragmentData> getSequenceFragments() {
+        return sequenceFragments;
     }
 
     /**
-     * Return notes of a particular type
-     *
-     * @param type comment type
-     * @return list of notes of a particular type
+     * Set of citations specified for this library. E.g. can be used to remind academic users to cite specific paper,
+     * that this library was published with.
      */
-    public List<VDJCLibraryNote> getComments(VDJCLibraryNoteType type) {
-        List<VDJCLibraryNote> ret = new ArrayList<>();
-        for (VDJCLibraryNote c : notes)
-            if (c.getType() == type)
-                ret.add(c);
-        return ret;
+    public SortedSet<String> getCitations() {
+        return getMetaValueSet(KnownVDJCLibraryMetaFields.CITATIONS);
     }
 
-    public List<KnownSequenceFragmentData> getSequenceFragments() {
-        return sequenceFragments;
+    /**
+     * Warnings, associated with the library. E.g. it is not finished yet (beta release).
+     */
+    public SortedSet<String> getWarnings() {
+        return getMetaValueSet(KnownVDJCLibraryMetaFields.WARNINGS);
+    }
+
+    /**
+     * All comment blocks associated with the library
+     */
+    public SortedSet<String> getComments() {
+        return getMetaValueSet(KnownVDJCLibraryMetaFields.COMMENTS);
+    }
+
+    /**
+     * Free form meta information for the library, raw meta map
+     */
+    public SortedMap<String, SortedSet<String>> getMeta() {
+        return meta;
+    }
+
+    /**
+     * Returns list of values associated with the key from meta section of the library document
+     *
+     * @param key key
+     */
+    public SortedSet<String> getMetaValueSet(String key) {
+        SortedSet<String> values = meta.get(key);
+        return values == null ? new TreeSet<String>() : values;
+    }
+
+    /**
+     * Returns single value associated with the key from meta section of the library document
+     *
+     * @param key key
+     */
+    public String getMetaValue(String key) {
+        SortedSet<String> values = meta.get(key);
+        if (values == null || values.isEmpty())
+            return null;
+        else if (values.size() > 1)
+            throw new RuntimeException("More then one value associated with the key \"" + key + "\"");
+        else
+            return values.first();
+    }
+
+    /**
+     * Overrides value of field with the specified key. All previous values (even if several were associated with the
+     * field) will be dropped.
+     *
+     * @param key      key
+     * @param newValue new value
+     */
+    public VDJCLibraryData setMetaValue(String key, String newValue) {
+        SortedSet<String> values = new TreeSet<>();
+        values.add(newValue);
+        meta.put(key, values);
+        return this;
+    }
+
+    /**
+     * Add value to the list of values associated with the key.
+     *
+     * @param key   key
+     * @param value value
+     */
+    public VDJCLibraryData addMetaValue(String key, String value) {
+        SortedSet<String> values = meta.get(key);
+        if (values == null)
+            meta.put(key, values = new TreeSet<>());
+        values.add(value);
+        return this;
+    }
+
+    public VDJCLibraryData clone() {
+        return new VDJCLibraryData(taxonId,
+                new ArrayList<>(speciesNames),
+                new ArrayList<>(genes),
+                MetaUtils.deepCopy(meta),
+                new ArrayList<>(sequenceFragments));
     }
 
     @Override
@@ -94,19 +166,19 @@ public final class VDJCLibraryData implements Comparable<VDJCLibraryData> {
         VDJCLibraryData that = (VDJCLibraryData) o;
 
         if (taxonId != that.taxonId) return false;
-        if (speciesNames != null ? !speciesNames.equals(that.speciesNames) : that.speciesNames != null) return false;
-        if (genes != null ? !genes.equals(that.genes) : that.genes != null) return false;
-        if (notes != null ? !notes.equals(that.notes) : that.notes != null) return false;
-        return sequenceFragments != null ? sequenceFragments.equals(that.sequenceFragments) : that.sequenceFragments == null;
+        if (!speciesNames.equals(that.speciesNames)) return false;
+        if (!genes.equals(that.genes)) return false;
+        if (!meta.equals(that.meta)) return false;
+        return sequenceFragments.equals(that.sequenceFragments);
     }
 
     @Override
     public int hashCode() {
         int result = (int) (taxonId ^ (taxonId >>> 32));
-        result = 31 * result + (speciesNames != null ? speciesNames.hashCode() : 0);
-        result = 31 * result + (genes != null ? genes.hashCode() : 0);
-        result = 31 * result + (notes != null ? notes.hashCode() : 0);
-        result = 31 * result + (sequenceFragments != null ? sequenceFragments.hashCode() : 0);
+        result = 31 * result + speciesNames.hashCode();
+        result = 31 * result + genes.hashCode();
+        result = 31 * result + meta.hashCode();
+        result = 31 * result + sequenceFragments.hashCode();
         return result;
     }
 }
