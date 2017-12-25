@@ -31,6 +31,10 @@ package io.repseq.core;
 import com.milaboratory.core.Range;
 import com.milaboratory.core.sequence.TranslationParameters;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Object stores information about sequence partitioning (positions of specific anchor points)
  */
@@ -42,6 +46,14 @@ public abstract class SequencePartitioning {
      * @return position of anchor point
      */
     public abstract int getPosition(ReferencePoint referencePoint);
+
+    /**
+     * Return true if sequence partitioning is defined on the reverse-complement strand of the sequence,
+     * false if on forward strand.
+     *
+     * @return true if partitioning is defined on the reverse-complement strand
+     */
+    public abstract boolean isReversed();
 
     /**
      * Checks if position of anchor point can be obtained using this partitioning
@@ -274,6 +286,118 @@ public abstract class SequencePartitioning {
                         return TranslationParameters.withIncompleteCodon(relativePosition);
 
         return null;
+    }
+
+    /**
+     * Returns RangeTranslationParameters for all ranges in current partitioning that can be transcribed
+     *
+     * @param length length of original sequence (Integer.MAX_VALUE can be used if value is not known in advance, this
+     *               value will be set for final range and must be processed accordingly)
+     */
+    public List<RangeTranslationParameters> getTranslationParameters(int length) {
+        final boolean reversed = isReversed();
+
+        // Creating list of points
+        List<PointPosition> points = new ArrayList<>();
+        PointPosition previousPoint = new PointPosition(null, 0);
+        for (ReferencePoint currentPoint : ReferencePoint.DefaultReferencePoints) {
+            int position = getPosition(currentPoint);
+            if (position == -1
+                    || (position < previousPoint.position && !reversed)
+                    || (position > previousPoint.position && reversed))
+                continue;
+            if (currentPoint.isTripletBoundary() || currentPoint.isCodingSequenceBoundary()) {
+                if (previousPoint.point != null
+                        && previousPoint.position == position) {
+                    if (previousPoint.point.isCodingOnBothSides() && currentPoint.isCodingOnBothSides())
+                        if (previousPoint.point.isTripletBoundary())
+                            // Skipping this point, it changes nothing (zero-length coding sequence)
+                            continue;
+                        else
+                            // Current point supersedes previous one
+                            points.set(points.size() - 1, previousPoint = new PointPosition(currentPoint, position));
+                    else if (!previousPoint.point.isTripletBoundary()
+                            && !currentPoint.isTripletBoundary()
+                            && previousPoint.point.isCodingSequenceOnTheLeft() == currentPoint.isCodingSequenceOnTheRight()) {
+                        // Points annihilation
+                        points.remove(points.size() - 1);
+                        previousPoint = points.get(points.size() - 1);
+                    } else
+                        // Both points must be considered in the same position
+                        points.add(previousPoint = new PointPosition(currentPoint, position));
+                } else
+                    // Adding point
+                    points.add(previousPoint = new PointPosition(currentPoint, position));
+            }
+        }
+
+        if (points.isEmpty())
+            return Collections.EMPTY_LIST;
+
+        RangeTranslationParameters.Accumulator acc = new RangeTranslationParameters.Accumulator();
+
+        // Processing left edge
+        if (points.get(0).point.isTripletBoundary()
+                && points.get(0).point.isCodingSequenceOnTheLeft())
+            acc.put(new RangeTranslationParameters(null, points.get(0).point,
+                    new Range(reversed ? length : 0, points.get(0).position)));
+
+        // Processing intermediate ranges
+        for (int i = 1; i < points.size(); i++)
+            if (points.get(i - 1).point.isCodingSequenceOnTheRight()
+                    && points.get(i).point.isCodingSequenceOnTheLeft()
+                    && points.get(i - 1).position != points.get(i).position)
+                acc.put(new RangeTranslationParameters(
+                        points.get(i - 1).point, points.get(i).point,
+                        new Range(points.get(i - 1).position, points.get(i).position)));
+
+        // Processing right edge
+        if (points.get(points.size() - 1).point.isCodingSequenceOnTheRight()
+                && points.get(points.size() - 1).point.isTripletBoundary())
+            acc.put(new RangeTranslationParameters(
+                    points.get(points.size() - 1).point,
+                    null,
+                    new Range(points.get(points.size() - 1).position, reversed ? 0 : length)));
+
+        List<RangeTranslationParameters> result = acc.getResult();
+
+        // Adding codon leftovers
+        for (int i = 1; i < result.size(); i++) {
+            if (result.get(i - 1).acceptCodonLeftover() && result.get(i).leftIncompleteCodonRange() != null)
+                result.set(i - 1, result.get(i - 1).withCodonLeftover(result.get(i).leftIncompleteCodonRange()));
+            if (result.get(i).acceptCodonLeftover() && result.get(i - 1).rightIncompleteCodonRange() != null)
+                result.set(i, result.get(i).withCodonLeftover(result.get(i - 1).rightIncompleteCodonRange()));
+        }
+
+        return result;
+    }
+
+    private static final class PointPosition {
+        final ReferencePoint point;
+        final int position;
+
+        public PointPosition(ReferencePoint point, int position) {
+            this.point = point;
+            this.position = position;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof PointPosition)) return false;
+
+            PointPosition that = (PointPosition) o;
+
+            if (position != that.position) return false;
+            return point.equals(that.point);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = point.hashCode();
+            result = 31 * result + position;
+            return result;
+        }
     }
 
     public static int floorDiv(int x, int y) {

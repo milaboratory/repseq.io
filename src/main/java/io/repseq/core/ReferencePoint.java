@@ -325,6 +325,20 @@ public final class ReferencePoint implements Comparable<ReferencePoint>, java.io
         return basicPoint.isCodingSequenceOnTheRight();
     }
 
+    /**
+     * Returns isCodingSequenceOnTheLeft() != isCodingSequenceOnTheRight()
+     */
+    public boolean isCodingSequenceBoundary() {
+        return isCodingSequenceOnTheLeft() != isCodingSequenceOnTheRight();
+    }
+
+    /**
+     * Returns isCodingSequenceOnTheLeft() && isCodingSequenceOnTheRight()
+     */
+    public boolean isCodingOnBothSides() {
+        return isCodingSequenceOnTheLeft() && isCodingSequenceOnTheRight();
+    }
+
     public boolean isTripletBoundary() {
         return basicPoint.isTripletBoundary() && offset % 3 == 0;
     }

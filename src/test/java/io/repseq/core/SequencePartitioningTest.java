@@ -4,6 +4,9 @@ import com.milaboratory.core.Range;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static io.repseq.core.GeneFeature.CDR2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -70,5 +73,36 @@ public class SequencePartitioningTest {
                 BasicReferencePoint.DBegin.index, new int[]{0, 100});
         Assert.assertEquals(100, refPoints.getRelativePosition(GeneFeature.DRegionWithP, ReferencePoint.DBegin));
         Assert.assertEquals(200, refPoints.getRelativePosition(GeneFeature.DRegionWithP, ReferencePoint.DEnd));
+    }
+
+    @Test
+    public void testTranslationRules() throws Exception {
+        ExtendedReferencePointsBuilder builder = new ExtendedReferencePointsBuilder();
+        builder.setPosition(ReferencePoint.UTR5Begin, 10);
+        builder.setPosition(ReferencePoint.L1Begin, 20);
+        builder.setPosition(ReferencePoint.L1End, 30);
+        builder.setPosition(ReferencePoint.L2Begin, 40);
+        builder.setPosition(ReferencePoint.FR1Begin, 51);
+        builder.setPosition(ReferencePoint.CDR1Begin, 60);
+        builder.setPosition(ReferencePoint.FR2Begin, 72);
+        builder.setPosition(ReferencePoint.CDR2Begin, 78);
+        builder.setPosition(ReferencePoint.FR3Begin, 81);
+        builder.setPosition(ReferencePoint.CDR3Begin, 90);
+        builder.setPosition(ReferencePoint.VEndTrimmed, 94);
+        builder.setPosition(ReferencePoint.DBeginTrimmed, 95);
+        builder.setPosition(ReferencePoint.DEndTrimmed, 97);
+        builder.setPosition(ReferencePoint.JBeginTrimmed, 98);
+        builder.setPosition(ReferencePoint.JBegin, 100);
+        builder.setPosition(ReferencePoint.CDR3End, 102);
+        builder.setPosition(ReferencePoint.FR4End, 112);
+        builder.setPosition(ReferencePoint.CBegin, 112);
+        ExtendedReferencePoints points = builder.build();
+
+        List<RangeTranslationParameters> translationParameters = points.getTranslationParameters(120);
+        List<RangeTranslationParameters> expected = new ArrayList<>();
+        expected.add(new RangeTranslationParameters(ReferencePoint.L1Begin, ReferencePoint.L1End, new Range(20, 30), new Range(40, 42)));
+        // expected.add(new RangeTranslationParameters(ReferencePoint.L2Begin, ReferencePoint.L1End, new Range(20, 30), new Range(40, 42)));
+        for (RangeTranslationParameters tp : translationParameters)
+            System.out.println(tp);
     }
 }
