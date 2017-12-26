@@ -6,8 +6,6 @@ import com.milaboratory.core.sequence.NucleotideSequence;
 
 import java.util.Arrays;
 
-import static io.repseq.core.BasicReferencePoint.TOTAL_NUMBER_OF_BASIC_REFERENCE_POINTS;
-
 public abstract class AbstractReferencePoints<T extends AbstractReferencePoints<T>> extends SequencePartitioning {
     final int[] points;
     final boolean reversed;
@@ -86,6 +84,7 @@ public abstract class AbstractReferencePoints<T extends AbstractReferencePoints<
         return reversed;
     }
 
+    @Override
     public boolean isReversed() {
         return reversed;
     }
@@ -98,7 +97,7 @@ public abstract class AbstractReferencePoints<T extends AbstractReferencePoints<
         return ret;
     }
 
-    public T without(ReferencePoint referencePoint){
+    public T without(ReferencePoint referencePoint) {
         int[] newPoints = points.clone();
         newPoints[indexFromReferencePoint(referencePoint)] = -1;
         return create(newPoints);
