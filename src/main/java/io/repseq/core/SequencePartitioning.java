@@ -321,7 +321,7 @@ public abstract class SequencePartitioning {
                             && previousPoint.point.isCodingSequenceOnTheLeft() == currentPoint.isCodingSequenceOnTheRight()) {
                         // Points annihilation
                         points.remove(points.size() - 1);
-                        previousPoint = points.get(points.size() - 1);
+                        previousPoint = points.isEmpty() ? new PointPosition(null, 0) : points.get(points.size() - 1);
                     } else
                         // Both points must be considered in the same position
                         points.add(previousPoint = new PointPosition(currentPoint, position));
@@ -338,7 +338,8 @@ public abstract class SequencePartitioning {
 
         // Processing left edge
         if (points.get(0).point.isTripletBoundary()
-                && points.get(0).point.isCodingSequenceOnTheLeft())
+                && points.get(0).point.isCodingSequenceOnTheLeft()
+                && points.get(0).position != (reversed ? length : 0))
             acc.put(new RangeTranslationParameters(null, points.get(0).point,
                     new Range(reversed ? length : 0, points.get(0).position)));
 
@@ -353,7 +354,8 @@ public abstract class SequencePartitioning {
 
         // Processing right edge
         if (points.get(points.size() - 1).point.isCodingSequenceOnTheRight()
-                && points.get(points.size() - 1).point.isTripletBoundary())
+                && points.get(points.size() - 1).point.isTripletBoundary()
+                && points.get(points.size() - 1).position != (reversed ? 0 : length))
             acc.put(new RangeTranslationParameters(
                     points.get(points.size() - 1).point,
                     null,
