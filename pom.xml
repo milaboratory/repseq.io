@@ -173,16 +173,16 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.0</version>
-                <configuration>
-                    <additionalJOptions>
-                        <additionalJOption>-Xdoclint:none</additionalJOption>
-                    </additionalJOptions>
-                </configuration>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-javadoc-plugin</artifactId>-->
+                <!--<version>3.0.0</version>-->
+                <!--<configuration>-->
+                    <!--<additionalJOptions>-->
+                        <!--<additionalJOption>-Xdoclint:none</additionalJOption>-->
+                    <!--</additionalJOptions>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
             
             <plugin>
                 <!-- Workaround maven not being able to set a property conditionally -->
