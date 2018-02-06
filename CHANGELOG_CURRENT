@@ -2,3 +2,4 @@ Built-in library upgraded to 1.5, many genes updated / added (see library change
 Major refactoring of `fromPaddedFasta` action, separate action for plain fasta import (see `fromFasta`). Convenient pipeline for importing fasta files (see README)
 Added GeneFeature#isAlignmentAttached() method
 minor: Fix for incorrect negative value interpretation in `fromPaddedFasta` action
+minor: several other minor enhancements
