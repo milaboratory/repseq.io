@@ -40,6 +40,15 @@ public class InferAnchorPointsAction implements Action {
 
     @Override
     public void go(ActionHelper helper) throws Exception {
+        boolean first = true;
+        for (GeneFeature geneFeature : params.getGeneFeature()) {
+            go(geneFeature, first ? params.getInput() : params.getOutput(), params.getOutput());
+            first = false;
+        }
+    }
+
+    public void go(GeneFeature geneFeature, String inputFile, String outputFile) throws Exception {
+        VDJCLibraryRegistry.resetDefaultRegistry();
         VDJCLibraryRegistry reg = VDJCLibraryRegistry.getDefault();
 
         // Map of library names
@@ -61,22 +70,21 @@ public class InferAnchorPointsAction implements Action {
         }
 
         // Registering target library
-        reg.registerLibraries(params.getInput(), TARGET_LIBRARY_NAME);
+        reg.registerLibraries(inputFile, TARGET_LIBRARY_NAME);
 
         // Compile gene filter
         Pattern namePattern = params.name == null ? null : Pattern.compile(params.name);
 
-        // Parsing gene feature
-        GeneFeature geneFeature = params.getGeneFeature();
+        List<VDJCLibrary> refLibraries = reg.getLoadedLibrariesByNamePattern(REFERENCE_LIBRARY_PATTERN);
 
         SimpleBatchAlignerParameters<AminoAcidSequence> aParams = new SimpleBatchAlignerParameters<>(5, 0.4f,
-                params.getAbsoluteMinScore(), true,
+                params.getAbsoluteMinScore(geneFeature), true,
                 AffineGapAlignmentScoring.getAminoAcidBLASTScoring(BLASTMatrix.BLOSUM62, -10, -1));
         SimpleBatchAligner<AminoAcidSequence, Ref> aligner = new SimpleBatchAligner<>(aParams);
 
         int dbSize = 0;
 
-        for (VDJCLibrary lib : reg.getLoadedLibrariesByNamePattern(REFERENCE_LIBRARY_PATTERN)) {
+        for (VDJCLibrary lib : refLibraries) {
             for (VDJCGene gene : lib.getGenes()) {
                 NucleotideSequence nSeq = gene.getFeature(geneFeature);
 
@@ -121,7 +129,7 @@ public class InferAnchorPointsAction implements Action {
                 bos.reset();
                 PrintStream ps = params.outputOnlyModified() ? bufferPS : System.out;
                 if (namePattern != null && !namePattern.matcher(targetGene.getName()).matches()) {
-                    if (params.doCopyAll())
+                    if (!params.outputOnlyModified())
                         genes.add(targetGene.getData());
                     continue;
                 }
@@ -135,7 +143,7 @@ public class InferAnchorPointsAction implements Action {
                     ps.println("Failed to extract " + GeneFeature.encode(geneFeature));
                     ps.println("================");
                     ps.println();
-                    if (params.doCopyAll())
+                    if (!params.outputOnlyModified())
                         genes.add(targetGene.getData());
                     continue;
                 }
@@ -158,7 +166,7 @@ public class InferAnchorPointsAction implements Action {
 
                 if (bestFrame == null) {
                     ps.println("No alignments found.");
-                    if (params.doCopyAll())
+                    if (!params.outputOnlyModified())
                         genes.add(targetGene.getData());
                     continue;
                 }
@@ -243,7 +251,7 @@ public class InferAnchorPointsAction implements Action {
 
                             if (isAvailable) {
                                 int existingPosition = targetPartitioning.getPosition(point);
-                                if (existingPosition != ntPositionInTarget){
+                                if (existingPosition != ntPositionInTarget) {
                                     localPS.println("inferred position differs from existing value.  existing: " + existingPosition + ", inferred: " + ntPositionInTarget);
                                 }
                                 continue;
@@ -277,7 +285,7 @@ public class InferAnchorPointsAction implements Action {
             result.add(new VDJCLibraryData(lib.getData(), genes));
         }
 
-        VDJCDataUtils.writeToFile(result, params.getOutput(), false);
+        VDJCDataUtils.writeToFile(result, outputFile, false);
     }
 
     @Override
@@ -316,16 +324,13 @@ public class InferAnchorPointsAction implements Action {
                 names = {"-o", "--only-modified"})
         public Boolean onlyModified = null;
 
-        @Parameter(description = "Copy not modified records..",
-                names = {"-a", "--copy-all"})
-        public Boolean copyAll = null;
-
         @Parameter(description = "Reference gene feature to use (e.g. VRegion, JRegion, VTranscript, etc...). This " +
                 "feature will be used to align target genes with reference genes. Target genes must have this gene " +
-                "feature.",
+                "feature. This option can be used several times, to specify several target gene features. Inference " +
+                "will be performed in order options are specified.",
                 names = {"-g", "--gene-feature"},
                 required = true)
-        public String feature;
+        public List<String> feature;
 
         //TODO change!
         @Parameter(description = "Absolute minimal score. Alignment is performed using amino acid sequences (target is " +
@@ -333,10 +338,10 @@ public class InferAnchorPointsAction implements Action {
                 names = {"-m", "--min-score"})
         public Integer absoluteMinScore = null;
 
-        public Integer getAbsoluteMinScore() {
+        public Integer getAbsoluteMinScore(GeneFeature gf) {
             if (absoluteMinScore != null)
                 return absoluteMinScore;
-            switch (getGeneFeature().getGeneType()) {
+            switch (gf.getGeneType()) {
                 case Joining:
                     return 50;
                 case Variable:
@@ -346,16 +351,15 @@ public class InferAnchorPointsAction implements Action {
             }
         }
 
-        public boolean doCopyAll() {
-            return copyAll != null && copyAll;
-        }
-
         public boolean outputOnlyModified() {
             return onlyModified != null && onlyModified;
         }
 
-        public GeneFeature getGeneFeature() {
-            return GeneFeature.parse(feature);
+        public List<GeneFeature> getGeneFeature() {
+            List<GeneFeature> gfs = new ArrayList<>();
+            for (String f : feature)
+                gfs.add(GeneFeature.parse(f));
+            return gfs;
         }
 
         public String getInput() {

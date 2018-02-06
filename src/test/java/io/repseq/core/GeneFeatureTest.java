@@ -427,6 +427,24 @@ public class GeneFeatureTest {
     }
 
     @Test
+    public void testIntersectionTrimmed1() throws Exception {
+        assertTrue(GeneFeature.VRegion.contains(GeneFeature.VCDR3Part));
+    }
+
+    @Test
+    public void testIntersectionTrimmed2() throws Exception {
+        ExtendedReferencePointsBuilder builder = new ExtendedReferencePointsBuilder();
+        builder.setPosition(ReferencePoint.FR3Begin, 10);
+        builder.setPosition(ReferencePoint.CDR3Begin, 22);
+        builder.setPosition(ReferencePoint.VEndTrimmed, 27);
+        builder.setPosition(ReferencePoint.JBeginTrimmed, 33);
+        builder.setPosition(ReferencePoint.CDR3End, 52);
+        builder.setPosition(ReferencePoint.FR4End, 64);
+        ExtendedReferencePoints points = builder.build();
+
+    }
+
+    @Test
     public void testCoding1() throws Exception {
         GeneFeature input = GeneFeature.parse("{CDR3Begin(-10):CDR3Begin(-1)}");
         GeneFeature cf = GeneFeature.getCodingGeneFeature(input);

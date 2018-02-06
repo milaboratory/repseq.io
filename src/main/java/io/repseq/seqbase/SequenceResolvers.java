@@ -25,6 +25,7 @@ public class SequenceResolvers {
         defaultResolver = new MultiSequenceResolver(
                 new LocalFileResolver(),
                 new HTTPSequenceResolvers.NucCoreResolver(context),
+                new HTTPSequenceResolvers.RAWHTTPResolver(context),
                 new AnySequenceResolver());
     }
 

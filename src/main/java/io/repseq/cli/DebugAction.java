@@ -129,7 +129,7 @@ public class DebugAction implements Action {
                 if (params.getProblemOnly() && warnings.isEmpty())
                     continue;
 
-                System.out.println(gene.getName() + " (" + (gene.isFunctional() ? "F" : "P") + ") " + gene.getChains());
+                System.out.println(gene.getName() + " (" + (gene.isFunctional() ? "F" : "P") + ") " + gene.getChains() + " : " + lib.getTaxonId());
 
                 if (!warnings.isEmpty()) {
                     System.out.println();

@@ -40,6 +40,7 @@ public class Main {
                 new DebugAction(),
                 new FormatAction(),
                 new StatAction(),
+                new FromFastaAction(),
                 new FromPaddedFastaAction());
 
         main.setVersionInfoCallback(new Runnable() {

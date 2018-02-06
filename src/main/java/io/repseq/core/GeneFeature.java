@@ -60,7 +60,7 @@ import static io.repseq.core.ReferencePoint.*;
 @JsonSerialize(using = GeneFeature.Serializer.class)
 @Serializable(by = GeneFeatureSerializer.class)
 public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, Comparable<GeneFeature>,
-        java.io.Serializable {
+                                          java.io.Serializable {
     /* V, D, J, Regions */
 
     public static final int GermlinePRegionSize = 20;
@@ -297,8 +297,22 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         return gt;
     }
 
+    /**
+     * Return true if this gene feature contains more then one disjoint region
+     */
     public boolean isComposite() {
         return regions.length != 1;
+    }
+
+    /**
+     * Return true if contains at least one alignment attached point
+     */
+    public boolean isAlignmentAttached() {
+        for (ReferenceRange region : regions)
+            if (region.begin.isAttachedToAlignmentBound() ||
+                    region.end.isAttachedToAlignmentBound())
+                return true;
+        return false;
     }
 
     @Override
@@ -515,8 +529,7 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
      * returns null.
      *
      * @param feature gene feature
-     * @return reference point that is triplet boundary (so defines reading frame) inside provided gene feature or
-     * null
+     * @return reference point that is triplet boundary (so defines reading frame) inside provided gene feature or null
      */
     public static synchronized ReferencePoint getFrameReference(GeneFeature feature) {
         ReferencePoint rp = frameReferenceCache.get(feature);
@@ -781,6 +794,8 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
     public static GeneFeature parse(String string) {
         string = string.replaceAll(" ", "");
+        if ("null".equals(string))
+            return null;
 
         String[] singles = ParseUtil.splitWithBrackets(string, '+', "(){}");
         ArrayList<GeneFeature> features = new ArrayList<>(singles.length);
@@ -801,6 +816,8 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
 
     private static GeneFeature parseSingle(String string) {
         string = string.trim();
+        if ("null".equals(string))
+            return null;
         //single feature
         if (string.charAt(0) == '{') { // feature by points {from:to}
             if (string.charAt(string.length() - 1) != '}')

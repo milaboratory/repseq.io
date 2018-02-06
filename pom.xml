@@ -32,7 +32,7 @@
 
     <groupId>io.repseq</groupId>
     <artifactId>repseqio</artifactId>
-    <version>1.2.10</version>
+    <version>1.2.11</version>
     <packaging>jar</packaging>
     <name>RepSeqIO</name>
 
@@ -45,7 +45,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.8.1</milib.version>
+        <milib.version>1.8.2</milib.version>
     </properties>
 
     <dependencies>
@@ -173,6 +173,17 @@
 
     <build>
         <plugins>
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-javadoc-plugin</artifactId>-->
+                <!--<version>3.0.0</version>-->
+                <!--<configuration>-->
+                    <!--<additionalJOptions>-->
+                        <!--<additionalJOption>-Xdoclint:none</additionalJOption>-->
+                    <!--</additionalJOptions>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
+            
             <plugin>
                 <!-- Workaround maven not being able to set a property conditionally -->
                 <groupId>org.apache.maven.plugins</groupId>

@@ -8,6 +8,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.net.URI;
+import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -43,5 +45,43 @@ public class SequenceResolverTest {
                 .getRegion(new Range(10, 30));
 
         Assert.assertEquals(new NucleotideSequence("ATCCTGGCTTAGAACTAACG"), seq);
+    }
+
+    @Test
+    public void rawHttpTest1() throws Exception {
+        Path dir = TempFileManager.getTempDir().toPath().toAbsolutePath();
+
+        Path work = dir.resolve("work");
+        Files.createDirectories(work);
+
+        Path cache = dir.resolve("cache");
+        Files.createDirectories(cache);
+
+        SequenceResolvers.initDefaultResolver(cache);
+        SequenceResolver defaultResolver = SequenceResolvers.getDefault();
+
+        NucleotideSequence seq = defaultResolver.resolve(new SequenceAddress(
+                "http://files.milaboratory.com/test-data/test.fa#testRecord"))
+                .getRegion(new Range(10, 30).inverse());
+        Assert.assertEquals(new NucleotideSequence("GCTCCACCACAAGACACTCT"), seq);
+    }
+
+    @Test
+    public void rawHttpTest2() throws Exception {
+        Path dir = TempFileManager.getTempDir().toPath().toAbsolutePath();
+
+        Path work = dir.resolve("work");
+        Files.createDirectories(work);
+
+        Path cache = dir.resolve("cache");
+        Files.createDirectories(cache);
+
+        SequenceResolvers.initDefaultResolver(cache);
+        SequenceResolver defaultResolver = SequenceResolvers.getDefault();
+
+        NucleotideSequence seq = defaultResolver.resolve(new SequenceAddress(
+                "http://files.milaboratory.com/test-data/test.fa.gz#testRecord"))
+                .getRegion(new Range(10, 30).inverse());
+        Assert.assertEquals(new NucleotideSequence("GCTCCACCACAAGACACTCT"), seq);
     }
 }

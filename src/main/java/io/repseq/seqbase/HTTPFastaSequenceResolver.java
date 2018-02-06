@@ -9,13 +9,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.zip.GZIPInputStream;
 
 public abstract class HTTPFastaSequenceResolver extends AbstractRAFastaResolver
         implements OptionalSequenceResolver {
@@ -100,13 +98,16 @@ public abstract class HTTPFastaSequenceResolver extends AbstractRAFastaResolver
 
         // Downloading file
         HttpGet request = new HttpGet(httpURI);
-        log.debug("Downloading " + httpURI);
+        boolean unGZIP = httpURI.getPath().endsWith(".gz");
+        log.debug("Downloading " + httpURI + " into " + file);
         try {
             HttpResponse resp = context.getHttpClient().execute(request);
             HttpEntity entity = resp.getEntity();
             long contentLength = entity.getContentLength();
             try (LongProcess lp = reporter.start("Downloading " + httpURI);
-                 BufferedInputStream istream = new BufferedInputStream(entity.getContent());
+                 InputStream istream = unGZIP ?
+                         new GZIPInputStream(new BufferedInputStream(entity.getContent())) :
+                         new BufferedInputStream(entity.getContent());
                  OutputStream ostream = new FileOutputStream(file.toFile())) {
                 long startTimestamp = System.nanoTime();
                 byte[] buffer = new byte[CHUNK_SIZE];
