@@ -45,7 +45,7 @@ public class TsvAction implements Action {
         try (BufferedWriter writer = new BufferedWriter(
                 new OutputStreamWriter(params.getOutputStream(), StandardCharsets.UTF_8))) {
 
-            writer.write("Gene\tChains\tFeature\tStart\tStop\tSource\tSequence\n");
+            writer.write("Name\tGene\tChains\tFeature\tStart\tStop\tSource\tSequence\n");
 
             for (VDJCLibrary lib : reg.getLoadedLibraries()) {
                 if (taxonFilter != null && taxonFilter != lib.getTaxonId())
@@ -80,7 +80,7 @@ public class TsvAction implements Action {
                         NucleotideSequence nSequence = gene.getFeature(geneFeature);
 
                         List<String> tokens =
-                                Arrays.asList(gene.getGeneName(),
+                                Arrays.asList(gene.getData().getName(), gene.getGeneName(),
                                         gene.getChains().toString(), feature.originalName,
                                         // NOTE: both coordinates from the library are 0-based, but end is exclusive
                                         // (so essentially 1-based inclusive). Report both as 1-based.
