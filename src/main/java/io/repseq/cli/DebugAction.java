@@ -56,6 +56,8 @@ public class DebugAction implements Action {
                             l3 = gene.getFeature(cdr3FirstTriplet);
                             if (l3 == null)
                                 warnings.add("Unable to find CDR3 start");
+                            else if (l3.containsWildcards())
+                                warnings.add("CDR3 start contains wildcards: " + gene.getName() + " / " + l3);
                             else if (l3.size() != 3)
                                 warnings.add("Unable to translate sequence: " + gene.getName() + " / " + l3);
                             else if (AminoAcidSequence.translate(l3).codeAt(0) != AminoAcidAlphabet.C)
