@@ -1,4 +1,10 @@
 
+RepSeqIO 1.2.12 (14 Jun 2018)
+========================
+
+-- Added allele name to TsvAction (#41) [@bbimber]
+
+
 RepSeqIO 1.2.11 ( 7 Feb 2018)
 ========================
 
