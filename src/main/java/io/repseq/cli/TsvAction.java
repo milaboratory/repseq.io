@@ -149,10 +149,10 @@ public class TsvAction implements Action {
 
         @Parameter(description = "Use one-based coordinates instead of zero-based and output inclusive end position.",
                 names = {"-1", "--one-based"})
-        public Boolean oneBased = false;
+        public boolean oneBased = false;
 
         public boolean isOneBased() {
-            return oneBased != null && oneBased;
+            return oneBased;
         }
 
         @Parameter(description = "Gene feature(s) to export (e.g. VRegion, JRegion, VTranscript, etc...). " +

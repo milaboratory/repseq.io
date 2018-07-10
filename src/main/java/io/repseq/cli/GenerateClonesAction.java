@@ -91,11 +91,11 @@ public class GenerateClonesAction implements Action {
 
         @Parameter(description = "In-frame clones only.",
                 names = {"-a", "--in-frame"})
-        public Boolean inFrame;
+        public boolean inFrame = false;
 
         @Parameter(description = "Output clones without stop codons in CDR3 (valid only with -a / --in-frame).",
                 names = {"-b", "--no-stops"})
-        public Boolean noStops;
+        public boolean noStops = false;
 
         public long getSeed() {
             if (seed == null)
@@ -117,11 +117,11 @@ public class GenerateClonesAction implements Action {
         }
 
         public boolean isInFrame() {
-            return inFrame != null && inFrame;
+            return inFrame;
         }
 
         public boolean isNoStops() {
-            return noStops != null && noStops;
+            return noStops;
         }
 
         @Override
