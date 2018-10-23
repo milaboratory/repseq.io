@@ -23,7 +23,7 @@ public abstract class FromFastaParametersAbstract extends ActionParametersWithOu
 
     @Parameter(description = "Ignore duplicate genes",
             names = {"-i", "--ignore-duplicates"})
-    public Boolean ignoreDuplicates;
+    public boolean ignoreDuplicates = false;
 
     @Parameter(description = "Species names (can be used multiple times)",
             names = {"-s", "--species-name"})
@@ -70,7 +70,7 @@ public abstract class FromFastaParametersAbstract extends ActionParametersWithOu
     public Map<String, String> patterns = new HashMap<>();
 
     public boolean getIgnoreDuplicates() {
-        return ignoreDuplicates != null && ignoreDuplicates;
+        return ignoreDuplicates;
     }
 
     public String getInput() {

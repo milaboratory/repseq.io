@@ -322,7 +322,7 @@ public class InferAnchorPointsAction implements Action {
 
         @Parameter(description = "Output only modified records.",
                 names = {"-o", "--only-modified"})
-        public Boolean onlyModified = null;
+        public boolean onlyModified ;
 
         @Parameter(description = "Reference gene feature to use (e.g. VRegion, JRegion, VTranscript, etc...). This " +
                 "feature will be used to align target genes with reference genes. Target genes must have this gene " +
@@ -352,7 +352,7 @@ public class InferAnchorPointsAction implements Action {
         }
 
         public boolean outputOnlyModified() {
-            return onlyModified != null && onlyModified;
+            return onlyModified;
         }
 
         public List<GeneFeature> getGeneFeature() {

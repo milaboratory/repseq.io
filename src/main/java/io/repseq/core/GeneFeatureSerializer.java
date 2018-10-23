@@ -25,7 +25,7 @@ public final class GeneFeatureSerializer implements Serializer<GeneFeature> {
         output.writeObject(object.regions);
         if (saveRef)
             // Saving this gene feature for the all subsequent serializations
-            output.putKnownReference(object);
+            output.putKnownObject(object);
     }
 
     @Override
@@ -33,7 +33,7 @@ public final class GeneFeatureSerializer implements Serializer<GeneFeature> {
         GeneFeature object = new GeneFeature(input.readObject(GeneFeature.ReferenceRange[].class), true);
         if (saveRef)
             // Saving this gene feature for the all subsequent deserializations
-            input.putKnownReference(object);
+            input.putKnownObject(object);
         return object;
     }
 

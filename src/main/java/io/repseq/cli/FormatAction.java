@@ -46,10 +46,10 @@ public class FormatAction implements Action {
 
         @Parameter(description = "Compact.",
                 names = {"-c", "--compact"})
-        public Boolean compact = null;
+        public boolean compact = false;
 
         public boolean getCompact() {
-            return compact != null && compact;
+            return compact;
         }
 
         public String getInput() {

@@ -260,22 +260,22 @@ public class DebugAction implements Action {
 
         @Parameter(description = "Print only genes with problems, checks only functional genes by default (see -a option).",
                 names = {"-p", "--problems"})
-        public Boolean problemOnly;
+        public boolean problemOnly = false;
 
         @Parameter(description = "Check all genes, used with -p option.",
                 names = {"-a", "--all"})
-        public Boolean checkAllGenes;
+        public boolean checkAllGenes = false;
 
         @Parameter(description = "Gene name pattern, regexp string, all genes with matching gene name will be exported.",
                 names = {"-n", "--name"})
         public String name;
 
         public boolean getProblemOnly() {
-            return problemOnly != null && problemOnly;
+            return problemOnly;
         }
 
         public boolean getCheckAll() {
-            return checkAllGenes != null && checkAllGenes;
+            return checkAllGenes;
         }
 
         public String getInput() {
