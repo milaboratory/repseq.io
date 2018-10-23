@@ -309,6 +309,10 @@ public final class VDJCLibraryRegistry {
      * Used in {@link #getLibrary(String, String, long, byte[])}
      */
     private VDJCLibrary tryGetLibrary(String libraryName, String species, long taxonId, byte[] checksum) {
+        return tryGetLibrary(libraryName, species, taxonId, checksum, false);
+    }
+
+    private VDJCLibrary tryGetLibrary(String libraryName, String species, long taxonId, byte[] checksum, boolean aliasSearch) {
         // Try resolve species if it was provided in string form
         if (species != null) {
             Long tId = tryResolveSpecies(species);
@@ -320,13 +324,13 @@ public final class VDJCLibraryRegistry {
         // Key to search in map
         VDJCLibraryId libraryId = new VDJCLibraryId(libraryName, taxonId);
 
-        // Try get from map
+        // Try get from already loaded
         VDJCLibrary vdjcLibrary = libraries.get(libraryId);
 
         // If not found try aliases
         if (vdjcLibrary == null) {
-            if (aliases.containsKey(libraryName))
-                return tryGetLibrary(aliases.get(libraryName), null, taxonId, checksum);
+            if (aliases.containsKey(libraryName) && !aliasSearch)
+                return tryGetLibrary(aliases.get(libraryName), null, taxonId, checksum, true);
             else
                 return null;
         }
