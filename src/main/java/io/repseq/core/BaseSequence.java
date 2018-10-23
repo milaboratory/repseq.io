@@ -180,7 +180,8 @@ public class BaseSequence {
         }
     }
 
-    private static final TypeReference<Mutations<NucleotideSequence>> numMutationsRef = new TypeReference<Mutations<NucleotideSequence>>() {};
+    private static final TypeReference<Mutations<NucleotideSequence>> numMutationsRef = new TypeReference<Mutations<NucleotideSequence>>() {
+    };
     private static final JavaType numMutationsType = TypeFactory.defaultInstance().constructParametricType(Mutations.class, NucleotideSequence.class);
 
     public static final class Deserializer extends JsonDeserializer<BaseSequence> {
@@ -194,7 +195,7 @@ public class BaseSequence {
                 while ((token = p.nextToken()) != JsonToken.END_OBJECT) {
                     // Only Field name token expected here
                     if (token != JsonToken.FIELD_NAME)
-                        throw ctxt.wrongTokenException(p, JsonToken.FIELD_NAME, "");
+                        throw ctxt.wrongTokenException(p, BaseSequence.class, JsonToken.FIELD_NAME, "");
 
                     String fieldName = p.getCurrentName();
                     p.nextToken();
@@ -212,7 +213,7 @@ public class BaseSequence {
                             mutations = p.readValueAs(numMutationsRef);
                             break;
                         default:
-                            throw ctxt.reportInstantiationException(BaseSequence.class, "Unknown field: " + fieldName);
+                            ctxt.handleUnknownProperty(p, this, BaseSequence.class, fieldName);
                     }
                 }
                 return new BaseSequence(origin, regions, mutations);
