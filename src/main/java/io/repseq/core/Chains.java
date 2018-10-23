@@ -2,12 +2,14 @@ package io.repseq.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.milaboratory.primitivio.annotations.Serializable;
 
 import java.util.*;
 
 /**
  * Immutable set of strings
  */
+@Serializable(asJson = true)
 public final class Chains implements Iterable<String> {
     /**
      * Special chains object represents all possible alleles.
