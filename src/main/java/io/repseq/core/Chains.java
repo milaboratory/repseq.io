@@ -110,8 +110,8 @@ public final class Chains implements Iterable<String> {
 
     @JsonValue
     private Set<String> getChains() {
-        if (chains == null)
-            throw new RuntimeException("Serialization of ALL chains is not implemented.");
+//        if (chains == null)
+//            return null; //throw new RuntimeException("Serialization of ALL chains is not implemented.");
         return chains;
     }
 
@@ -217,7 +217,6 @@ public final class Chains implements Iterable<String> {
         Chains strings = (Chains) o;
 
         return chains != null ? chains.equals(strings.chains) : strings.chains == null;
-
     }
 
     @Override
