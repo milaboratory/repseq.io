@@ -1,0 +1,2 @@
+Fix for empty `Chains` JSON serialization
+Some new `Chains` constants
