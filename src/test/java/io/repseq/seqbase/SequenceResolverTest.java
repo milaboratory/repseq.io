@@ -20,17 +20,25 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReaderTest;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.util.TempFileManager;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.URI;
-import java.net.URLDecoder;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class SequenceResolverTest {
     @Test
     public void test1() throws Exception {
+        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+        System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
+        System.setProperty("org.apache.commons.logging.simplelog.log.httpclient.wire", "debug");
+        System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "debug");
+        System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.headers", "debug");
+
         Path dir = TempFileManager.getTempDir().toPath().toAbsolutePath();
 
         Path work = dir.resolve("work");
