@@ -113,6 +113,8 @@ public abstract class HTTPFastaSequenceResolver extends AbstractRAFastaResolver
 
         // Downloading file
         HttpGet request = new HttpGet(httpURI);
+        request.addHeader("Connection", "close");
+
         boolean unGZIP = httpURI.getPath().endsWith(".gz");
         log.debug("Downloading " + httpURI + " into " + file);
         try {

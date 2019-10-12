@@ -33,6 +33,12 @@ import java.nio.file.Path;
 public class SequenceResolverTest {
     @Test
     public void test1() throws Exception {
+        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+        System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
+        System.setProperty("org.apache.commons.logging.simplelog.log.httpclient.wire", "debug");
+        System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "debug");
+        System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.headers", "debug");
+
         Path dir = TempFileManager.getTempDir().toPath().toAbsolutePath();
 
         Path work = dir.resolve("work");

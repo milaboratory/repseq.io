@@ -15,6 +15,7 @@
  */
 package io.repseq.seqbase;
 
+import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -29,6 +30,9 @@ public class SequenceResolvers {
         CloseableHttpClient httpClient = HttpClients.custom()
                 .disableCookieManagement()
                 .setConnectionManager(cm)
+                .disableContentCompression()
+                .setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE)
+                .setUserAgent("curl/7.64.1")
                 .build();
         HTTPResolversContext context = new HTTPResolversContext(
                 cacheFolderPath,

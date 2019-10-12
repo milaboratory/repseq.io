@@ -25,6 +25,7 @@
     <logger name="io.repseq" level="trace"/>
     <logger name="org.reflections.Reflections" level="error"/>
 
+    <logger name="org.apache.http" level="TRACE"/>
 
     <root level="debug">
         <appender-ref ref="stderr"/>
