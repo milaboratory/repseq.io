@@ -15,8 +15,6 @@
  */
 package io.repseq.seqbase;
 
-import org.apache.http.client.utils.URIBuilder;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -79,15 +77,20 @@ public final class HTTPSequenceResolvers {
         @Override
         protected URI resolveHTTPAddress(URI address) {
             try {
-                return new URIBuilder("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi")
-                        .addParameter("db", "nuccore")
-                        .addParameter("id",
-                                URLEncoder.encode(extractId(address), "UTF-8")
-                                        .replace("+", "%20")
-                                        .replace(".", "%2E"))
-                        .addParameter("rettype", "fasta")
-                        .addParameter("retmode", "text").build();
-            } catch (URISyntaxException | UnsupportedEncodingException e) {
+                // return new URIBuilder("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi")
+                //         .addParameter("db", "nuccore")
+                //         .addParameter("id",
+                //                 URLEncoder.encode(extractId(address), "UTF-8")
+                //                         .replace("+", "%20")
+                //                         .replace(".", "%2E"))
+                //         .addParameter("rettype", "fasta")
+                //         .addParameter("retmode", "text").build();
+                return URI.create("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" +
+                        URLEncoder.encode(extractId(address), "UTF-8")
+                                .replace("+", "%20")
+                                .replace(".", "%2E") +
+                        "&rettype=fasta&retmode=text");
+            } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException(e);
             }
         }
