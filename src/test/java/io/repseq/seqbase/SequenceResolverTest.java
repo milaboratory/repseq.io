@@ -20,11 +20,13 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReaderTest;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.util.TempFileManager;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.URI;
-import java.net.URLDecoder;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -98,5 +100,17 @@ public class SequenceResolverTest {
                 "http://files.milaboratory.com/test-data/test.fa.gz#testRecord"))
                 .getRegion(new Range(10, 30).inverse());
         Assert.assertEquals(new NucleotideSequence("GCTCCACCACAAGACACTCT"), seq);
+    }
+
+    @Test
+    public void dd33() throws URISyntaxException, UnsupportedEncodingException {
+        System.out.println(new URIBuilder("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi")
+                .addParameter("db", "nuccore")
+                .addParameter("id",
+                        URLEncoder.encode("asd.a.sd", "UTF-8")
+                                .replace("+", "%20")
+                                .replace(".", "%2E"))
+                .addParameter("rettype", "fasta")
+                .addParameter("retmode", "text").build());
     }
 }
