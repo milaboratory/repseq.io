@@ -77,14 +77,6 @@ public final class HTTPSequenceResolvers {
         @Override
         protected URI resolveHTTPAddress(URI address) {
             try {
-                // return new URIBuilder("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi")
-                //         .addParameter("db", "nuccore")
-                //         .addParameter("id",
-                //                 URLEncoder.encode(extractId(address), "UTF-8")
-                //                         .replace("+", "%20")
-                //                         .replace(".", "%2E"))
-                //         .addParameter("rettype", "fasta")
-                //         .addParameter("retmode", "text").build();
                 return URI.create("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" +
                         URLEncoder.encode(extractId(address), "UTF-8")
                                 .replace("+", "%20")

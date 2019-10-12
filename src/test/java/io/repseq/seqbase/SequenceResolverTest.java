@@ -107,16 +107,4 @@ public class SequenceResolverTest {
                 .getRegion(new Range(10, 30).inverse());
         Assert.assertEquals(new NucleotideSequence("GCTCCACCACAAGACACTCT"), seq);
     }
-
-    @Test
-    public void dd33() throws URISyntaxException, UnsupportedEncodingException {
-        System.out.println(new URIBuilder("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi")
-                .addParameter("db", "nuccore")
-                .addParameter("id",
-                        URLEncoder.encode("asd.a.sd", "UTF-8")
-                                .replace("+", "%20")
-                                .replace(".", "%2E"))
-                .addParameter("rettype", "fasta")
-                .addParameter("retmode", "text").build());
-    }
 }

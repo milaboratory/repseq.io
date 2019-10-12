@@ -43,12 +43,6 @@ public class CompileLibraryMavenStage {
     private static final Logger log = LoggerFactory.getLogger(CompileLibraryMavenStage.class);
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        // System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
-        // System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
-        // System.setProperty("org.apache.commons.logging.simplelog.log.httpclient.wire", "debug");
-        // System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "debug");
-        // System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.headers", "debug");
-
         Path root = Paths.get(args[0]);
 
         Path cacheFolder = root.resolve(".cache");
