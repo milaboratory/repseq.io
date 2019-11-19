@@ -25,7 +25,6 @@
     <logger name="io.repseq" level="trace"/>
     <logger name="org.reflections.Reflections" level="error"/>
 
-
     <root level="debug">
         <appender-ref ref="stderr"/>
     </root>

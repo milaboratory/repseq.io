@@ -22,6 +22,7 @@ import com.milaboratory.cli.ActionHelper;
 import com.milaboratory.cli.ActionParameters;
 import com.milaboratory.cli.ActionParametersWithOutput;
 import com.milaboratory.core.Range;
+import com.milaboratory.core.io.sequence.fasta.RandomAccessFastaReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.provider.SequenceProviderIndexOutOfBoundsException;
 import io.repseq.core.VDJCGene;
@@ -75,11 +76,23 @@ public class CompileAction implements Action {
                 fragmentsBuilder.addRegion(fragment);
 
             for (VDJCGene gene : lib.getGenes()) {
+                // Forcing initialization under all caching layers
+                gene.getSequenceProvider().forceInitialize();
+
                 if (!gene.getData().getBaseSequence().isPureOriginalSequence())
                     throw new IllegalArgumentException("Don't support mutated sequences yet.");
                 URI uri = gene.getData().getBaseSequence().getOrigin();
                 Range region = gene.getPartitioning().getContainingRegion();
-                region = region.expand(surroundings);
+                region = region
+                        .expand(surroundings)
+                        .intersection(new Range(0, gene.getSequenceProvider().size()));
+                if(region == null){
+                    System.out.println(uri);
+                    System.out.println(gene.getSequenceProvider());
+                    System.out.println(gene.getFullName());
+                    System.out.println(new Range(0, gene.getSequenceProvider().size()));
+                    System.out.println(gene.getPartitioning().getContainingRegion());
+                }
                 NucleotideSequence seq;
                 try {
                     seq = gene.getSequenceProvider().getRegion(region);

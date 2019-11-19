@@ -113,12 +113,16 @@ public abstract class HTTPFastaSequenceResolver extends AbstractRAFastaResolver
 
         // Downloading file
         HttpGet request = new HttpGet(httpURI);
+        request.addHeader("Connection", "close");
+
         boolean unGZIP = httpURI.getPath().endsWith(".gz");
         log.debug("Downloading " + httpURI + " into " + file);
         try {
             HttpResponse resp = context.getHttpClient().execute(request);
             HttpEntity entity = resp.getEntity();
             long contentLength = entity.getContentLength();
+            if (resp.getStatusLine().getStatusCode() != 200)
+                throw new RuntimeException("Status code (" + resp.getStatusLine().getStatusCode() + ") != 200");
             try (LongProcess lp = reporter.start("Downloading " + httpURI);
                  InputStream istream = unGZIP ?
                          new GZIPInputStream(new BufferedInputStream(entity.getContent())) :

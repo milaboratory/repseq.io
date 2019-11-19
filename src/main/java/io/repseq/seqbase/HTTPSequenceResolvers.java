@@ -15,8 +15,10 @@
  */
 package io.repseq.seqbase;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 
 public final class HTTPSequenceResolvers {
     private HTTPSequenceResolvers() {
@@ -74,9 +76,20 @@ public final class HTTPSequenceResolvers {
 
         @Override
         protected URI resolveHTTPAddress(URI address) {
-            return URI.create("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" +
-                    extractId(address) +
-                    "&rettype=fasta&retmode=text");
+            try {
+                return URI.create("https://www.ncbi.nlm.nih.gov/sviewer/viewer.fcgi?id=" +
+                        URLEncoder.encode(extractId(address), "UTF-8")
+                                .replace("+", "%20")
+                                .replace(".", "%2E") +
+                        "&db=nuccore&report=fasta&retmode=text");
+                // return URI.create("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" +
+                //         URLEncoder.encode(extractId(address), "UTF-8")
+                //                 .replace("+", "%20")
+                //                 .replace(".", "%2E") +
+                //         "&rettype=fasta&retmode=text");
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override

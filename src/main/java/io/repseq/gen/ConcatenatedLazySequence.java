@@ -29,6 +29,12 @@ public final class ConcatenatedLazySequence<S extends Sequence<S>> implements Se
     }
 
     @Override
+    public void forceInitialize() {
+        for (SequenceProvider<S> provider : providers)
+            provider.forceInitialize();
+    }
+
+    @Override
     public int size() {
         if (size == -1) {
             int totalLength = 0;
