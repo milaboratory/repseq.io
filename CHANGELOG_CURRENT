@@ -1,0 +1,5 @@
+Internal library upgraded to RepSeq.IO v1.6
+Better error when CDR3 contains wildcards (pull-request #42 from @bbimber)
+Minor optimizations for HTTP sequence resolver
+Better endpoint for NCBI's nuccore sequence retrieval
+Fixes for `compile` action with small base sequences
