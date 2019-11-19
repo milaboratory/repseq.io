@@ -77,11 +77,16 @@ public final class HTTPSequenceResolvers {
         @Override
         protected URI resolveHTTPAddress(URI address) {
             try {
-                return URI.create("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" +
+                return URI.create("https://www.ncbi.nlm.nih.gov/sviewer/viewer.fcgi?id=" +
                         URLEncoder.encode(extractId(address), "UTF-8")
                                 .replace("+", "%20")
                                 .replace(".", "%2E") +
-                        "&rettype=fasta&retmode=text");
+                        "&db=nuccore&report=fasta&retmode=text");
+                // return URI.create("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" +
+                //         URLEncoder.encode(extractId(address), "UTF-8")
+                //                 .replace("+", "%20")
+                //                 .replace(".", "%2E") +
+                //         "&rettype=fasta&retmode=text");
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException(e);
             }
