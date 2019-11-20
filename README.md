@@ -22,6 +22,10 @@ Upgrade
 
 Unpack zip file with latest release version to a folder and add it to your `PATH` variable or create symlink to `repseqio` script in `/usr/local/bin`, `~/bin` or similar folder.
 
+#### Docker
+
+See [official Docker Image](https://hub.docker.com/r/milaboratory/repseqio).
+
 # Reference
 
 See this [repository](https://github.com/repseqio/library) for actual references.

@@ -301,6 +301,12 @@
                                     </includes>
                                 </filter>
                                 <filter>
+                                    <artifact>com.fasterxml.jackson.core:jackson-databind</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
                                     <artifact>commons-logging:commons-logging</artifact>
                                     <includes>
                                         <include>**</include>
