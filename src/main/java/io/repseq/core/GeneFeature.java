@@ -47,7 +47,7 @@ import static io.repseq.core.ReferencePoint.*;
 @JsonSerialize(using = GeneFeature.Serializer.class)
 @Serializable(by = GeneFeatureSerializer.class)
 public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, Comparable<GeneFeature>,
-                                          java.io.Serializable {
+        java.io.Serializable {
     /* V, D, J, Regions */
 
     public static final int GermlinePRegionSize = 20;
@@ -557,8 +557,10 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
             List<ReferenceRange> resultRanges = new ArrayList<>();
             ReferencePoint previousPoint = null, lastPoint = null;
 
-            for (ReferenceRange region : feature.regions)
-                for (ReferencePoint intermediatePoint : region.getIntermediatePoints()) {
+            for (ReferenceRange region : feature.regions) {
+                previousPoint = null;
+
+                for (ReferencePoint intermediatePoint : region.getBoundaryAndIntermediatePoints()) {
                     if (previousPoint == null && intermediatePoint.isCodingSequenceOnTheRight())
                         previousPoint = intermediatePoint;
                     else if (previousPoint != null && !intermediatePoint.isCodingSequenceOnTheRight()) {
@@ -571,11 +573,12 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
                     lastPoint = intermediatePoint;
                 }
 
-            if (previousPoint != null && previousPoint != lastPoint) {
-                if (!lastPoint.isCodingSequenceOnTheLeft())
-                    throw new IllegalArgumentException(
-                            "Can't calculate coding feature for " + feature + ".");
-                resultRanges.add(new ReferenceRange(previousPoint, lastPoint));
+                if (previousPoint != null && previousPoint != lastPoint) {
+                    if (!lastPoint.isCodingSequenceOnTheLeft())
+                        throw new IllegalArgumentException(
+                                "Can't calculate coding feature for " + feature + ".");
+                    resultRanges.add(new ReferenceRange(previousPoint, lastPoint));
+                }
             }
 
             if (resultRanges.isEmpty())
@@ -639,6 +642,15 @@ public final class GeneFeature implements Iterable<GeneFeature.ReferenceRange>, 
         ReferenceRange(ReferencePoint begin, ReferencePoint end) {
             this.begin = begin;
             this.end = end;
+        }
+
+        public List<ReferencePoint> getBoundaryAndIntermediatePoints() {
+            List<ReferencePoint> points = getIntermediatePoints();
+            if(!begin.equals(points.get(0)))
+                points.add(0, begin);
+            if(!end.equals(points.get(points.size() - 1)))
+                points.add(end);
+            return points;
         }
 
         public List<ReferencePoint> getIntermediatePoints() {
