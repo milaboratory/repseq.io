@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright 2019 MiLaboratory, LLC
+  ~ Copyright 2020 MiLaboratory, LLC
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <milib.version>1.13-SNAPSHOT</milib.version>
+        <milib.version>1.13</milib.version>
     </properties>
 
     <dependencies>
