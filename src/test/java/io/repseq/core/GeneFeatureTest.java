@@ -292,7 +292,7 @@ public class GeneFeatureTest {
     }
 
     @Test
-    public void testCodingSubfeature() throws Exception {
+    public void testCodingSubfeature1() throws Exception {
         Assert.assertEquals(VTranscriptWithout5UTR, getCodingGeneFeature(VGene));
         Assert.assertEquals(VTranscriptWithout5UTR, getCodingGeneFeature(VTranscriptWithout5UTR));
         Assert.assertEquals(VDJTranscriptWithout5UTR, getCodingGeneFeature(VDJTranscript));
@@ -303,6 +303,13 @@ public class GeneFeatureTest {
                 getCodingGeneFeature(GeneFeature.parse("{DBegin(1):FR4End(20)}")));
 
         Assert.assertNull(getCodingGeneFeature(VIntron));
+    }
+
+    @Test
+    public void testCodingSubfeatureReversed() {
+        Assert.assertEquals(GermlineVPSegment, getCodingGeneFeature(GermlineVPSegment));
+        Assert.assertEquals(VTranscriptWithout5UTRWithP, getCodingGeneFeature(VTranscriptWithout5UTRWithP));
+        Assert.assertEquals(JRegionWithP, getCodingGeneFeature(JRegionWithP));
     }
 
     @Test

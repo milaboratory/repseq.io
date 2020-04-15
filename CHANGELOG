@@ -1,4 +1,11 @@
 
+RepSeqIO 1.3.4 (15 Apr 2020)
+========================
+
+-- Bug fix in method for retrieving coding gene feature
+-- Update for library v1.6
+
+
 RepSeqIO 1.3.3 (19 Nov 2019)
 ========================
 

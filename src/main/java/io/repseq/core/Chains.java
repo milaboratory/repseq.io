@@ -55,6 +55,8 @@ public final class Chains implements Iterable<String> {
     public static final NamedChains IGK_NAMED = new NamedChains("IGK", IGK);
     public static final Chains IGL = new Chains("IGL");
     public static final NamedChains IGL_NAMED = new NamedChains("IGL", IGL);
+    public static final Chains IGKL = new Chains("IGK", "IGL");
+    public static final NamedChains IGKL_NAMED = new NamedChains("IGKL", IGKL);
     public static final Chains IG = new Chains("IGH", "IGK", "IGL");
     public static final NamedChains IG_NAMED = new NamedChains("IG", IG);
 
@@ -87,6 +89,7 @@ public final class Chains implements Iterable<String> {
         WELL_KNOWN_CHAINS.add(IGH_NAMED);
         WELL_KNOWN_CHAINS.add(IGK_NAMED);
         WELL_KNOWN_CHAINS.add(IGL_NAMED);
+        WELL_KNOWN_CHAINS.add(IGKL_NAMED);
         WELL_KNOWN_CHAINS.add(IG_NAMED);
 
         for (NamedChains wkc : WELL_KNOWN_CHAINS)
@@ -128,8 +131,7 @@ public final class Chains implements Iterable<String> {
         if (other.chains.equals(this.chains))
             return this;
 
-        HashSet<String> s = new HashSet<>();
-        s.addAll(this.chains);
+        HashSet<String> s = new HashSet<>(this.chains);
         s.addAll(other.chains);
         return new Chains(s);
     }
