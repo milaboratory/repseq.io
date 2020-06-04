@@ -15,9 +15,9 @@
  */
 package io.repseq.seqbase;
 
+import com.milaboratory.util.FormatUtils;
 import com.milaboratory.util.LongProcess;
 import com.milaboratory.util.LongProcessReporter;
-import com.milaboratory.util.TimeUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -138,7 +138,7 @@ public abstract class HTTPFastaSequenceResolver extends AbstractRAFastaResolver
                         lp.reportStatus(1.0 * (done += read) / contentLength);
                 }
                 log.debug(httpURI + " downloaded in " +
-                        TimeUtils.nanoTimeToString(System.nanoTime() - startTimestamp));
+                        FormatUtils.nanoTimeToString(System.nanoTime() - startTimestamp));
             }
 
             return file;
