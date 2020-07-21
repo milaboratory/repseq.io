@@ -26,13 +26,6 @@ import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-//        Signal.handle(new Signal("PIPE"), new SignalHandler() {
-//            @Override
-//            public void handle(Signal signal) {
-//                System.exit(0);
-//            }
-//        });
-
         if (System.getProperty("localOnly") == null) {
             Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
             SequenceResolvers.initDefaultResolver(cachePath);

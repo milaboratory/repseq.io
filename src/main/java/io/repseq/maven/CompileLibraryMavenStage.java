@@ -46,6 +46,12 @@ public class CompileLibraryMavenStage {
         Path root = Paths.get(args[0]);
 
         Path cacheFolder = root.resolve(".cache");
+
+        String repseqioCacheEnv = System.getenv("REPSEQIO_CACHE");
+        if (repseqioCacheEnv != null) {
+            cacheFolder = Paths.get(repseqioCacheEnv);
+        }
+
         Path buildFolder = root.resolve("target").resolve("library");
         Path outputFolder = root.resolve("target").resolve("classes").resolve("libraries");
         Path libraryRepoFolder = root.resolve("library");
@@ -57,7 +63,7 @@ public class CompileLibraryMavenStage {
                 .replace("\n", "").replace("\r", "");
         gitTagProcess.waitFor();
 
-        String[] targetTags = {"v1.5", "v1.6", currentTag};
+        String[] targetTags = {"v1.5s", "v1.6", currentTag};
 
         for (String tag : targetTags) {
             new ProcessBuilder("git", "checkout", tag)
