@@ -34,7 +34,7 @@ steps:
   - name: deploy
     image: maven:3-adoptopenjdk-8
     commands:
-      - mvn --no-transfer-progress deploy -DskipTests -DaltDeploymentRepository=therepo::default::$${DEPLOY_REPO} -Drevision=${DRONE_COMMIT_SHA:0:7}
+      - mvn -X --no-transfer-progress deploy -DskipTests -DaltDeploymentRepository=therepo::default::$${DEPLOY_REPO} -Drevision=${DRONE_COMMIT_SHA:0:7}
     environment:
       MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
       AWS_DEFAULT_REGION:
@@ -79,6 +79,6 @@ steps:
 
 ---
 kind: signature
-hmac: 14cc3679dff66644c2c07e8af51ac6f69fe64ffaec0240df722219882dc674cb
+hmac: ab9fb5eb67a31a8b0243fe9f49b4567a6e32d6eab9ed783bd20a98012e75ffad
 
 ...
