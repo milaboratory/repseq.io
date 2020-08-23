@@ -1,0 +1,96 @@
+---
+kind: pipeline
+type: docker
+name: linux
+
+platform:
+  os: linux
+  arch: amd64
+
+event:
+  - push
+
+steps:
+  - name: submodules
+    image: alpine/git
+    commands:
+      - git submodule update --init --recursive
+
+  - name: restore_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      restore: true
+      # debug: true
+      cache_key: '{{ .Commit.Branch }}'
+      access_key:
+        from_secret: aws-key-id
+      secret_key:
+        from_secret: aws-secret-key
+      bucket:
+        from_secret: aws-cache-bucket
+      region:
+        from_secret: aws-region
+      local_root: /drone/src
+      mount:
+        - .m2
+        - .cache
+
+  - name: deploy
+    image: maven:3-adoptopenjdk-8
+    commands:
+      - mvn --no-transfer-progress package -DskipTests
+      - mvn --no-transfer-progress deploy -DskipTests -DaltDeploymentRepository=therepo::default::$${DEPLOY_REPO} -Drevision=${DRONE_COMMIT_SHA:0:7}
+    environment:
+      MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
+      AWS_DEFAULT_REGION:
+        from_secret: aws-region
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws-key-id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws-secret-key
+      DEPLOY_REPO:
+        from_secret: maven-deploy-repo
+    when:
+      event:
+        exclude:
+          - pull_request
+    depends_on:
+      - submodules
+      - restore_cache
+
+  - name: build_and_test
+    image: maven:3-adoptopenjdk-8
+    commands:
+      - mvn --no-transfer-progress clean test
+    environment:
+      MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
+    depends_on:
+      - deploy
+
+  - name: rebuild_cache
+    image: meltwater/drone-cache
+    settings:
+      rebuild: true
+      # debug: true
+      cache_key: '{{ .Commit.Branch }}'
+      access_key:
+        from_secret: aws-key-id
+      secret_key:
+        from_secret: aws-secret-key
+      bucket:
+        from_secret: aws-cache-bucket
+      region:
+        from_secret: aws-region
+      local_root: /drone/src
+      mount:
+        - .m2
+        - .cache
+    depends_on:
+      - build_and_test
+
+---
+kind: signature
+hmac: f6aff318b9ead9458ebe095751f761f26457bd59c81d25b1be4f64fe5f4da155
+
+...
