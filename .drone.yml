@@ -53,7 +53,6 @@ steps:
   - name: build_and_test
     image: maven:3-adoptopenjdk-8
     commands:
-      - ./init.sh
       - mvn --no-transfer-progress clean test
     environment:
       MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
@@ -79,6 +78,6 @@ steps:
 
 ---
 kind: signature
-hmac: ab9fb5eb67a31a8b0243fe9f49b4567a6e32d6eab9ed783bd20a98012e75ffad
+hmac: 878eddb6143a26eb15be6bef7310a5be022e39411293b45e64b2f0868ebb0d92
 
 ...
