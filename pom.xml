@@ -43,7 +43,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <milib.version>1.14-47a96ec</milib.version>
         <revision>SNAPSHOT</revision>
-        <wagon.version>3.4.1</wagon.version>
     </properties>
 
     <dependencies>
@@ -187,9 +186,9 @@
     <build>
         <extensions>
             <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-webdav-jackrabbit</artifactId>
-                <version>${wagon.version}</version>
+                <groupId>com.github.seahen</groupId>
+                <artifactId>maven-s3-wagon</artifactId>
+                <version>1.3.1</version>
             </extension>
         </extensions>
 
