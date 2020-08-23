@@ -12,32 +12,39 @@ event:
 
 steps:
   - name: restore_cache
-    image: curlimages/curl
-    user: root
-    environment:
-      WEBDAV_CACHE_ADDRESS:
-        from_secret: webdav-cache-address
-      WEBDAV_CACHE_USERNAME:
-        from_secret: webdav-cache-username
-      WEBDAV_CACHE_PASSWORD:
-        from_secret: webdav-cache-password
-    commands:
-      - echo .m2 .cache | tr ' ' '\n' | xargs -P5 -i /bin/sh -c 'mkdir -p {} && curl --user "$${WEBDAV_CACHE_USERNAME}:$${WEBDAV_CACHE_PASSWORD}" $${WEBDAV_CACHE_ADDRESS}/${DRONE_REPO_NAME}/${DRONE_BRANCH}/$$(echo {} | tr -d / ) | tar -xC {} || true'
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      restore: true
+      # debug: true
+      cache_key: '{{ .Commit.Branch }}'
+      access_key:
+        from_secret: aws-key-id
+      secret_key:
+        from_secret: aws-secret-key
+      bucket:
+        from_secret: aws-cache-bucket
+      region:
+        from_secret: aws-region
+      local_root: /drone/src
+      mount:
+        - .m2
+        - .cache
 
   - name: deploy
     image: maven:3-adoptopenjdk-8
     commands:
-      - mkdir -p $${HOME}/.m2
-      - echo '<settings><servers><server><id>therepo</id><username>$${repo.user}</username><password>$${repo.pass}</password></server></servers></settings>' > $${HOME}/.m2/settings.xml
-      - mvn deploy -DskipTests -DaltDeploymentRepository=therepo::default::$${DEPLOY_REPO} -Drepo.user=$${DEPLOY_USER} -Drepo.pass=$${DEPLOY_PASS} -Drevision=${DRONE_COMMIT_SHA:0:7}
+      - mvn --no-transfer-progress deploy -DskipTests -DaltDeploymentRepository=therepo::default::$${DEPLOY_REPO} -Drevision=${DRONE_COMMIT_SHA:0:7}
     environment:
       MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
+      AWS_DEFAULT_REGION:
+        from_secret: aws-region
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws-key-id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws-secret-key
       DEPLOY_REPO:
         from_secret: maven-deploy-repo
-      DEPLOY_USER:
-        from_secret: maven-deploy-user
-      DEPLOY_PASS:
-        from_secret: maven-deploy-pass
     when:
       event:
         exclude:
@@ -46,26 +53,32 @@ steps:
   - name: build_and_test
     image: maven:3-adoptopenjdk-8
     commands:
-      - mvn clean test
+      - ./init.sh
+      - mvn --no-transfer-progress clean test
     environment:
       MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
 
   - name: rebuild_cache
-    image: curlimages/curl
-    user: root
-    environment:
-      WEBDAV_CACHE_ADDRESS:
-        from_secret: webdav-cache-address
-      WEBDAV_CACHE_USERNAME:
-        from_secret: webdav-cache-username
-      WEBDAV_CACHE_PASSWORD:
-        from_secret: webdav-cache-password
-    commands:
-      - curl -X MKCOL --user "$${WEBDAV_CACHE_USERNAME}:$${WEBDAV_CACHE_PASSWORD}" $${WEBDAV_CACHE_ADDRESS}/${DRONE_REPO_NAME} || true
-      - curl -X MKCOL --user "$${WEBDAV_CACHE_USERNAME}:$${WEBDAV_CACHE_PASSWORD}" $${WEBDAV_CACHE_ADDRESS}/${DRONE_REPO_NAME}/${DRONE_BRANCH} || true
-      - echo .m2 .cache | tr ' ' '\n' | xargs -P5 -i /bin/sh -c 'tar -C {} -c . | curl -T - --user "$${WEBDAV_CACHE_USERNAME}:$${WEBDAV_CACHE_PASSWORD}" $${WEBDAV_CACHE_ADDRESS}/${DRONE_REPO_NAME}/${DRONE_BRANCH}/$$(echo {} | tr -d / ) || true'
+    image: meltwater/drone-cache
+    settings:
+      rebuild: true
+      # debug: true
+      cache_key: '{{ .Commit.Branch }}'
+      access_key:
+        from_secret: aws-key-id
+      secret_key:
+        from_secret: aws-secret-key
+      bucket:
+        from_secret: aws-cache-bucket
+      region:
+        from_secret: aws-region
+      local_root: /drone/src
+      mount:
+        - .m2
+        - .cache
+
 ---
 kind: signature
-hmac: 1faf3036447ef1c31955b26515d90f27f23d75035831cd1351fee10dc776b29b
+hmac: 14cc3679dff66644c2c07e8af51ac6f69fe64ffaec0240df722219882dc674cb
 
 ...
