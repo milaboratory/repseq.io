@@ -28,12 +28,16 @@ import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+      try {
         Signal.handle(new Signal("PIPE"), new SignalHandler() {
             @Override
             public void handle(Signal signal) {
                 System.exit(0);
             }
         });
+      } catch (Exception e) {
+        // If the OS doesn't throw PIPE signals, then don't try handlin' them.
+      }
 
         if (System.getProperty("localOnly") == null) {
             Path cachePath = Paths.get(System.getProperty("user.home"), ".repseqio", "cache");
