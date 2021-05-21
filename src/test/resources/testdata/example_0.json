@@ -1,6 +1,11 @@
 [
   {
     "taxonId": 9606,
+    "meta": {
+      "citations": [
+        "citation1"
+      ]
+    },
     "speciesNames": [
       "homosapiens",
       "homsap",
