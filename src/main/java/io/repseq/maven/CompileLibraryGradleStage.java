@@ -39,8 +39,8 @@ import static java.util.Arrays.asList;
 /**
  * Class executed during maven build process
  */
-public class CompileLibraryMavenStage {
-    private static final Logger log = LoggerFactory.getLogger(CompileLibraryMavenStage.class);
+public class CompileLibraryGradleStage {
+    private static final Logger log = LoggerFactory.getLogger(CompileLibraryGradleStage.class);
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Path root = Paths.get(args[0]);
@@ -52,8 +52,8 @@ public class CompileLibraryMavenStage {
             cacheFolder = Paths.get(repseqioCacheEnv);
         }
 
-        Path buildFolder = root.resolve("target").resolve("library");
-        Path outputFolder = root.resolve("target").resolve("classes").resolve("libraries");
+        Path buildFolder = root.resolve("build").resolve("library");
+        Path outputFolder = root.resolve("build/resources/main/libraries");
         Path libraryRepoFolder = root.resolve("library");
 
         Process gitTagProcess = new ProcessBuilder("git", "describe", "--always", "--tags")

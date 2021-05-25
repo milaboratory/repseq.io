@@ -16,8 +16,8 @@
 package io.repseq.seqbase;
 
 import com.milaboratory.core.Range;
-import com.milaboratory.core.io.sequence.fastq.SingleFastqReaderTest;
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.test.TestUtil;
 import com.milaboratory.util.TempFileManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -56,7 +56,7 @@ public class SequenceResolverTest {
 
         Path someFasta = work.resolve("some_fasta.fasta");
         FileUtils.copyToFile(
-                SingleFastqReaderTest.class.getClassLoader().getResourceAsStream("sequences/some_fasta.fasta"),
+                TestUtil.class.getClassLoader().getResourceAsStream("sequences/some_fasta.fasta"),
                 someFasta.toFile());
 
         //Path rootPath = new File(SingleFastqReaderTest.class.getClassLoader().getResource("sequences/some_fasta.fasta")
