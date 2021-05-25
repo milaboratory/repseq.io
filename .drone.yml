@@ -48,6 +48,7 @@ anchors:
     local_root: /drone/src
     mount:
       - .gradle
+      - .cache
 
 steps:
   - name: fetch
@@ -141,6 +142,6 @@ steps:
 
 ---
 kind: signature
-hmac: 736b1e69309079a18920a765258cba156923d5ad85911ab7cc4a9a92caa0182d
+hmac: 7f1d0f1593e108096227d9557aed5dfb5c578a1a0e5352782649dfa3324b90e3
 
 ...
