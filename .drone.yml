@@ -90,8 +90,7 @@ steps:
   - <<: *gradle_task
     name: test
     commands:
-      - ./init.sh
-      - gradle -i --no-daemon -PlongTests=true -PmiRepoAccessKeyId=$${AWS_ACCESS_KEY_ID} -PmiRepoSecretAccessKey=$${AWS_SECRET_ACCESS_KEY} test
+      - gradle -i --no-daemon -PmiRepoAccessKeyId=$${AWS_ACCESS_KEY_ID} -PmiRepoSecretAccessKey=$${AWS_SECRET_ACCESS_KEY} test
 
   - name: test_report_upload
     image: amazon/aws-cli
@@ -144,6 +143,6 @@ steps:
 
 ---
 kind: signature
-hmac: b65b85f746f21b90a578b775457dfa7193ba321f9cd9e1f0a4e0eb896eddefbf
+hmac: 558dc4c143758a706cdf643e8f2f63663739d71d79aedd8f28f2164a7b23f6ea
 
 ...
