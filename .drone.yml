@@ -48,8 +48,6 @@ anchors:
     local_root: /drone/src
     mount:
       - .gradle
-      - src/test/resources/big
-      - blast
 
 steps:
   - name: fetch
@@ -143,6 +141,6 @@ steps:
 
 ---
 kind: signature
-hmac: 558dc4c143758a706cdf643e8f2f63663739d71d79aedd8f28f2164a7b23f6ea
+hmac: 736b1e69309079a18920a765258cba156923d5ad85911ab7cc4a9a92caa0182d
 
 ...
