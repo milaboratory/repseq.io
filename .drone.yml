@@ -1,19 +1,61 @@
 ---
 kind: pipeline
 type: docker
-name: linux
+name: main
 
 platform:
   os: linux
   arch: amd64
 
-event:
-  - push
+trigger:
+  event:
+    - push
+    - tag
+
+image_pull_secrets:
+  - docker-dockerconfig
+  - quay-dockerconfig
+
+anchors:
+  aws_credentials: &aws_credentials
+    AWS_DEFAULT_REGION:
+      from_secret: aws-region
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws-key-id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws-secret-key
+
+  gradle_task: &gradle_task
+    image: gradle:7.0.2-jdk8-hotspot
+    environment:
+      # Gradle folder
+      GRADLE_USER_HOME: "/drone/src/.gradle"
+
+      # For interaction with repositories
+      <<: *aws_credentials
+
+  cache_settings: &cache_settings
+    # debug: true
+    cache_key: '{{ .Commit.Branch }}'
+    access_key:
+      from_secret: aws-key-id
+    secret_key:
+      from_secret: aws-secret-key
+    bucket:
+      from_secret: aws-cache-bucket
+    region:
+      from_secret: aws-region
+    local_root: /drone/src
+    mount:
+      - .gradle
+      - src/test/resources/big
+      - blast
 
 steps:
-  - name: submodules
+  - name: fetch
     image: alpine/git
     commands:
+      - git fetch --tags
       - git submodule update --init --recursive
 
   - name: restore_cache
@@ -21,76 +63,87 @@ steps:
     pull: true
     settings:
       restore: true
-      # debug: true
-      cache_key: '{{ .Commit.Branch }}'
-      access_key:
-        from_secret: aws-key-id
-      secret_key:
-        from_secret: aws-secret-key
-      bucket:
-        from_secret: aws-cache-bucket
-      region:
-        from_secret: aws-region
-      local_root: /drone/src
-      mount:
-        - .m2
-        - .cache
+      <<: *cache_settings
 
-  - name: deploy
-    image: maven:3-adoptopenjdk-8
+  - <<: *gradle_task
+    name: initialization
     commands:
-      - mvn --no-transfer-progress package -DskipTests
-      - mvn --no-transfer-progress deploy -DskipTests -DaltDeploymentRepository=therepo::default::$${DEPLOY_REPO} -Drevision=${DRONE_COMMIT_SHA:0:7}
-    environment:
-      MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
-      AWS_DEFAULT_REGION:
-        from_secret: aws-region
-      AWS_ACCESS_KEY_ID:
-        from_secret: aws-key-id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: aws-secret-key
-      DEPLOY_REPO:
-        from_secret: maven-deploy-repo
+      - echo "{}" > build_info.json
+      - gradle -i --no-daemon -PmiRepoAccessKeyId=$${AWS_ACCESS_KEY_ID} -PmiRepoSecretAccessKey=$${AWS_SECRET_ACCESS_KEY} CreateInfoFile
+
+  - <<: *gradle_task
+    name: publish_to_mipub
+    commands:
+      - gradle --no-daemon -i -PmiRepoAccessKeyId=$${AWS_ACCESS_KEY_ID} -PmiRepoSecretAccessKey=$${AWS_SECRET_ACCESS_KEY} -x test PublishAllPublicationsToMiPubRepository
+
+  - name: telegram_published
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: telegram-token
+      to:
+        from_secret: telegram-chat-id-micore
+      format: markdown
+      template_vars_file: build_info.json
+      message: 🧩 build {{build.number}} on {{commit.branch}} published ```com.milaboratory:milib:{{tpl.version}}```
+
+  - <<: *gradle_task
+    name: test
+    commands:
+      - ./init.sh
+      - gradle -i --no-daemon -PlongTests=true -PmiRepoAccessKeyId=$${AWS_ACCESS_KEY_ID} -PmiRepoSecretAccessKey=$${AWS_SECRET_ACCESS_KEY} test
+
+  - name: test_report_upload
+    image: amazon/aws-cli
     when:
-      event:
-        exclude:
-          - pull_request
-    depends_on:
-      - submodules
-      - restore_cache
-
-  - name: build_and_test
-    image: maven:3-adoptopenjdk-8
+      status:
+        - success
+        - failure
     commands:
-      - mvn --no-transfer-progress clean test
+      - aws s3 cp --recursive build/reports/tests/test s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-$${URL_SECRET}/tests/
     environment:
-      MAVEN_OPTS: "-Dmaven.repo.local=/drone/src/.m2"
-    depends_on:
-      - deploy
+      <<: *aws_credentials
+      DEPLOY_S3_CDN_BUCKET:
+        from_secret: cdn-s3-bucket
+      DEPLOY_S3_CDN_PREFIX:
+        from_secret: cdn-s3-prefix
+      URL_SECRET:
+        from_secret: url-secret
+
+  - name: telegram
+    image: appleboy/drone-telegram
+    when:
+      status:
+        - success
+        - failure
+    settings:
+      token:
+        from_secret: telegram-token
+      to:
+        from_secret: telegram-chat-id-micore
+      format: markdown
+      template_vars_file: build_info.json
+      message: >
+        {{#success build.status}}
+        ✅ MiLib build {{build.number}} by {{commit.author}} on {{commit.branch}} test success.
+        {{else}}
+        ❌ MiLib build {{build.number}} by {{commit.author}} on {{commit.branch}} test failure.
+        {{/success}}
+
+
+        🌐 {{build.link}}
+
+
+        [📊 Test Report](https://cdn.milaboratory.com/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-{{tpl.urlsecret}}/tests/index.html)
 
   - name: rebuild_cache
     image: meltwater/drone-cache
     settings:
       rebuild: true
-      # debug: true
-      cache_key: '{{ .Commit.Branch }}'
-      access_key:
-        from_secret: aws-key-id
-      secret_key:
-        from_secret: aws-secret-key
-      bucket:
-        from_secret: aws-cache-bucket
-      region:
-        from_secret: aws-region
-      local_root: /drone/src
-      mount:
-        - .m2
-        - .cache
-    depends_on:
-      - build_and_test
+      <<: *cache_settings
 
 ---
 kind: signature
-hmac: f6aff318b9ead9458ebe095751f761f26457bd59c81d25b1be4f64fe5f4da155
+hmac: b65b85f746f21b90a578b775457dfa7193ba321f9cd9e1f0a4e0eb896eddefbf
 
 ...

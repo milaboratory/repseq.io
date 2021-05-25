@@ -17,11 +17,13 @@ val gitDetails = versionDetails()
 
 val longTests: String? by project
 
-group = "com.milaboratory"
+group = "io.repseq"
 version =
     if (gitDetails.commitDistance == 0) gitDetails.lastTag
     else "${gitDetails.lastTag}-${gitDetails.commitDistance}-${gitDetails.gitHash}"
-description = "MiLib"
+description = "RepSeqIO"
+
+java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 tasks.register("createInfoFile") {
     doLast {
@@ -53,14 +55,9 @@ dependencies {
     implementation("net.sf.trove4j:trove4j:3.0.3")
 
     testImplementation("junit:junit:4.13.1")
-    api(testFixtures("com.milaboratory:milib:$milibVersion"))
+    testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.9.5")
 }
-
-group = "io.repseq"
-version = "1.3.5-SNAPSHOT"
-description = "RepSeqIO"
-java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 val buildLibrary by tasks.registering(JavaExec::class) {
     main = "io.repseq.maven.CompileLibraryGradleStage"
@@ -73,6 +70,20 @@ tasks.classes {
 }
 
 publishing {
+    repositories {
+        maven {
+            name = "mipub"
+            url = uri("s3://milaboratory-artefacts-public-files.s3.eu-central-1.amazonaws.com/maven")
+
+            authentication {
+                credentials(AwsCredentials::class) {
+                    accessKey = miRepoAccessKeyId
+                    secretKey = miRepoSecretAccessKey
+                }
+            }
+        }
+    }
+
     publications.create<MavenPublication>("maven") {
         from(components["java"])
     }
