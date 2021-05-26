@@ -151,8 +151,8 @@ tasks.withType<JavaCompile>() {
 
 val checkMiLibNotSnapshot by tasks.registering {
     doLast {
-        // if (milibVersion.contains('-'))
-        //     throw GradleException("Can't publish to maven central with snapshot dependencies.")
+        if (milibVersion.contains('-'))
+            throw GradleException("Can't publish to maven central with snapshot dependencies.")
     }
 }
 
