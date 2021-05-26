@@ -127,7 +127,7 @@ steps:
       URL_SECRET:
         from_secret: url-secret
 
-  - name: telegram
+  - name: telegram_tests
     image: appleboy/drone-telegram
     when:
       status:
@@ -161,7 +161,7 @@ steps:
     commands:
       - gradle --no-daemon -i -x test publishToSonatype closeSonatypeStagingRepository
 
-  - name: telegram_mipub_published
+  - name: telegram_maven_central_published
     when:
       event:
         - tag
@@ -183,6 +183,6 @@ steps:
 
 ---
 kind: signature
-hmac: 35da32ac7553049b868c4449e93d609e18797b2fa78f5411cb52c3cc83941efc
+hmac: 5d82211ca4e760fca629ec91da9a1c5b48097357e21ad8fa0a523591dfecad4d
 
 ...
