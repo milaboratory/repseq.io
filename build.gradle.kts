@@ -149,8 +149,21 @@ tasks.withType<JavaCompile>() {
     options.encoding = "UTF-8"
 }
 
+val checkMiLibNotSnapshot by tasks.registering {
+    doLast {
+        if (milibVersion.contains('-'))
+            throw GradleException("Can't publish to maven central with snapshot dependencies.")
+    }
+}
+
 nexusPublishing {
     repositories {
         sonatype()
+    }
+}
+
+afterEvaluate {
+    tasks.named("publishToSonatype") {
+        dependsOn(checkMiLibNotSnapshot)
     }
 }

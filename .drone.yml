@@ -37,6 +37,14 @@ anchors:
       ORG_GRADLE_PROJECT_miRepoSecretAccessKey:
         from_secret: aws-secret-key
 
+      # For Maven Central release
+      ORG_GRADLE_PROJECT_sonatypeUsername:
+        from_secret: sonatype-username
+      ORG_GRADLE_PROJECT_sonatypePassword:
+        from_secret: sonatype-password
+      ORG_GRADLE_PROJECT_signingKey:
+        from_secret: signing-key
+
   cache_settings: &cache_settings
     # debug: true
     cache_key: '{{ .Commit.Branch }}'
@@ -183,6 +191,6 @@ steps:
 
 ---
 kind: signature
-hmac: 5d82211ca4e760fca629ec91da9a1c5b48097357e21ad8fa0a523591dfecad4d
+hmac: 180886fca0288ca1dc36a26dbeba48dda82061b181c2b015c4997401d8908557
 
 ...
