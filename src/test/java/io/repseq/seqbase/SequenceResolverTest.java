@@ -59,9 +59,6 @@ public class SequenceResolverTest {
                 TestUtil.class.getClassLoader().getResourceAsStream("sequences/some_fasta.fasta"),
                 someFasta.toFile());
 
-        //Path rootPath = new File(SingleFastqReaderTest.class.getClassLoader().getResource("sequences/some_fasta.fasta")
-        //        .toURI()).toPath().toAbsolutePath().normalize().getParent();
-
         seq = defaultResolver.resolve(
                 new SequenceAddress(work,
                         "file://some_fasta.fasta#24.6jsd21.Tut"))

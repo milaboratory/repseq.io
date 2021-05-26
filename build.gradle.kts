@@ -1,9 +1,11 @@
 import com.palantir.gradle.gitversion.VersionDetails
+import java.util.Base64
 import groovy.lang.Closure
 
 plugins {
     `java-library`
     `maven-publish`
+    signing
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("com.palantir.git-version") version "0.12.3"
 }
@@ -18,12 +20,17 @@ val gitDetails = versionDetails()
 val longTests: String? by project
 
 group = "io.repseq"
+val gitLastTag = gitDetails.lastTag.removePrefix("v")
 version =
-    if (gitDetails.commitDistance == 0) gitDetails.lastTag
-    else "${gitDetails.lastTag}-${gitDetails.commitDistance}-${gitDetails.gitHash}"
+    if (gitDetails.commitDistance == 0) gitLastTag
+    else "${gitLastTag}-${gitDetails.commitDistance}-${gitDetails.gitHash}"
 description = "RepSeqIO"
 
-java.sourceCompatibility = JavaVersion.VERSION_1_8
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    withSourcesJar()
+    withJavadocJar()
+}
 
 tasks.register("createInfoFile") {
     doLast {
@@ -41,12 +48,13 @@ repositories {
     }
 }
 
-val milibVersion = "1.13.1-8-ee94440152"
+val milibVersion = "1.14-1-2fdb618468"
+val jacksonVersion = "2.12.3"
 
 dependencies {
     api("com.milaboratory:milib:$milibVersion")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.11.4")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("org.reflections:reflections:0.9.10")
     implementation("commons-io:commons-io:2.7")
     implementation("org.apache.httpcomponents:httpclient:4.5.10")
@@ -54,9 +62,9 @@ dependencies {
     implementation("com.beust:jcommander:1.72")
     implementation("net.sf.trove4j:trove4j:3.0.3")
 
-    testImplementation("junit:junit:4.13.1")
+    testImplementation("junit:junit:4.13.2")
     testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
-    testImplementation("org.mockito:mockito-all:1.9.5")
+    testImplementation("org.mockito:mockito-all:1.10.19")
 }
 
 val buildLibrary by tasks.registering(JavaExec::class) {
@@ -84,11 +92,65 @@ publishing {
         }
     }
 
-    publications.create<MavenPublication>("maven") {
+    publications.create<MavenPublication>("mavenJava") {
         from(components["java"])
+        pom {
+            withXml {
+                asNode().apply {
+                    appendNode("name", "RepseqIO")
+                    appendNode(
+                        "description",
+                        "Command line helper to manipulate RepSeq.IO formatted V/D/J/C reference data."
+                    )
+                    appendNode("url", "https://milaboratory.com/")
+                }
+            }
+            licenses {
+                license {
+                    name.set("The Apache License, Version 2.0")
+                    url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                }
+            }
+            developers {
+                developer {
+                    id.set("dbolotin")
+                    name.set("Dmitry Bolotin")
+                    email.set("bolotin.dmitriy@gmail.com")
+                }
+                developer {
+                    id.set("PoslavskySV")
+                    name.set("Stanislav Poslavsky")
+                    email.set("stvlpos@mail.ru")
+                }
+            }
+            scm {
+                url.set("scm:git:https://github.com/repseq/repseqio.git")
+            }
+        }
     }
+}
+
+val signingKey: String? by project
+if (signingKey != null) {
+    signing {
+        useInMemoryPgpKeys(
+            Base64.getMimeDecoder().decode(signingKey).decodeToString(),
+            ""
+        )
+        sign(publishing.publications["mavenJava"])
+    }
+}
+
+tasks.withType<Javadoc> {
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
 }
 
 tasks.withType<JavaCompile>() {
     options.encoding = "UTF-8"
+}
+
+nexusPublishing {
+    repositories {
+        sonatype()
+    }
 }

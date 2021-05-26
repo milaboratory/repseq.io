@@ -31,8 +31,11 @@ anchors:
       # Gradle folder
       GRADLE_USER_HOME: "/drone/src/.gradle"
 
-      # For interaction with repositories
-      <<: *aws_credentials
+      # MiLab repository credentials
+      ORG_GRADLE_PROJECT_miRepoAccessKeyId:
+        from_secret: aws-key-id
+      ORG_GRADLE_PROJECT_miRepoSecretAccessKey:
+        from_secret: aws-secret-key
 
   cache_settings: &cache_settings
     # debug: true
@@ -68,14 +71,30 @@ steps:
     name: initialization
     commands:
       - echo "{}" > build_info.json
-      - gradle -i --no-daemon -PmiRepoAccessKeyId=$${AWS_ACCESS_KEY_ID} -PmiRepoSecretAccessKey=$${AWS_SECRET_ACCESS_KEY} CreateInfoFile
+      - gradle -i --no-daemon CreateInfoFile
+
+  - name: add_url_secret
+    image: alpine
+    commands:
+      - apk add jq
+      - jq ".urlsecret=\"$${URL_SECRET}\"" build_info.json > build_info.json.1
+      - mv build_info.json.1 build_info.json
+    environment:
+      URL_SECRET:
+        from_secret: url-secret
 
   - <<: *gradle_task
     name: publish_to_mipub
+    when:
+      event:
+        - push
     commands:
-      - gradle --no-daemon -i -PmiRepoAccessKeyId=$${AWS_ACCESS_KEY_ID} -PmiRepoSecretAccessKey=$${AWS_SECRET_ACCESS_KEY} -x test PublishAllPublicationsToMiPubRepository
+      - gradle --no-daemon -i -x test PublishAllPublicationsToMiPubRepository
 
-  - name: telegram_published
+  - name: telegram_mipub_published
+    when:
+      event:
+        - push
     image: appleboy/drone-telegram
     settings:
       token:
@@ -84,12 +103,12 @@ steps:
         from_secret: telegram-chat-id-micore
       format: markdown
       template_vars_file: build_info.json
-      message: 🧩 build {{build.number}} on {{commit.branch}} published ```com.milaboratory:milib:{{tpl.version}}```
+      message: 🧩 build {{build.number}} on `{{commit.branch}}` published ```io.repseq:repseqio:{{tpl.version}}```
 
   - <<: *gradle_task
     name: test
     commands:
-      - gradle -i --no-daemon -PmiRepoAccessKeyId=$${AWS_ACCESS_KEY_ID} -PmiRepoSecretAccessKey=$${AWS_SECRET_ACCESS_KEY} test
+      - gradle -i --no-daemon test
 
   - name: test_report_upload
     image: amazon/aws-cli
@@ -123,9 +142,9 @@ steps:
       template_vars_file: build_info.json
       message: >
         {{#success build.status}}
-        ✅ MiLib build {{build.number}} by {{commit.author}} on {{commit.branch}} test success.
+        ✅ MiLib build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test success.
         {{else}}
-        ❌ MiLib build {{build.number}} by {{commit.author}} on {{commit.branch}} test failure.
+        ❌ MiLib build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test failure.
         {{/success}}
 
 
@@ -133,6 +152,28 @@ steps:
 
 
         [📊 Test Report](https://cdn.milaboratory.com/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-{{tpl.urlsecret}}/tests/index.html)
+
+  - <<: *gradle_task
+    name: publish_to_maven_central
+    when:
+      event:
+        - tag
+    commands:
+      - gradle --no-daemon -i -x test publishToSonatype closeSonatypeStagingRepository
+
+  - name: telegram_mipub_published
+    when:
+      event:
+        - tag
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: telegram-token
+      to:
+        from_secret: telegram-chat-id-micore
+      format: markdown
+      template_vars_file: build_info.json
+      message: 🧩🎉 build {{build.number}} on `{{commit.branch}}` published to Maven Central ```io.repseq:repseqio:{{tpl.version}}```
 
   - name: rebuild_cache
     image: meltwater/drone-cache
@@ -142,6 +183,6 @@ steps:
 
 ---
 kind: signature
-hmac: 7f1d0f1593e108096227d9557aed5dfb5c578a1a0e5352782649dfa3324b90e3
+hmac: 35da32ac7553049b868c4449e93d609e18797b2fa78f5411cb52c3cc83941efc
 
 ...
