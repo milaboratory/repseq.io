@@ -1,0 +1,196 @@
+---
+kind: pipeline
+type: docker
+name: main
+
+platform:
+  os: linux
+  arch: amd64
+
+trigger:
+  event:
+    - push
+    - tag
+
+image_pull_secrets:
+  - docker-dockerconfig
+  - quay-dockerconfig
+
+anchors:
+  aws_credentials: &aws_credentials
+    AWS_DEFAULT_REGION:
+      from_secret: aws-region
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws-key-id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws-secret-key
+
+  gradle_task: &gradle_task
+    image: gradle:7.0.2-jdk8-hotspot
+    environment:
+      # Gradle folder
+      GRADLE_USER_HOME: "/drone/src/.gradle"
+
+      # MiLab repository credentials
+      ORG_GRADLE_PROJECT_miRepoAccessKeyId:
+        from_secret: aws-key-id
+      ORG_GRADLE_PROJECT_miRepoSecretAccessKey:
+        from_secret: aws-secret-key
+
+      # For Maven Central release
+      ORG_GRADLE_PROJECT_sonatypeUsername:
+        from_secret: sonatype-username
+      ORG_GRADLE_PROJECT_sonatypePassword:
+        from_secret: sonatype-password
+      ORG_GRADLE_PROJECT_signingKey:
+        from_secret: signing-key
+
+  cache_settings: &cache_settings
+    # debug: true
+    cache_key: '{{ .Commit.Branch }}'
+    access_key:
+      from_secret: aws-key-id
+    secret_key:
+      from_secret: aws-secret-key
+    bucket:
+      from_secret: aws-cache-bucket
+    region:
+      from_secret: aws-region
+    local_root: /drone/src
+    mount:
+      - .gradle
+      - .cache
+
+steps:
+  - name: fetch
+    image: alpine/git
+    commands:
+      - git fetch --tags
+      - git submodule update --init --recursive
+
+  - name: restore_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      restore: true
+      <<: *cache_settings
+
+  - <<: *gradle_task
+    name: initialization
+    commands:
+      - echo "{}" > build_info.json
+      - gradle -i --no-daemon CreateInfoFile
+
+  - name: add_url_secret
+    image: alpine
+    commands:
+      - apk add jq
+      - jq ".urlsecret=\"$${URL_SECRET}\"" build_info.json > build_info.json.1
+      - mv build_info.json.1 build_info.json
+    environment:
+      URL_SECRET:
+        from_secret: url-secret
+
+  - <<: *gradle_task
+    name: publish_to_mipub
+    when:
+      event:
+        - push
+    commands:
+      - gradle --no-daemon -i -x test PublishAllPublicationsToMiPubRepository
+
+  - name: telegram_mipub_published
+    when:
+      event:
+        - push
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: telegram-token
+      to:
+        from_secret: telegram-chat-id-micore
+      format: markdown
+      template_vars_file: build_info.json
+      message: 🧩 build {{build.number}} on `{{commit.branch}}` published ```io.repseq:repseqio:{{tpl.version}}```
+
+  - <<: *gradle_task
+    name: test
+    commands:
+      - gradle -i --no-daemon test
+
+  - name: test_report_upload
+    image: amazon/aws-cli
+    when:
+      status:
+        - success
+        - failure
+    commands:
+      - aws s3 cp --recursive build/reports/tests/test s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-$${URL_SECRET}/tests/
+    environment:
+      <<: *aws_credentials
+      DEPLOY_S3_CDN_BUCKET:
+        from_secret: cdn-s3-bucket
+      DEPLOY_S3_CDN_PREFIX:
+        from_secret: cdn-s3-prefix
+      URL_SECRET:
+        from_secret: url-secret
+
+  - name: telegram_tests
+    image: appleboy/drone-telegram
+    when:
+      status:
+        - success
+        - failure
+    settings:
+      token:
+        from_secret: telegram-token
+      to:
+        from_secret: telegram-chat-id-micore
+      format: markdown
+      template_vars_file: build_info.json
+      message: >
+        {{#success build.status}}
+        ✅ MiLib build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test success.
+        {{else}}
+        ❌ MiLib build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test failure.
+        {{/success}}
+
+
+        🌐 {{build.link}}
+
+
+        [📊 Test Report](https://cdn.milaboratory.com/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-{{tpl.urlsecret}}/tests/index.html)
+
+  - <<: *gradle_task
+    name: publish_to_maven_central
+    when:
+      event:
+        - tag
+    commands:
+      - gradle --no-daemon -i -x test publishToSonatype closeSonatypeStagingRepository
+
+  - name: telegram_maven_central_published
+    when:
+      event:
+        - tag
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: telegram-token
+      to:
+        from_secret: telegram-chat-id-micore
+      format: markdown
+      template_vars_file: build_info.json
+      message: 🧩🎉 build {{build.number}} on `{{commit.branch}}` published to Maven Central ```io.repseq:repseqio:{{tpl.version}}```
+
+  - name: rebuild_cache
+    image: meltwater/drone-cache
+    settings:
+      rebuild: true
+      <<: *cache_settings
+
+---
+kind: signature
+hmac: 180886fca0288ca1dc36a26dbeba48dda82061b181c2b015c4997401d8908557
+
+...

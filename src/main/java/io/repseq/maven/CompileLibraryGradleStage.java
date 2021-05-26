@@ -39,15 +39,21 @@ import static java.util.Arrays.asList;
 /**
  * Class executed during maven build process
  */
-public class CompileLibraryMavenStage {
-    private static final Logger log = LoggerFactory.getLogger(CompileLibraryMavenStage.class);
+public class CompileLibraryGradleStage {
+    private static final Logger log = LoggerFactory.getLogger(CompileLibraryGradleStage.class);
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Path root = Paths.get(args[0]);
 
         Path cacheFolder = root.resolve(".cache");
-        Path buildFolder = root.resolve("target").resolve("library");
-        Path outputFolder = root.resolve("target").resolve("classes").resolve("libraries");
+
+        String repseqioCacheEnv = System.getenv("REPSEQIO_CACHE");
+        if (repseqioCacheEnv != null) {
+            cacheFolder = Paths.get(repseqioCacheEnv);
+        }
+
+        Path buildFolder = root.resolve("build").resolve("library");
+        Path outputFolder = root.resolve("build/resources/main/libraries");
         Path libraryRepoFolder = root.resolve("library");
 
         Process gitTagProcess = new ProcessBuilder("git", "describe", "--always", "--tags")
@@ -57,7 +63,7 @@ public class CompileLibraryMavenStage {
                 .replace("\n", "").replace("\r", "");
         gitTagProcess.waitFor();
 
-        String[] targetTags = {"v1.4", "v1.5", currentTag};
+        String[] targetTags = {"v1.6", "v1.7", currentTag};
 
         for (String tag : targetTags) {
             new ProcessBuilder("git", "checkout", tag)

@@ -17,9 +17,12 @@ package io.repseq.dto;
 
 import com.milaboratory.test.TestUtil;
 import com.milaboratory.util.GlobalObjectMappers;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.TreeSet;
 
 public class VDJCLibraryDataTest {
     @Test
@@ -27,6 +30,7 @@ public class VDJCLibraryDataTest {
         try (InputStream stream = getClass().getResourceAsStream("/testdata/example_0.json")) {
             VDJCLibraryData[] lib = GlobalObjectMappers.PRETTY.readValue(stream, VDJCLibraryData[].class);
             TestUtil.assertJson(lib[0]);
+            Assert.assertEquals(new TreeSet(Arrays.asList("citation1")), lib[0].getCitations());
         }
     }
 }
