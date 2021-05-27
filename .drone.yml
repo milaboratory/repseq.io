@@ -51,7 +51,7 @@ anchors:
 
   cache_settings: &cache_settings
     # debug: true
-    cache_key: '{{ .Commit.Branch }}'
+    # cache_key: '{{ .Commit.Branch }}'
     access_key:
       from_secret: aws-key-id
     secret_key:
@@ -61,9 +61,9 @@ anchors:
     region:
       from_secret: aws-region
     local_root: /drone/src
-    mount:
-      - .gradle
-      - .cache
+    # mount:
+    #   - .gradle
+    #   - .cache
 
 steps:
   - name: fetch
@@ -72,11 +72,24 @@ steps:
       - git fetch --tags
       - git submodule update --init --recursive
 
-  - name: restore_cache
+  - name: restore_library_cache
     image: meltwater/drone-cache
     pull: true
     settings:
       restore: true
+      cache_key: library
+      mount:
+        - .cache
+      <<: *cache_settings
+
+  - name: restore_gradle_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      restore: true
+      cache_key: '{{ .Commit.Branch }}'
+      mount:
+        - .gradle
       <<: *cache_settings
 
   - <<: *gradle_task
@@ -110,9 +123,9 @@ steps:
         - push
     commands:
       - apk add jq aws-cli
-      - >
-        echo aws s3 cp
-          "build/distributions/repseqio.zip"
+      - |
+         echo aws s3 cp \
+          "build/distributions/repseqio.zip" \
           "s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/software/repseqio/repseqio-$(jq -r .version build_info.json).zip"
     environment:
       <<: *aws_credentials
@@ -201,14 +214,28 @@ steps:
       template_vars_file: build_info.json
       message: 🧩🎉 build {{build.number}} on `{{commit.branch}}` published to Maven Central ```io.repseq:repseqio:{{tpl.version}}```
 
-  - name: rebuild_cache
+  - name: rebuild_library_cache
     image: meltwater/drone-cache
+    pull: true
     settings:
       rebuild: true
+      cache_key: library
+      mount:
+        - .cache
+      <<: *cache_settings
+
+  - name: rebuild_gradle_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      rebuild: true
+      cache_key: '{{ .Commit.Branch }}'
+      mount:
+        - .gradle
       <<: *cache_settings
 
 ---
 kind: signature
-hmac: d15182390115bd8b9071bad5ff8091f1f5eab0cf6944e0daa1b7d9ee1b8ed556
+hmac: 470aea3cb2733dd38c9c304a3334ce9937ab22918c2ad00ef975f42660d82092
 
 ...
