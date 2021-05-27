@@ -111,7 +111,7 @@ steps:
     commands:
       - apk add jq aws-cli
       - >
-        aws s3 cp \
+        echo aws s3 cp
           "build/distributions/repseqio.zip"
           "s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/software/repseqio/repseqio-$(jq -r .version build_info.json).zip"
     environment:
@@ -209,6 +209,6 @@ steps:
 
 ---
 kind: signature
-hmac: 6c51f90aa885ff9180e9e2e5cd2574946ad9df39307817af5823b299033e1d6f
+hmac: d15182390115bd8b9071bad5ff8091f1f5eab0cf6944e0daa1b7d9ee1b8ed556
 
 ...
