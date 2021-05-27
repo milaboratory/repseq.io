@@ -138,6 +138,8 @@ steps:
     settings:
       api_key:
         from_secret: github-public-repo
+      checksum:
+        - sha256
       files: build/distributions/repseqio.zip
 
   - name: telegram_mipub_published
@@ -252,6 +254,6 @@ steps:
 
 ---
 kind: signature
-hmac: fffc618ac00072c69feec6d5f78f9b2df0e1cf7ca986bbcd8277f42c13e35f0e
+hmac: 0f918d816eaa5a644852f03fd4e84220c5b404b63a23bfb5c57d41ba506dc16e
 
 ...
