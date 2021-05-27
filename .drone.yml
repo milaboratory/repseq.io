@@ -124,9 +124,9 @@ steps:
     commands:
       - apk add jq aws-cli
       - |
-         aws s3 cp \
-          "build/distributions/repseqio.zip" \
-          "s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/software/repseqio/repseqio-$(jq -r .version build_info.json).zip"
+        aws s3 cp \
+         "build/distributions/repseqio.zip" \
+         "s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/software/repseqio/repseqio-$(jq -r .version build_info.json).zip"
     environment:
       <<: *aws_credentials
 
@@ -142,8 +142,10 @@ steps:
         from_secret: telegram-chat-id-micore
       format: markdown
       template_vars_file: build_info.json
+      disable_web_page_preview: true
       message: |
         🧩 build {{build.number}} on `{{commit.branch}}` published ```io.repseq:repseqio:{{tpl.version}}```
+
         📦 https://cdn.milaboratory.com/software/repseqio/repseqio-{{tpl.version}}.zip
 
   - <<: *gradle_task
@@ -238,6 +240,6 @@ steps:
 
 ---
 kind: signature
-hmac: 22865d446bcd9a33220c462d46de8e9eab62994376d74eb0617753597fc9c337
+hmac: ba980a7284c16162f0527941345d62c99654c7ca8f7e926ca41b1f50117737be
 
 ...
