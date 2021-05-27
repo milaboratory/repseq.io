@@ -131,6 +131,15 @@ steps:
     environment:
       <<: *aws_credentials
 
+  - name: rename_release_file
+    image: alpine
+    when:
+      event:
+        - tag
+    commands:
+      - apk add jq
+      - mv build/distributions/repseqio.zip build/distributions/repseqio-$(jq -r .version build_info.json).zip
+
   - name: publish_zip_to_github
     image: plugins/github-release
     when:
@@ -140,7 +149,7 @@ steps:
         from_secret: github-public-repo
       checksum:
         - sha256
-      files: build/distributions/repseqio.zip
+      files: build/distributions/*
 
   - name: telegram_mipub_published
     when:
@@ -254,6 +263,6 @@ steps:
 
 ---
 kind: signature
-hmac: 0f918d816eaa5a644852f03fd4e84220c5b404b63a23bfb5c57d41ba506dc16e
+hmac: e880b81687d140dd2b609633b524ffd1993d34738bd0f5aa68a4d73a9f33dcbc
 
 ...
