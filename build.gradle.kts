@@ -1,13 +1,16 @@
 import com.palantir.gradle.gitversion.VersionDetails
 import java.util.Base64
 import groovy.lang.Closure
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     `java-library`
+    application
     `maven-publish`
     signing
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("com.palantir.git-version") version "0.12.3"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
 }
 
 
@@ -32,6 +35,14 @@ java {
     withJavadocJar()
 }
 
+application {
+    mainClass.set("io.repseq.cli.Main")
+}
+
+tasks.withType<JavaCompile>() {
+    options.encoding = "UTF-8"
+}
+
 tasks.register("createInfoFile") {
     doLast {
         projectDir
@@ -43,6 +54,7 @@ tasks.register("createInfoFile") {
 repositories {
     mavenCentral()
 
+    // Snapshot versions of milib distributed via this repo
     maven {
         url = uri("https://pub.maven.milaboratory.com")
     }
@@ -75,6 +87,28 @@ val buildLibrary by tasks.registering(JavaExec::class) {
 
 tasks.classes {
     finalizedBy(buildLibrary)
+}
+
+val shadowJar = tasks.withType<ShadowJar> {
+    minimize {
+        exclude(dependency("org.slf4j:slf4j-api"))
+        exclude(dependency("ch.qos.logback:logback-core"))
+        exclude(dependency("ch.qos.logback:logback-classic"))
+        exclude(dependency("commons-logging:commons-logging"))
+        exclude(dependency("com.fasterxml.jackson.core:jackson-databind"))
+        exclude(dependency("log4j:log4j"))
+        exclude(dependency("com.milaboratory:milib"))
+    }
+}
+
+val distributionZip by tasks.registering(Zip::class) {
+    archiveFileName.set("${project.name}.zip")
+    destinationDirectory.set(file("$buildDir/distributions"))
+    from(shadowJar){
+        rename("-.*\\.jar", "\\.jar")
+    }
+    from("${project.rootDir}/repseqio")
+    from("${project.rootDir}/LICENSE")
 }
 
 publishing {
@@ -145,20 +179,16 @@ tasks.withType<Javadoc> {
     (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
 }
 
-tasks.withType<JavaCompile>() {
-    options.encoding = "UTF-8"
+nexusPublishing {
+    repositories {
+        sonatype()
+    }
 }
 
 val checkMiLibNotSnapshot by tasks.registering {
     doLast {
         if (milibVersion.contains('-'))
             throw GradleException("Can't publish to maven central with snapshot dependencies.")
-    }
-}
-
-nexusPublishing {
-    repositories {
-        sonatype()
     }
 }
 
