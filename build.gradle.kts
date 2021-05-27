@@ -60,7 +60,7 @@ repositories {
     }
 }
 
-val milibVersion = "1.14-1-2fdb618468"
+val milibVersion = "1.14.1"
 val jacksonVersion = "2.12.3"
 
 dependencies {
