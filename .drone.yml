@@ -51,7 +51,6 @@ anchors:
 
   cache_settings: &cache_settings
     # debug: true
-    # cache_key: '{{ .Commit.Branch }}'
     access_key:
       from_secret: aws-key-id
     secret_key:
@@ -61,9 +60,6 @@ anchors:
     region:
       from_secret: aws-region
     local_root: /drone/src
-    # mount:
-    #   - .gradle
-    #   - .cache
 
 steps:
   - name: fetch
@@ -116,7 +112,12 @@ steps:
     commands:
       - gradle --no-daemon -i -x test PublishAllPublicationsToMiPubRepository distributionZip
 
-  - name: publish_to_cdn
+  - <<: *gradle_task
+    name: create_zip_distribution
+    commands:
+      - gradle --no-daemon -i -x test distributionZip
+
+  - name: publish_zip_to_cdn
     image: alpine
     when:
       event:
@@ -129,6 +130,15 @@ steps:
          "s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/software/repseqio/repseqio-$(jq -r .version build_info.json).zip"
     environment:
       <<: *aws_credentials
+
+  - name: publish_zip_to_github
+    image: plugins/github-release
+    when:
+      event: tag
+    settings:
+      api_key:
+        from_secret: github-public-repo
+      files: build/distributions/repseqio.zip
 
   - name: telegram_mipub_published
     when:
@@ -183,16 +193,14 @@ steps:
         from_secret: telegram-chat-id-micore
       format: markdown
       template_vars_file: build_info.json
-      message: >
+      message: |
         {{#success build.status}}
-        ✅ MiLib build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test success.
+        ✅ RepSeq.IO build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test success.
         {{else}}
-        ❌ MiLib build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test failure.
+        ❌ RepSeq.IO build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test failure.
         {{/success}}
 
-
         🌐 {{build.link}}
-
 
         [📊 Test Report](https://cdn.milaboratory.com/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-{{tpl.urlsecret}}/tests/index.html)
 
@@ -216,7 +224,11 @@ steps:
         from_secret: telegram-chat-id-micore
       format: markdown
       template_vars_file: build_info.json
-      message: 🧩🎉 build {{build.number}} on `{{commit.branch}}` published to Maven Central ```io.repseq:repseqio:{{tpl.version}}```
+      disable_web_page_preview: true
+      message: |
+        🧩 🎯 build {{build.number}} on `{{commit.branch}}` published to Maven Central ```io.repseq:repseqio:{{tpl.version}}```
+
+        🐙 https://github.com/repseqio/repseqio/releases/tag/{{build.tag}}
 
   - name: rebuild_library_cache
     image: meltwater/drone-cache
@@ -240,6 +252,6 @@ steps:
 
 ---
 kind: signature
-hmac: ba980a7284c16162f0527941345d62c99654c7ca8f7e926ca41b1f50117737be
+hmac: fffc618ac00072c69feec6d5f78f9b2df0e1cf7ca986bbcd8277f42c13e35f0e
 
 ...
