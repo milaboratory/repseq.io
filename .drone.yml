@@ -24,6 +24,10 @@ anchors:
       from_secret: aws-key-id
     AWS_SECRET_ACCESS_KEY:
       from_secret: aws-secret-key
+    DEPLOY_S3_CDN_BUCKET:
+      from_secret: cdn-s3-bucket
+    DEPLOY_S3_CDN_PREFIX:
+      from_secret: cdn-s3-prefix
 
   gradle_task: &gradle_task
     image: gradle:7.0.2-jdk8-hotspot
@@ -47,7 +51,6 @@ anchors:
 
   cache_settings: &cache_settings
     # debug: true
-    cache_key: '{{ .Commit.Branch }}'
     access_key:
       from_secret: aws-key-id
     secret_key:
@@ -57,9 +60,6 @@ anchors:
     region:
       from_secret: aws-region
     local_root: /drone/src
-    mount:
-      - .gradle
-      - .cache
 
 steps:
   - name: fetch
@@ -68,11 +68,24 @@ steps:
       - git fetch --tags
       - git submodule update --init --recursive
 
-  - name: restore_cache
+  - name: restore_library_cache
     image: meltwater/drone-cache
     pull: true
     settings:
       restore: true
+      cache_key: library
+      mount:
+        - .cache
+      <<: *cache_settings
+
+  - name: restore_gradle_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      restore: true
+      cache_key: '{{ .Commit.Branch }}'
+      mount:
+        - .gradle
       <<: *cache_settings
 
   - <<: *gradle_task
@@ -97,7 +110,46 @@ steps:
       event:
         - push
     commands:
-      - gradle --no-daemon -i -x test PublishAllPublicationsToMiPubRepository
+      - gradle --no-daemon -i -x test PublishAllPublicationsToMiPubRepository distributionZip
+
+  - <<: *gradle_task
+    name: create_zip_distribution
+    commands:
+      - gradle --no-daemon -i -x test distributionZip
+
+  - name: publish_zip_to_cdn
+    image: alpine
+    when:
+      event:
+        - push
+    commands:
+      - apk add jq aws-cli
+      - |
+        aws s3 cp \
+         "build/distributions/repseqio.zip" \
+         "s3://$${DEPLOY_S3_CDN_BUCKET}/$${DEPLOY_S3_CDN_PREFIX}/software/repseqio/repseqio-$(jq -r .version build_info.json).zip"
+    environment:
+      <<: *aws_credentials
+
+  - name: rename_release_file
+    image: alpine
+    when:
+      event:
+        - tag
+    commands:
+      - apk add jq
+      - mv build/distributions/repseqio.zip build/distributions/repseqio-$(jq -r .version build_info.json).zip
+
+  - name: publish_zip_to_github
+    image: plugins/github-release
+    when:
+      event: tag
+    settings:
+      api_key:
+        from_secret: github-public-repo
+      checksum:
+        - sha256
+      files: build/distributions/*
 
   - name: telegram_mipub_published
     when:
@@ -111,7 +163,11 @@ steps:
         from_secret: telegram-chat-id-micore
       format: markdown
       template_vars_file: build_info.json
-      message: 🧩 build {{build.number}} on `{{commit.branch}}` published ```io.repseq:repseqio:{{tpl.version}}```
+      disable_web_page_preview: true
+      message: |
+        🧩 build {{build.number}} on `{{commit.branch}}` published ```io.repseq:repseqio:{{tpl.version}}```
+
+        📦 https://cdn.milaboratory.com/software/repseqio/repseqio-{{tpl.version}}.zip
 
   - <<: *gradle_task
     name: test
@@ -148,16 +204,14 @@ steps:
         from_secret: telegram-chat-id-micore
       format: markdown
       template_vars_file: build_info.json
-      message: >
+      message: |
         {{#success build.status}}
-        ✅ MiLib build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test success.
+        ✅ RepSeq.IO build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test success.
         {{else}}
-        ❌ MiLib build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test failure.
+        ❌ RepSeq.IO build {{build.number}} by {{commit.author}} on `{{commit.branch}}` test failure.
         {{/success}}
 
-
         🌐 {{build.link}}
-
 
         [📊 Test Report](https://cdn.milaboratory.com/internal/ci/${DRONE_REPO}/${DRONE_COMMIT}-${DRONE_BUILD_NUMBER}-{{tpl.urlsecret}}/tests/index.html)
 
@@ -181,16 +235,34 @@ steps:
         from_secret: telegram-chat-id-micore
       format: markdown
       template_vars_file: build_info.json
-      message: 🧩🎉 build {{build.number}} on `{{commit.branch}}` published to Maven Central ```io.repseq:repseqio:{{tpl.version}}```
+      disable_web_page_preview: true
+      message: |
+        🧩 🎯 build {{build.number}} on `{{commit.branch}}` published to Maven Central ```io.repseq:repseqio:{{tpl.version}}```
 
-  - name: rebuild_cache
+        🐙 https://github.com/repseqio/repseqio/releases/tag/{{build.tag}}
+
+  - name: rebuild_library_cache
     image: meltwater/drone-cache
+    pull: true
     settings:
       rebuild: true
+      cache_key: library
+      mount:
+        - .cache
+      <<: *cache_settings
+
+  - name: rebuild_gradle_cache
+    image: meltwater/drone-cache
+    pull: true
+    settings:
+      rebuild: true
+      cache_key: '{{ .Commit.Branch }}'
+      mount:
+        - .gradle
       <<: *cache_settings
 
 ---
 kind: signature
-hmac: 180886fca0288ca1dc36a26dbeba48dda82061b181c2b015c4997401d8908557
+hmac: e880b81687d140dd2b609633b524ffd1993d34738bd0f5aa68a4d73a9f33dcbc
 
 ...
