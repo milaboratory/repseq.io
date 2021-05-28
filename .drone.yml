@@ -221,7 +221,7 @@ steps:
       event:
         - tag
     commands:
-      - gradle --no-daemon -i -x test publishToSonatype closeSonatypeStagingRepository
+      - gradle --no-daemon -i -x test publishToSonatype closeAndReleaseSonatypeStagingRepository
 
   - name: telegram_maven_central_published
     when:
@@ -261,8 +261,3 @@ steps:
         - .gradle
       <<: *cache_settings
 
----
-kind: signature
-hmac: e880b81687d140dd2b609633b524ffd1993d34738bd0f5aa68a4d73a9f33dcbc
-
-...
