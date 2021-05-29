@@ -1,6 +1,7 @@
 import com.palantir.gradle.gitversion.VersionDetails
 import java.util.Base64
 import groovy.lang.Closure
+import java.net.InetAddress
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
@@ -12,7 +13,6 @@ plugins {
     id("com.palantir.git-version") version "0.12.3"
     id("com.github.johnrengelman.shadow") version "7.0.0"
 }
-
 
 val miRepoAccessKeyId: String by project
 val miRepoSecretAccessKey: String by project
@@ -77,6 +77,20 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation(testFixtures("com.milaboratory:milib:$milibVersion"))
     testImplementation("org.mockito:mockito-all:1.10.19")
+}
+
+val writeBuildProperties by tasks.registering(WriteProperties::class) {
+    outputFile = file("${sourceSets.main.get().output.resourcesDir}/${project.name}-build.properties")
+    property("version", version)
+    property("name", "MiLib")
+    property("revision", gitDetails.gitHash)
+    property("branch", gitDetails.branchName)
+    property("host", InetAddress.getLocalHost().hostName)
+    property("timestamp", System.currentTimeMillis())
+}
+
+tasks.processResources {
+    dependsOn(writeBuildProperties)
 }
 
 val buildLibrary by tasks.registering(JavaExec::class) {
