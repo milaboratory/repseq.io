@@ -110,7 +110,7 @@ steps:
       event:
         - push
     commands:
-      - gradle --no-daemon -i -x test PublishAllPublicationsToMiPubRepository distributionZip
+      - gradle --no-daemon -i -x test PublishAllPublicationsToMiPubRepository
 
   - <<: *gradle_task
     name: create_zip_distribution
