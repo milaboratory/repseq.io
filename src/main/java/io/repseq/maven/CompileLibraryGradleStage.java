@@ -63,7 +63,7 @@ public class CompileLibraryGradleStage {
                 .replace("\n", "").replace("\r", "");
         gitTagProcess.waitFor();
 
-        String[] targetTags = {"v1.6", "v1.7", currentTag};
+        String[] targetTags = {"v1.6", "v1.7", "v1.8", currentTag};
 
         for (String tag : targetTags) {
             new ProcessBuilder("git", "checkout", tag)
